@@ -1,0 +1,12 @@
+{
+  "name": "agentic-retrospective",
+  "version": "1.0.0",
+  "description": "Evidence-based sprint retrospectives for human-agent collaboration. Captures telemetry and generates actionable insights.",
+  "author": {
+    "name": "jpoley"
+  },
+  "license": "Apache-2.0",
+  "homepage": "https://github.com/daax-dev/agentic-retrospective",
+  "repository": "https://github.com/daax-dev/agentic-retrospective",
+  "keywords": ["retrospective", "telemetry", "agentskills", "sprint"]
+}
