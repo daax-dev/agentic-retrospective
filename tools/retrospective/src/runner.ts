@@ -153,7 +153,7 @@ export class RetroRunner {
         gap_type: 'missing_decisions',
         severity: 'high',
         impact: 'Cannot evaluate decision quality or boundary discipline',
-        recommendation: `Create decision log directory: mkdir -p ${this.config.decisionsPath}\nSee skills/retro/docs/fixing-telemetry-gaps.md`,
+        recommendation: `Create decision log directory: mkdir -p ${this.config.decisionsPath}\nSee docs/fixing-telemetry-gaps.md`,
       });
     }
 
@@ -165,7 +165,7 @@ export class RetroRunner {
         gap_type: 'missing_agent_logs',
         severity: 'medium',
         impact: 'Cannot analyze agent collaboration patterns or inner loop health',
-        recommendation: `Agent logs not found at ${this.config.agentLogsPath}\nSee skills/retro/docs/fixing-telemetry-gaps.md`,
+        recommendation: `Agent logs not found at ${this.config.agentLogsPath}\nSee docs/fixing-telemetry-gaps.md`,
       });
     }
 
@@ -195,7 +195,7 @@ export class RetroRunner {
         gap_type: 'missing_human_feedback',
         severity: 'medium',
         impact: 'Cannot analyze prompt patterns or generate human improvement insights',
-        recommendation: 'Run micro-retro.sh after sessions: bash skills/claude-watch/scripts/micro-retro.sh',
+        recommendation: 'Run micro-retro.sh after sessions: bash .logs/scripts/micro-retro.sh',
       });
     }
 

@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 
 /**
- * CLI entry point for @daax/retro
+ * CLI entry point for @agentic/retrospective
  *
  * Usage:
- *   daax-retro [options]
- *   npx @daax/retro [options]
+ *   agentic-retro [options]
+ *   npx @agentic/retrospective [options]
  */
 
 import { Command } from 'commander';
@@ -16,7 +16,7 @@ import type { RetroConfig } from './types.js';
 const program = new Command();
 
 program
-  .name('daax-retro')
+  .name('agentic-retro')
   .description('Generate evidence-based sprint retrospective analyzing human-agent collaboration')
   .version('0.1.0')
   .option('--from <ref>', 'Git ref for sprint start (commit hash, tag, branch, or relative ref)', '')

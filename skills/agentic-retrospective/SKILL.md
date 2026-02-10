@@ -81,7 +81,7 @@ To enable Human Partner Insights, capture session feedback:
 
 ```bash
 # After each session
-bash skills/agent-watch/scripts/micro-retro.sh
+bash .logs/scripts/micro-retro.sh
 ```
 
 This 30-second survey captures alignment, rework needed, and improvement suggestions.

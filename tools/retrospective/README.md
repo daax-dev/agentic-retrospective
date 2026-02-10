@@ -1,12 +1,12 @@
-# Agentic Retrospective Skill
+# Agentic Retrospective Tool
 
-**Daax Skill for Sprint/Cycle-Level Retrospectives**
+**Evidence-Based Sprint/Cycle-Level Retrospectives**
 
 A structured, evidence-based retrospective tool that analyzes human-agent collaboration, evaluates inner loop health, and produces actionable improvement recommendations.
 
 ## Overview
 
-The Agentic Retrospective skill ingests:
+The Agentic Retrospective tool ingests:
 - Code + diffs + PR metadata
 - Agent traces (prompt/tool-call logs)
 - Decision logs (JSONL)
@@ -20,32 +20,23 @@ And produces:
 
 ## Installation
 
-### As a Daax Skill (Recommended)
-
-The skill is already included in Daax. Use it via:
-
-```bash
-/retro                    # Run retrospective for current sprint
-/retro --from HEAD~50     # Custom git range
-```
-
 ### Standalone Installation
 
 ```bash
 # Install globally
-npm install -g @daax/retro
+npm install -g @agentic/retrospective
 
 # Or run directly
-npx @daax/retro --help
+npx @agentic/retrospective --help
 ```
 
-### Claude Code Custom Command
-
-Copy the skill command to your project:
+### From Source
 
 ```bash
-mkdir -p .claude/commands/retro
-cp skills/retro/commands/run.md .claude/commands/retro/run.md
+cd tools/retrospective
+npm install
+npm run build
+node dist/cli.js --help
 ```
 
 ## Usage
@@ -54,22 +45,22 @@ cp skills/retro/commands/run.md .claude/commands/retro/run.md
 
 ```bash
 # Run retrospective for last 2 weeks of work
-/retro
+agentic-retro
 
 # Run between tags
-/retro --from v1.0.0 --to v1.1.0
+agentic-retro --from v1.0.0 --to v1.1.0
 
 # Run from specific commit hash to HEAD
-/retro --from a1b2c3d --to HEAD
+agentic-retro --from a1b2c3d --to HEAD
 
 # Run between two commit hashes
-/retro --from abc123 --to def456
+agentic-retro --from abc123 --to def456
 
 # Run for specific sprint
-/retro --sprint sprint-42
+agentic-retro --sprint sprint-42
 
 # Run with CI data
-/retro --ci .github/workflows/ci.yml
+agentic-retro --ci .github/workflows/ci.yml
 ```
 
 ### Command Options
@@ -82,7 +73,7 @@ cp skills/retro/commands/run.md .claude/commands/retro/run.md
 | `--decisions` | Path to decision log JSONL | `.logs/decisions/` |
 | `--logs` | Path to agent logs | `.logs/agents/` |
 | `--ci` | Path to CI results | Auto-detect |
-| `--output` | Output directory | `docs/retro/` |
+| `--output` | Output directory | `docs/retrospectives/` |
 
 ### Supported Git Refs
 
@@ -98,160 +89,66 @@ The `--from` and `--to` options accept any valid git ref:
 
 ### Required (Minimum Viable Retrospective)
 
-1. **Git History**
-   - Automatically extracted from repository
-   - Provides: commits, diffs, PRs, file changes
+| Source | Description | Location |
+|--------|-------------|----------|
+| Git history | Commits, diffs, authors | Repository |
 
-### Optional (Enhanced Fidelity)
+### Optional (Enhanced Analysis)
 
-2. **Decision Logs (JSONL)**
-   - Location: `.logs/decisions/*.jsonl`
-   - Schema: See [decision-schema.json](./schemas/decision-schema.json)
-   - One JSON object per line, append-only
+| Source | Description | Location | Setup |
+|--------|-------------|----------|-------|
+| Decision logs | Architectural decisions | `.logs/decisions/` | agent-watch skill |
+| Prompt logs | User prompts with complexity signals | `.logs/prompts/` | agent-watch skill |
+| Feedback logs | Post-session micro-retro | `.logs/feedback/` | micro-retro.sh |
+| Agent logs | Tool calls, session data | `.logs/` | agent-watch skill |
+| Test results | JUnit XML | `test-results/` | CI config |
 
-3. **Agent Logs**
-   - Location: `.logs/agents/`
-   - Formats supported: Claude Code logs, Aider logs, custom JSONL
-
-4. **CI Results**
-   - GitHub Actions, GitLab CI, CircleCI
-   - Test results, coverage reports
-
-5. **Security Scans**
-   - SAST/SCA/SBOM outputs
-   - Vulnerability reports
-
-## Graceful Degradation
-
-The skill is designed to **always produce useful output**, even with missing data:
-
-| Data Source | If Missing | Skill Behavior |
-|-------------|------------|----------------|
-| Git history | ❌ Fatal | Cannot run without git |
-| Decision logs | ⚠️ Warning | Reports "decision opacity" as finding, recommends instrumentation |
-| Agent logs | ⚠️ Warning | Limits collaboration analysis, recommends logging |
-| CI results | ℹ️ Info | Skips inner loop metrics, notes gap |
-| Security scans | ℹ️ Info | Skips security posture section |
-
-When data is missing, the skill:
-1. Clearly documents the gap in the report
-2. Adjusts confidence scores downward
-3. Provides specific instructions to collect the missing data
-4. Still produces a partial report with available information
-
-## Report Structure
-
-### Executive Summary (1 page)
-- Planned vs delivered (scope drift, carryover)
-- Quality signals (test pass rate, incidents)
-- Collaboration health (human interrupts, agent autonomy)
-- Top 3 wins, top 3 risks, top 3 recommended changes
-
-### Sections
-1. **Delivery & Outcome** - What shipped, DORA-ish metrics
-2. **Code Quality & Maintainability** - Diff analysis, complexity
-3. **Security & Compliance** - Dependency changes, controls
-4. **Agent Collaboration (360°)** - Strengths, struggles, handoffs
-5. **Inner Loop Health** - Test loop completeness
-6. **Decision Quality** - One-way/two-way door discipline
-7. **Action Items** - Prioritized improvements
-
-### Scoring Rubrics (0-5 each)
-- Delivery Predictability
-- Test Loop Completeness
-- Quality/Maintainability
-- Security Posture
-- Collaboration Efficiency
-- Decision Hygiene
-
-## Decision Log Schema
-
-Each decision record (JSONL, one object per line):
-
-```json
-{
-  "id": "dec-001",
-  "ts": "2024-01-15T10:30:00Z",
-  "sprint_id": "sprint-42",
-  "actor": "human",
-  "category": "architecture",
-  "decision_type": "one_way_door",
-  "summary": "Chose PostgreSQL over MongoDB for user data",
-  "context": "docs/adr/001-database-choice.md",
-  "options_considered": [
-    {"option": "PostgreSQL", "pros": ["ACID", "familiar"], "cons": ["scaling"]},
-    {"option": "MongoDB", "pros": ["flexible schema"], "cons": ["consistency"]}
-  ],
-  "chosen_option": "PostgreSQL",
-  "rationale": "Strong consistency required for financial data",
-  "risk_level": "high",
-  "reversibility_plan": "Would require data migration, estimated 2 weeks",
-  "owner": "jane@example.com",
-  "followups": ["Create migration runbook"],
-  "evidence_refs": ["commit:abc123", "pr:45"]
-}
-```
-
-See [decision-schema.json](./schemas/decision-schema.json) for full schema.
-
-## Setting Up Decision Logging
-
-### Manual Logging
-
-Add to your workflow (e.g., in CLAUDE.md):
-
-```markdown
-## Decision Logging
-
-Log ALL architectural and significant decisions to `.logs/decisions/`:
-
-\`\`\`bash
-mkdir -p .logs/decisions
-echo '{"timestamp":"$(date -u +%Y-%m-%dT%H:%M:%SZ)","decision":"...","rationale":"..."}' >> .logs/decisions/$(date +%Y-%m-%d).jsonl
-\`\`\`
-```
-
-### Automated Hooks (Coming Soon)
-
-Pre-commit hooks can enforce decision logging for certain file changes.
-
-## Principles
-
-1. **Evidence-Driven**: Every claim links to artifacts or is marked "inferred"
-2. **Blameless**: Evaluate behaviors and systems, not people
-3. **Balanced**: Highlight strengths AND weaknesses fairly
-4. **Actionable**: Recommendations are implementable next sprint
-
-## What This Skill Does NOT Do
-
-- ❌ Rewrite history or "grade people" for punishment
-- ❌ Invent rationales where none exist
-- ❌ Recommend big rewrites without repeated failure evidence
-- ❌ Generate 20+ action items (keeps it to ~5 meaningful ones)
-
-## Integration with Daax
-
-The retrospective skill integrates with Daax's core principles:
-
-- **Everything is Recorded**: Leverages session recordings and decision logs
-- **Continuous Feedback Loop**: Produces insights for both humans and agents
-- **API-First**: All analysis available via JSON outputs
-
-## Files Generated
+## Output Structure
 
 ```
-docs/retro/
+docs/retrospectives/
 ├── sprint-42/
-│   ├── retro.md           # Human-readable report
-│   ├── retro.json         # Machine-readable findings
-│   ├── evidence_map.json  # Artifact traceability
-│   └── alerts.json        # High-risk followups
+│   ├── retro.md          # Human-readable report
+│   ├── retro.json        # Machine-readable data
+│   ├── evidence_map.json # Finding → evidence links
+│   └── alerts.json       # High-severity items
 ```
 
-## Contributing
+## Scoring Dimensions
 
-See the main Daax contributing guide.
+| Dimension | What It Measures | Score Range |
+|-----------|------------------|-------------|
+| Delivery Predictability | Scope vs delivered | 0-5 |
+| Test Loop Completeness | Test coverage, pass rates | 0-5 |
+| Quality/Maintainability | Code churn, large commit % | 0-5 |
+| Security Posture | Vulnerability trends | 0-5 |
+| Collaboration Efficiency | Human-agent handoffs | 0-5 |
+| Decision Hygiene | One-way-door escalation rate | 0-5 |
+
+## Integration with Agent-Watch
+
+For full analysis capabilities, install the agent-watch skill first:
+
+```bash
+bash skills/agent-watch/scripts/install.sh
+```
+
+This captures:
+- User prompts with complexity signals
+- Tool invocations
+- Architectural decisions
+- Session feedback
+
+## Development
+
+```bash
+npm install       # Install dependencies
+npm run build     # Build TypeScript
+npm run dev       # Watch mode
+npm run test      # Run tests
+npm run lint      # Lint code
+```
 
 ## License
 
-Apache 2.0 - See LICENSE
+Apache 2.0

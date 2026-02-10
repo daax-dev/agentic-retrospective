@@ -1,13 +1,14 @@
 #!/bin/bash
-# Retro - Run retrospective analysis
+# Agentic Retrospective - Run retrospective analysis
 # Usage: run.sh [--since "date"] [--until "date"] [--json] [--verbose]
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-TOOL_DIR="$SCRIPT_DIR/../../../../tools/retro"
+REPO_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
+TOOL_DIR="$REPO_ROOT/tools/retrospective"
 
 # Check if tool is built
 if [ -f "$TOOL_DIR/dist/cli.js" ]; then
-    node "$TOOL_DIR/dist/cli.js" run "$@"
+    node "$TOOL_DIR/dist/cli.js" "$@"
 else
     # Fallback: basic git analysis
     echo "Agentic Retrospective (fallback mode)"

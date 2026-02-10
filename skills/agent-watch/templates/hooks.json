@@ -5,7 +5,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash feedback-skills-plugin/skills/claude-watch/scripts/log-prompt.sh"
+            "command": "bash .logs/scripts/log-prompt.sh"
           }
         ]
       }
@@ -16,7 +16,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash feedback-skills-plugin/skills/claude-watch/scripts/log-tool.sh"
+            "command": "bash .logs/scripts/log-tool.sh"
           }
         ]
       }

@@ -1,5 +1,5 @@
 /**
- * @daax/retro - Agentic Retrospective Skill
+ * @agentic/retrospective - Agentic Retrospective Tool
  *
  * A structured, evidence-based retrospective tool for analyzing
  * human-agent collaboration in software development sprints.

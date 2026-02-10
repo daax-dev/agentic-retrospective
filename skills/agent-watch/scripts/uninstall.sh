@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# claude-watch uninstaller
+# agent-watch uninstaller
 # Removes telemetry hooks (preserves collected data)
 
 set -euo pipefail
@@ -11,8 +11,8 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m'
 
-info() { echo -e "${GREEN}[claude-watch]${NC} $1"; }
-warn() { echo -e "${YELLOW}[claude-watch]${NC} $1"; }
+info() { echo -e "${GREEN}[agent-watch]${NC} $1"; }
+warn() { echo -e "${YELLOW}[agent-watch]${NC} $1"; }
 
 SETTINGS_FILE="$PROJECT_DIR/.claude/settings.json"
 CLAUDE_MD="$PROJECT_DIR/CLAUDE.md"

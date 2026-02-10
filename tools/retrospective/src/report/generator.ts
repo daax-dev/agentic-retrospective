@@ -191,7 +191,7 @@ ${gap.recommendation}
 `;
     }
 
-    md += `For detailed instructions, see \`skills/retro/docs/fixing-telemetry-gaps.md\``;
+    md += `For detailed instructions, see \`docs/fixing-telemetry-gaps.md\``;
 
     return md;
   }

@@ -49,7 +49,7 @@ The install script:
 Capture quick feedback after each session using the micro-retro script:
 
 ```bash
-bash skills/agent-watch/scripts/micro-retro.sh
+bash .logs/scripts/micro-retro.sh
 ```
 
 This 30-second survey captures:
