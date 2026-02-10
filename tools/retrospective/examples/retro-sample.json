@@ -1,0 +1,264 @@
+{
+  "sprint_id": "sprint-42",
+  "period": {
+    "from": "2024-01-08T00:00:00Z",
+    "to": "2024-01-22T00:00:00Z"
+  },
+  "generated_at": "2024-01-23T10:00:00Z",
+  "data_completeness": {
+    "percentage": 60,
+    "sources": {
+      "git": true,
+      "decisions": true,
+      "agent_logs": true,
+      "ci": false,
+      "tests": false
+    },
+    "gaps": [
+      {
+        "gap_type": "missing_test_results",
+        "severity": "medium",
+        "impact": "Cannot analyze test pass rates, flakiness, or inner loop cycle times",
+        "recommendation": "Add JUnit XML output: pytest --junitxml=test-results/pytest.xml"
+      },
+      {
+        "gap_type": "missing_security_scans",
+        "severity": "low",
+        "impact": "Cannot analyze dependency vulnerability trends",
+        "recommendation": "Add Trivy to CI: trivy fs --format json --output .logs/security/trivy.json ."
+      }
+    ]
+  },
+  "summary": {
+    "commits": 47,
+    "contributors": 3,
+    "human_contributors": 2,
+    "agent_contributors": 1,
+    "lines_added": 3595,
+    "lines_removed": 1520,
+    "decisions_logged": 5,
+    "agent_commits": 18,
+    "agent_commit_percentage": 38.3
+  },
+  "scores": {
+    "delivery_predictability": {
+      "score": 4,
+      "confidence": "high",
+      "evidence": ["47 commits merged", "minor scope drift in 2 commits"],
+      "details": "Good delivery cadence with small commits, minor scope drift detected"
+    },
+    "test_loop_completeness": {
+      "score": 3,
+      "confidence": "low",
+      "evidence": ["12 'fix test' commits inferred", "no JUnit artifacts"],
+      "details": "Inferred iterative testing from commits, but cannot measure precisely"
+    },
+    "quality_maintainability": {
+      "score": 3,
+      "confidence": "medium",
+      "evidence": ["4 large commits >200 lines", "good documentation"],
+      "details": "Most commits small, but some large refactoring commits"
+    },
+    "security_posture": {
+      "score": 4,
+      "confidence": "medium",
+      "evidence": ["dec-003 JWT decision documented", "security review completed"],
+      "details": "Auth changes properly escalated and reviewed"
+    },
+    "collaboration_efficiency": {
+      "score": 4,
+      "confidence": "medium",
+      "evidence": ["38% agent commits", "2 scope drift incidents", "12 human interrupts"],
+      "details": "Effective collaboration with minor scope drift issues"
+    },
+    "decision_hygiene": {
+      "score": 4,
+      "confidence": "high",
+      "evidence": ["5 decisions logged", "3/3 one-way-doors escalated"],
+      "details": "Excellent escalation compliance, minor gap in rate limiter decision"
+    }
+  },
+  "findings": [
+    {
+      "id": "finding-001",
+      "severity": "medium",
+      "category": "scope_drift",
+      "title": "Agent scope drift in refactoring task",
+      "summary": "Agent added 340 lines of unrelated refactoring while working on auth task",
+      "evidence": ["commit:abc123", "commit:def456"],
+      "confidence": "high",
+      "impact": "Code review burden, potential for unintended side effects",
+      "recommendation": "Add explicit scope boundaries to task descriptions"
+    },
+    {
+      "id": "finding-002",
+      "severity": "low",
+      "category": "decision_gap",
+      "title": "Missing decision record for rate limit algorithm",
+      "summary": "Rate limiting middleware implemented without documented decision",
+      "evidence": ["src/middleware/rate-limit.ts"],
+      "confidence": "high",
+      "impact": "Rationale for algorithm choice not preserved",
+      "recommendation": "Create retroactive ADR for rate limiting approach"
+    },
+    {
+      "id": "finding-003",
+      "severity": "info",
+      "category": "agent_behavior",
+      "title": "Agent context loss observed",
+      "summary": "Agent asked same question about auth flow 3 times",
+      "evidence": ["agent_logs/session-001.jsonl:lines 45,89,123"],
+      "confidence": "medium",
+      "impact": "Human time spent re-explaining",
+      "recommendation": "Investigate session context persistence"
+    }
+  ],
+  "wins": [
+    {
+      "title": "Rapid authentication implementation",
+      "description": "JWT system delivered in 3 days vs 5 day estimate with zero security issues",
+      "evidence": ["pr:145", "dec-003"]
+    },
+    {
+      "title": "Strong decision logging adoption",
+      "description": "5 decisions logged this sprint, all one-way-doors properly escalated",
+      "evidence": [".logs/decisions/"]
+    },
+    {
+      "title": "Effective agent delegation",
+      "description": "Agent handled 18 commits independently with 0 critical bugs",
+      "evidence": ["agent_logs/"]
+    }
+  ],
+  "risks": [
+    {
+      "title": "Scope drift pattern emerging",
+      "description": "Agent added unrelated refactoring twice this sprint",
+      "evidence": ["commit:abc123", "commit:def456"],
+      "mitigation": "Add explicit scope boundaries to task descriptions"
+    },
+    {
+      "title": "Test result telemetry gap",
+      "description": "Cannot accurately measure inner loop health",
+      "evidence": ["data_completeness.gaps"],
+      "mitigation": "Add JUnit XML output to test commands"
+    },
+    {
+      "title": "JWT refresh race condition near-miss",
+      "description": "Race condition identified in code review, fixed before merge",
+      "evidence": ["pr:145 comments"],
+      "mitigation": "Add auth-specific test scenarios"
+    }
+  ],
+  "action_items": [
+    {
+      "id": "action-001",
+      "priority": "must_do",
+      "action": "Add explicit scope boundaries to task descriptions",
+      "rationale": "Prevent agent scope drift incidents",
+      "owner": null,
+      "success_metric": "0 scope drift incidents next sprint",
+      "effort": 1,
+      "impact": 4,
+      "risk_reduction": 4
+    },
+    {
+      "id": "action-002",
+      "priority": "must_do",
+      "action": "Configure test result artifacts",
+      "rationale": "Enable inner loop analysis for future retrospectives",
+      "owner": null,
+      "success_metric": "JUnit XML in CI output",
+      "effort": 1,
+      "impact": 3,
+      "risk_reduction": 2
+    },
+    {
+      "id": "action-003",
+      "priority": "next_sprint",
+      "action": "Create security escalation checklist",
+      "rationale": "Ensure all auth changes have decision records",
+      "owner": null,
+      "success_metric": "Checklist in PR template",
+      "effort": 2,
+      "impact": 4,
+      "risk_reduction": 4
+    },
+    {
+      "id": "action-004",
+      "priority": "next_sprint",
+      "action": "Add rate limit decision to ADR",
+      "rationale": "Document missing architectural decision",
+      "owner": null,
+      "success_metric": "ADR-002 created",
+      "effort": 1,
+      "impact": 2,
+      "risk_reduction": 2
+    },
+    {
+      "id": "action-005",
+      "priority": "next_sprint",
+      "action": "Set up dependency scanning",
+      "rationale": "Track security posture over time",
+      "owner": null,
+      "success_metric": "Trivy in CI pipeline",
+      "effort": 2,
+      "impact": 3,
+      "risk_reduction": 4
+    },
+    {
+      "id": "action-006",
+      "priority": "backlog",
+      "action": "Investigate agent context loss",
+      "rationale": "Improve handoff quality between sessions",
+      "owner": null,
+      "success_metric": "Reduced repeat questions",
+      "effort": 3,
+      "impact": 2,
+      "risk_reduction": 2
+    }
+  ],
+  "evidence_map": {
+    "commits": {
+      "abc123": {
+        "decisions": [],
+        "findings": ["finding-001"],
+        "category": "scope_drift"
+      },
+      "def456": {
+        "decisions": [],
+        "findings": ["finding-001"],
+        "category": "scope_drift"
+      }
+    },
+    "decisions": {
+      "dec-001": {
+        "commits": [],
+        "type": "one_way_door",
+        "escalated": true,
+        "category": "architecture"
+      },
+      "dec-002": {
+        "commits": ["motion-commit-id"],
+        "type": "two_way_door",
+        "escalated": false,
+        "category": "deps"
+      },
+      "dec-003": {
+        "commits": ["jwt-commit-id"],
+        "type": "one_way_door",
+        "escalated": true,
+        "category": "security"
+      }
+    },
+    "orphans": {
+      "commits_without_context": ["ghi789"],
+      "decisions_without_implementation": []
+    }
+  },
+  "metadata": {
+    "tool_version": "1.0.0",
+    "schema_version": "1.0",
+    "generated_by": "/retro"
+  }
+}

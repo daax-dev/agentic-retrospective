@@ -1,0 +1,25 @@
+{
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash feedback-skills-plugin/skills/claude-watch/scripts/log-prompt.sh"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash feedback-skills-plugin/skills/claude-watch/scripts/log-tool.sh"
+          }
+        ]
+      }
+    ]
+  }
+}

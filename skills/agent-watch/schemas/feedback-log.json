@@ -1,0 +1,53 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Micro-Retro Feedback Log Entry",
+  "description": "Post-session feedback capture for human-agent retrospectives",
+  "type": "object",
+  "required": ["timestamp", "session_id", "alignment", "rework_needed"],
+  "properties": {
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp when feedback was captured"
+    },
+    "session_id": {
+      "type": "string",
+      "description": "Unique identifier linking to the session"
+    },
+    "alignment": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 5,
+      "description": "How aligned was the agent with user intent (1-5)"
+    },
+    "rework_needed": {
+      "type": "string",
+      "enum": ["none", "minor", "significant", "unknown"],
+      "description": "Amount of rework required after the session"
+    },
+    "revision_cycles": {
+      "type": ["integer", "null"],
+      "minimum": 0,
+      "description": "Number of revision cycles during the session"
+    },
+    "improvement_suggestion": {
+      "type": "string",
+      "description": "User suggestion for improvement"
+    },
+    "worked_well": {
+      "type": "string",
+      "description": "What worked well during the session"
+    }
+  },
+  "examples": [
+    {
+      "timestamp": "2026-02-04T14:00:00Z",
+      "session_id": "sess-abc123",
+      "alignment": 4,
+      "rework_needed": "minor",
+      "revision_cycles": 2,
+      "improvement_suggestion": "Reference existing files when asking for similar patterns",
+      "worked_well": "Good at breaking down complex tasks into steps"
+    }
+  ]
+}

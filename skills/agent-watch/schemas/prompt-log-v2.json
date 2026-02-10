@@ -1,0 +1,72 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Prompt Log Entry (Enhanced v2)",
+  "description": "Enhanced prompt logging with complexity signals for human-agent retrospectives",
+  "type": "object",
+  "required": ["timestamp", "session_id", "prompt"],
+  "properties": {
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp when the prompt was submitted"
+    },
+    "session_id": {
+      "type": "string",
+      "description": "Unique identifier for the session"
+    },
+    "prompt": {
+      "type": "string",
+      "description": "The full text of the user's prompt"
+    },
+    "prompt_length": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Character count of the prompt"
+    },
+    "complexity_signals": {
+      "type": "object",
+      "description": "Signals indicating prompt quality and clarity",
+      "properties": {
+        "has_constraints": {
+          "type": "boolean",
+          "description": "Whether prompt includes constraint words (only, must, don't, etc.)"
+        },
+        "has_examples": {
+          "type": "boolean",
+          "description": "Whether prompt includes code examples or references"
+        },
+        "has_acceptance_criteria": {
+          "type": "boolean",
+          "description": "Whether prompt defines success criteria or expected outcomes"
+        },
+        "file_references": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Count of file paths/names referenced in the prompt"
+        },
+        "ambiguity_score": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Calculated ambiguity score (0.0 = clear, 1.0 = very ambiguous)"
+        }
+      },
+      "required": ["has_constraints", "has_examples", "has_acceptance_criteria", "file_references", "ambiguity_score"]
+    }
+  },
+  "examples": [
+    {
+      "timestamp": "2026-02-04T10:30:00Z",
+      "session_id": "sess-abc123",
+      "prompt": "Add JWT authentication to /api/users endpoint using the existing auth middleware in src/middleware/auth.ts",
+      "prompt_length": 98,
+      "complexity_signals": {
+        "has_constraints": true,
+        "has_examples": false,
+        "has_acceptance_criteria": false,
+        "file_references": 1,
+        "ambiguity_score": 0.25
+      }
+    }
+  ]
+}

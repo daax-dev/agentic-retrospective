@@ -1,0 +1,31 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs
+dist/
+*.tsbuildinfo
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test coverage
+coverage/
+
+# Environment
+.env
+.env.local
+
+# Logs (telemetry data - user-specific)
+.logs/
+
+# Lock files (optional - depends on your preference)
+# package-lock.json
+# bun.lock
