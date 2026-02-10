@@ -42,10 +42,10 @@ This creates `.logs/` directories and optionally updates `.gitignore`.
 
 ### 2. Work Normally
 
-Continue using your AI coding assistant. The hooks capture:
-- User prompts with complexity signals
-- Tool invocations
-- Architectural decisions (when logged)
+Continue using your AI coding assistant. The setup automatically configures Claude Code hooks that capture:
+- User prompts with complexity signals (via `UserPromptSubmit` hook)
+- Tool invocations (via `PostToolUse` hook)
+- Architectural decisions (when manually logged)
 
 ### 3. Capture Session Feedback (Optional)
 

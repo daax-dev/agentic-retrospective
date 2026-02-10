@@ -67,6 +67,12 @@ Reports score across 6 dimensions (0-5 scale):
 | Collaboration Efficiency | Human-agent handoffs |
 | Decision Hygiene | One-way-door escalation rate |
 
+## Requirements
+
+- **bash** - All scripts are bash-compatible (works on macOS, Linux, WSL)
+- **python3** - Required for JSON processing and analytics (fallback to basic mode without)
+- **git** - Required for commit analysis in retrospectives
+
 ## Compatibility
 
 This skill follows the [AgentSkills specification](https://agentskills.io/specification) and works with:

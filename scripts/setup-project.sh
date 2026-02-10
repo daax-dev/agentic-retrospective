@@ -74,6 +74,79 @@ else
     echo "$DECISION_PROMPT" > "$CLAUDE_MD"
 fi
 
+# 5. Configure Claude Code hooks (if Claude Code is detected)
+CLAUDE_SETTINGS_DIR="$PROJECT_DIR/.claude"
+CLAUDE_SETTINGS="$CLAUDE_SETTINGS_DIR/settings.json"
+
+# Create hooks configuration
+HOOKS_CONFIG='{
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.logs/scripts/log-prompt.sh",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.logs/scripts/log-tool.sh",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  }
+}'
+
+if [ -d "$CLAUDE_SETTINGS_DIR" ] || [ -f "$CLAUDE_SETTINGS" ]; then
+    # Claude Code is configured for this project
+    if [ -f "$CLAUDE_SETTINGS" ]; then
+        if grep -q '"hooks"' "$CLAUDE_SETTINGS" 2>/dev/null; then
+            warn "Hooks already configured in .claude/settings.json"
+            warn "Add manually if needed (see references/fixing-telemetry-gaps.md)"
+        else
+            # Merge hooks into existing settings using python3
+            if command -v python3 &> /dev/null; then
+                info "Adding hooks to .claude/settings.json..."
+                python3 -c "
+import json, sys
+
+# Read existing settings
+with open('$CLAUDE_SETTINGS', 'r') as f:
+    settings = json.load(f)
+
+# Add hooks
+hooks = json.loads('''$HOOKS_CONFIG''')
+settings['hooks'] = hooks['hooks']
+
+# Write back
+with open('$CLAUDE_SETTINGS', 'w') as f:
+    json.dump(settings, f, indent=2)
+    f.write('\n')
+" 2>/dev/null && info "Hooks configured successfully" || warn "Could not merge hooks (add manually)"
+            else
+                warn "python3 required to merge hooks into existing settings.json"
+            fi
+        fi
+    else
+        info "Creating .claude/settings.json with hooks..."
+        mkdir -p "$CLAUDE_SETTINGS_DIR"
+        echo "$HOOKS_CONFIG" > "$CLAUDE_SETTINGS"
+    fi
+else
+    info "Creating .claude/settings.json with hooks..."
+    mkdir -p "$CLAUDE_SETTINGS_DIR"
+    echo "$HOOKS_CONFIG" > "$CLAUDE_SETTINGS"
+fi
+
 info "Setup complete!"
 echo ""
 echo "Telemetry directories created:"
@@ -82,6 +155,8 @@ echo "  .logs/tools/      - Tool calls"
 echo "  .logs/decisions/  - Decision records"
 echo "  .logs/feedback/   - Session feedback"
 echo "  .logs/scripts/    - Hook scripts"
+echo ""
+echo "Claude Code hooks configured in .claude/settings.json"
 echo ""
 echo "Capture feedback:  bash .logs/scripts/micro-retro.sh"
 echo "Run retrospective: bash scripts/run-retrospective.sh"

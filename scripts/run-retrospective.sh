@@ -2,7 +2,8 @@
 # Run agentic retrospective analysis
 # Usage: run-retrospective.sh [--since "date"] [--json] [--verbose]
 
-set -euo pipefail
+set -uo pipefail
+# Note: Not using -e because some commands (like empty git output) return non-zero
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SKILL_ROOT="$(dirname "$SCRIPT_DIR")"
@@ -41,7 +42,12 @@ if [ "$COMMIT_COUNT" -gt 0 ]; then
     echo ""
 
     echo "### Contributors"
-    git shortlog -sn --since="$SINCE" 2>/dev/null | head -10
+    CONTRIBUTORS=$(git shortlog -sn --since="$SINCE" 2>/dev/null | head -10)
+    if [ -n "$CONTRIBUTORS" ]; then
+        echo "$CONTRIBUTORS"
+    else
+        echo "(No contributor data available)"
+    fi
     echo ""
 
     echo "### Files Most Changed"
@@ -52,7 +58,12 @@ if [ "$COMMIT_COUNT" -gt 0 ]; then
     FIX_COMMITS=$(git log --oneline --since="$SINCE" --grep="fix" --grep="bug" --grep="patch" -i 2>/dev/null | wc -l | tr -d ' ')
     FEATURE_COMMITS=$((COMMIT_COUNT - FIX_COMMITS))
     if [ "$FEATURE_COMMITS" -gt 0 ]; then
-        RATIO=$(echo "scale=1; $FIX_COMMITS / $FEATURE_COMMITS" | bc 2>/dev/null || echo "N/A")
+        # Use python3 for float division (cross-platform), fallback to integer
+        if command -v python3 &> /dev/null; then
+            RATIO=$(python3 -c "print(f'{$FIX_COMMITS / $FEATURE_COMMITS:.1f}')" 2>/dev/null || echo "N/A")
+        else
+            RATIO="$FIX_COMMITS/$FEATURE_COMMITS"
+        fi
         echo "### Fix-to-Feature Ratio"
         echo "Fix commits: $FIX_COMMITS"
         echo "Feature commits: $FEATURE_COMMITS"
@@ -67,7 +78,7 @@ echo ""
 
 LOGS_DIR="$PROJECT_DIR/.logs"
 
-if [ -d "$LOGS_DIR/prompts" ]; then
+if [ -d "$LOGS_DIR/prompts" ] && ls "$LOGS_DIR/prompts"/*.jsonl 1> /dev/null 2>&1; then
     PROMPT_COUNT=$(cat "$LOGS_DIR/prompts"/*.jsonl 2>/dev/null | wc -l | tr -d ' ')
     echo "Prompts logged: $PROMPT_COUNT"
 
@@ -80,14 +91,14 @@ else
     echo "Prompts: No data (run setup-project.sh first)"
 fi
 
-if [ -d "$LOGS_DIR/tools" ]; then
+if [ -d "$LOGS_DIR/tools" ] && ls "$LOGS_DIR/tools"/*.jsonl 1> /dev/null 2>&1; then
     TOOL_COUNT=$(cat "$LOGS_DIR/tools"/*.jsonl 2>/dev/null | wc -l | tr -d ' ')
     echo "Tool calls logged: $TOOL_COUNT"
 else
     echo "Tool calls: No data"
 fi
 
-if [ -d "$LOGS_DIR/decisions" ]; then
+if [ -d "$LOGS_DIR/decisions" ] && ls "$LOGS_DIR/decisions"/*.jsonl 1> /dev/null 2>&1; then
     DECISION_COUNT=$(cat "$LOGS_DIR/decisions"/*.jsonl 2>/dev/null | wc -l | tr -d ' ')
     echo "Decisions logged: $DECISION_COUNT"
 
@@ -100,7 +111,7 @@ else
     echo "Decisions: No data"
 fi
 
-if [ -d "$LOGS_DIR/feedback" ]; then
+if [ -d "$LOGS_DIR/feedback" ] && ls "$LOGS_DIR/feedback"/*.jsonl 1> /dev/null 2>&1; then
     FEEDBACK_COUNT=$(cat "$LOGS_DIR/feedback"/*.jsonl 2>/dev/null | wc -l | tr -d ' ')
     echo "Feedback entries: $FEEDBACK_COUNT"
 

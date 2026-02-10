@@ -26,6 +26,9 @@ coverage/
 # Logs (telemetry data - user-specific)
 .logs/
 
+# Claude Code local settings (user-specific)
+.claude/settings.local.json
+
 # Lock files (optional - depends on your preference)
 # package-lock.json
 # bun.lock
