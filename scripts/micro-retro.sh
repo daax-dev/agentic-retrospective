@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Post-session micro-retro capture
 # Quick 30-second feedback capture at end of session
-# Part of Phase 1: Foundation improvements
+# No jq dependency - uses python3 for JSON encoding
 
 set -euo pipefail
 
@@ -22,7 +22,7 @@ NC='\033[0m' # No Color
 
 echo ""
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-echo -e "${BLUE}       📋 Session Feedback (30 seconds)${NC}"
+echo -e "${BLUE}       Session Feedback (30 seconds)${NC}"
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo ""
 
@@ -56,55 +56,60 @@ echo ""
 echo -e "${YELLOW}3. How many revision cycles occurred? (0-10, press Enter to skip)${NC}"
 read -p "   Revision cycles: " REVISION_CYCLES
 if [[ -z "$REVISION_CYCLES" ]] || ! [[ "$REVISION_CYCLES" =~ ^[0-9]+$ ]]; then
-    REVISION_CYCLES="null"
+    REVISION_CYCLES=""
 fi
 
 # Question 4: One improvement suggestion
 echo ""
 echo -e "${YELLOW}4. One thing to improve next time? (press Enter to skip)${NC}"
 read -p "   Improvement: " IMPROVEMENT
-if [[ -z "$IMPROVEMENT" ]]; then
-    IMPROVEMENT=""
-fi
 
 # Question 5: What worked well (optional)
 echo ""
 echo -e "${YELLOW}5. What worked well? (press Enter to skip)${NC}"
 read -p "   Worked well: " WORKED_WELL
-if [[ -z "$WORKED_WELL" ]]; then
-    WORKED_WELL=""
-fi
 
 # Generate timestamp
 TIMESTAMP=$(date -u +%Y-%m-%dT%H:%M:%SZ)
 
-# Ensure jq is available for proper JSON escaping
-if ! command -v jq &> /dev/null; then
-    echo -e "${RED}Error: 'jq' is required but not installed. Please install jq to log feedback.${NC}" >&2
-    exit 1
+# Write log entry using python3 for proper JSON encoding
+if command -v python3 &> /dev/null; then
+    MICRO_TIMESTAMP="$TIMESTAMP" \
+    MICRO_SESSION_ID="$SESSION_ID" \
+    MICRO_ALIGNMENT="$ALIGNMENT" \
+    MICRO_REWORK="$REWORK" \
+    MICRO_REVISION_CYCLES="${REVISION_CYCLES}" \
+    MICRO_IMPROVEMENT="$IMPROVEMENT" \
+    MICRO_WORKED_WELL="$WORKED_WELL" \
+    python3 -c "
+import json, os
+
+rev = os.environ.get('MICRO_REVISION_CYCLES', '')
+entry = {
+    'timestamp': os.environ['MICRO_TIMESTAMP'],
+    'session_id': os.environ['MICRO_SESSION_ID'],
+    'alignment': int(os.environ['MICRO_ALIGNMENT']),
+    'rework_needed': os.environ['MICRO_REWORK'],
+    'revision_cycles': int(rev) if rev else None,
+    'improvement_suggestion': os.environ.get('MICRO_IMPROVEMENT', ''),
+    'worked_well': os.environ.get('MICRO_WORKED_WELL', ''),
+}
+print(json.dumps(entry))
+" >> "$LOG_FILE"
+else
+    # Bash fallback - escape backslashes first, then double quotes
+    REV_JSON="${REVISION_CYCLES:-null}"
+    if [[ "$REV_JSON" != "null" ]]; then
+        REV_JSON="$REV_JSON"
+    fi
+    # Escape backslashes then double quotes in free-text fields
+    IMPROVEMENT_ESC=$(printf '%s' "$IMPROVEMENT" | sed 's/\\/\\\\/g; s/"/\\"/g')
+    WORKED_WELL_ESC=$(printf '%s' "$WORKED_WELL" | sed 's/\\/\\\\/g; s/"/\\"/g')
+    echo "{\"timestamp\":\"$TIMESTAMP\",\"session_id\":\"$SESSION_ID\",\"alignment\":$ALIGNMENT,\"rework_needed\":\"$REWORK\",\"revision_cycles\":$REV_JSON,\"improvement_suggestion\":\"$IMPROVEMENT_ESC\",\"worked_well\":\"$WORKED_WELL_ESC\"}" >> "$LOG_FILE"
 fi
 
-# Write log entry using jq for proper JSON encoding
-jq -n \
-    --arg ts "$TIMESTAMP" \
-    --arg sid "$SESSION_ID" \
-    --argjson alignment "$ALIGNMENT" \
-    --arg rework "$REWORK" \
-    --argjson revision_cycles "$REVISION_CYCLES" \
-    --arg improvement "$IMPROVEMENT" \
-    --arg worked_well "$WORKED_WELL" \
-    '{
-        timestamp: $ts,
-        session_id: $sid,
-        alignment: $alignment,
-        rework_needed: $rework,
-        revision_cycles: $revision_cycles,
-        improvement_suggestion: $improvement,
-        worked_well: $worked_well
-    }' >> "$LOG_FILE"
-
 echo ""
-echo -e "${GREEN}✓ Feedback logged to $LOG_FILE${NC}"
+echo -e "${GREEN}Feedback logged to $LOG_FILE${NC}"
 
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo ""

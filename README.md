@@ -1,127 +1,62 @@
 # Agentic Retrospective
 
-Evidence-based sprint retrospectives for human-agent collaboration. Analyze your development sessions with AI coding assistants (Claude Code, Gemini CLI) and generate actionable insights.
+[![AgentSkills](https://img.shields.io/badge/AgentSkills-compatible-blue)](https://agentskills.io)
+
+Evidence-based sprint retrospectives for human-agent collaboration. An [AgentSkills](https://agentskills.io)-compatible skill that works with Claude Code, Gemini CLI, Cursor, and other agent products.
 
 ## Overview
 
-Agentic Retrospective provides a complete feedback loop for AI-assisted development:
+Agentic Retrospective provides:
 
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                         DATA FLOW                                    │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                      │
-│   Claude Code / Gemini CLI / etc.                                    │
-│              │                                                       │
-│              ▼                                                       │
-│   ┌─────────────────────┐                                           │
-│   │    agent-watch      │  ◄── PASSIVE CAPTURE (automatic)          │
-│   │      (skill)        │      transcripts, prompts, tools, tokens  │
-│   └──────────┬──────────┘                                           │
-│              │                                                       │
-│              ▼                                                       │
-│   ┌─────────────────────┐                                           │
-│   │      .logs/         │  ◄── STORAGE                              │
-│   │   (filesystem)      │                                           │
-│   └──────────┬──────────┘                                           │
-│              │                                                       │
-│              ▼                                                       │
-│   ┌─────────────────────┐                                           │
-│   │ agentic-retrospective│  ◄── ANALYZE + ACTIVE FEEDBACK           │
-│   │      (skill)        │      reports, micro-retro, scoring        │
-│   └──────────┬──────────┘                                           │
-│              │                                                       │
-│              ├───────────────┐                                       │
-│              ▼               ▼                                       │
-│   ┌─────────────────┐  ┌─────────────────┐                          │
-│   │docs/retrospectives│  │.logs/feedback/ │                          │
-│   │   (reports)     │  │(micro-retro)   │                          │
-│   └─────────────────┘  └─────────────────┘                          │
-│                                                                      │
-└─────────────────────────────────────────────────────────────────────┘
-```
-
-## Components
-
-### Skills
-
-| Skill | Purpose |
-|-------|---------|
-| **agent-watch** | Captures telemetry: prompts, tool calls, decisions, session transcripts |
-| **agentic-retrospective** | Analyzes captured data and generates retrospective reports |
-
-### Tools
-
-| Tool | Purpose |
-|------|---------|
-| **tools/retrospective** | TypeScript CLI for running retrospectives and generating reports |
+1. **Telemetry Capture** - Hooks that log prompts, tool calls, and decisions
+2. **Retrospective Analysis** - Analyzes captured data and generates reports
 
 ## Quick Start
 
-### 1. Install Agent Watch
-
-Set up telemetry capture in your project:
+### 1. Set Up Telemetry
 
 ```bash
-bash skills/agent-watch/scripts/install.sh
+bash scripts/setup-project.sh
 ```
-
-This creates the `.logs/` directory structure and installs Claude Code hooks.
 
 ### 2. Work Normally
 
-Continue using Claude Code, Gemini CLI, or other AI coding assistants. Agent Watch captures:
+Continue using your AI coding assistant. Telemetry is captured automatically.
 
-- User prompts with complexity signals
-- Tool invocations
-- Architectural decisions
-- Session feedback (when captured)
-
-### 3. Capture Session Feedback (Optional)
-
-After each session, run a quick 30-second feedback survey:
+### 3. Capture Session Feedback
 
 ```bash
-bash skills/agent-watch/scripts/micro-retro.sh
+bash scripts/micro-retro.sh
 ```
 
-### 4. Run a Retrospective
-
-Generate an evidence-based retrospective report:
+### 4. Run Retrospective
 
 ```bash
-bash skills/agentic-retrospective/scripts/run.sh
+bash scripts/run-retrospective.sh
 ```
 
-Or with the TypeScript CLI:
+## Skill Structure
 
-```bash
-cd tools/retrospective
-npm install && npm run build
-npm run start
+```
+agentic-retrospective/
+├── SKILL.md              # Skill definition (AgentSkills format)
+├── scripts/
+│   ├── setup-project.sh  # Initialize .logs/ directories
+│   ├── log-prompt.sh     # Hook: capture user prompts
+│   ├── log-tool.sh       # Hook: capture tool calls
+│   ├── micro-retro.sh    # Capture post-session feedback
+│   └── run-retrospective.sh
+├── references/
+│   ├── agent-watch.md
+│   ├── agentic-retrospective.md
+│   ├── fixing-telemetry-gaps.md
+│   └── schemas/
+└── assets/
 ```
 
-## What Gets Captured
+## Scoring Dimensions
 
-| Data Type | Location | Description |
-|-----------|----------|-------------|
-| Prompts | `.logs/prompts/YYYY-MM-DD.jsonl` | User prompts with complexity signals |
-| Tools | `.logs/tools/YYYY-MM-DD.jsonl` | All tool invocations |
-| Decisions | `.logs/decisions/YYYY-MM-DD.jsonl` | Architectural decisions |
-| Feedback | `.logs/feedback/YYYY-MM-DD.jsonl` | Post-session micro-retro |
-| Sessions | `.logs/sessions/<id>/` | Full session transcripts |
-
-## Report Contents
-
-Retrospectives include:
-
-- **TL;DR Summary** - At-a-glance sprint health
-- **Human Partner Insights** - Prompt patterns, improvement suggestions
-- **Fix-to-Feature Ratio** - Rework health indicator
-- **Scoring Dashboard** - 6 dimension scores (0-5)
-- **Action Items** - Prioritized improvements
-
-### Scoring Dimensions
+Reports score across 6 dimensions (0-5 scale):
 
 | Dimension | What It Measures |
 |-----------|------------------|
@@ -132,12 +67,15 @@ Retrospectives include:
 | Collaboration Efficiency | Human-agent handoffs |
 | Decision Hygiene | One-way-door escalation rate |
 
-## Documentation
+## Compatibility
 
-- [Agent Watch Specification](docs/agent-watch.md)
-- [Agentic Retrospective Specification](docs/agentic-retrospective.md)
-- [3-Agent Strategy](docs/3agent-strategy.md) - Multi-agent collaborative design
-- [Entire.io Review](docs/entire-review.md) - Competitive analysis and roadmap
+This skill follows the [AgentSkills specification](https://agentskills.io/specification) and works with:
+
+- Claude Code
+- Gemini CLI
+- Cursor
+- VS Code (with agent extensions)
+- And other AgentSkills-compatible products
 
 ## License
 
