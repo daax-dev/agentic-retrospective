@@ -1,0 +1,26 @@
+{
+  "name": "agentic-retrospective-marketplace",
+  "owner": {
+    "name": "daax-dev",
+    "email": "jason@peregrinesummit.com"
+  },
+  "description": "Evidence-based sprint retrospectives for human-agent collaboration",
+  "plugins": [
+    {
+      "name": "agentic-retrospective",
+      "source": ".",
+      "description": "Evidence-based sprint retrospectives with telemetry capture and 6-dimension scoring. Includes /retrospective and /micro-retrospective skills.",
+      "version": "1.0.0",
+      "author": {
+        "name": "daax-dev"
+      },
+      "keywords": [
+        "retrospective",
+        "telemetry",
+        "feedback",
+        "scoring",
+        "collaboration"
+      ]
+    }
+  ]
+}

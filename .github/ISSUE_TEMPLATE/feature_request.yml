@@ -1,0 +1,114 @@
+name: Feature Request
+description: Suggest a new feature or enhancement for agentic-retrospective
+title: "[Feature]: "
+labels: ["enhancement", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Before Submitting
+
+        > **Note**: "Nice to have" is not a strong use case. Please explain the specific problem this feature would solve.
+
+        - [ ] I have searched existing issues and discussions for similar feature requests
+        - [ ] This feature aligns with agentic-retrospective's goals of evidence-based human-agent collaboration
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: Feature Category
+      description: What area does this feature relate to?
+      options:
+        - CLI Commands - new command or subcommand
+        - Telemetry - new data capture capabilities
+        - Scoring - new dimension or metric
+        - Reporting - new report format or insights
+        - Integrations - new agent tool support
+        - Hooks - new hook types or triggers
+        - AgentSkills - specification compatibility
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem Statement
+      description: What problem does this feature solve? What pain point does it address?
+      placeholder: |
+        I'm always frustrated when...
+        Currently there's no way to...
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution
+      description: Describe the solution you'd like to see
+      placeholder: |
+        I would like agentic-retrospective to...
+        This could work by...
+    validations:
+      required: true
+
+  - type: textarea
+    id: use-cases
+    attributes:
+      label: Use Cases
+      description: Describe specific scenarios where this feature would be valuable
+      placeholder: |
+        1. During sprint retrospectives when...
+        2. When analyzing human-agent collaboration patterns...
+        3. For teams that need to track...
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: What alternatives have you considered? Are there workarounds you're using?
+      placeholder: |
+        I've tried...
+        The current workaround is...
+
+  - type: dropdown
+    id: scoring-dimension
+    attributes:
+      label: Related Scoring Dimension (if applicable)
+      description: If this relates to a specific retrospective scoring dimension, select it
+      options:
+        - N/A
+        - Delivery Predictability
+        - Test Loop Completeness
+        - Quality/Maintainability
+        - Security Posture
+        - Collaboration Efficiency
+        - Decision Hygiene
+        - New Dimension (describe in solution)
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      description: How critical is this feature for your workflow?
+      options:
+        - Low - Nice to have
+        - Medium - Would improve my workflow
+        - High - Significantly impacts my productivity
+        - Critical - Blocking my work
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: contribution
+    attributes:
+      label: Contribution
+      options:
+        - label: I am willing to contribute this feature myself
+          required: false
+        - label: I can help test this feature when implemented
+          required: false
+        - label: I can help write documentation for this feature
+          required: false

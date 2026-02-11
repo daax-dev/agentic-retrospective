@@ -23,14 +23,14 @@ def setup(project_dir: Path | None) -> None:
     do_setup(project_dir)
 
 
-@cli.command("micro-retro")
+@cli.command("micro-retrospective")
 @click.option("--session-id", "-s", default=None, help="Session ID for feedback")
 @click.option("--project-dir", "-p", type=click.Path(exists=True, path_type=Path), default=None)
-def micro_retro(session_id: str | None, project_dir: Path | None) -> None:
+def micro_retrospective(session_id: str | None, project_dir: Path | None) -> None:
     """Capture post-session feedback (30 seconds)."""
-    from .commands.micro_retro import micro_retro as do_micro_retro
+    from .commands.micro_retrospective import micro_retrospective as do_micro_retrospective
 
-    do_micro_retro(session_id, project_dir)
+    do_micro_retrospective(session_id, project_dir)
 
 
 @cli.command("run")
@@ -39,9 +39,9 @@ def micro_retro(session_id: str | None, project_dir: Path | None) -> None:
 @click.option("--project-dir", "-p", type=click.Path(exists=True, path_type=Path), default=None)
 def run(since: str, verbose: bool, project_dir: Path | None) -> None:
     """Run retrospective analysis."""
-    from .commands.run_retro import run_retro
+    from .commands.run_retrospective import run_retrospective
 
-    run_retro(since, verbose, project_dir)
+    run_retrospective(since, verbose, project_dir)
 
 
 @cli.command()

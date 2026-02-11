@@ -21,7 +21,7 @@ log_decision("what", "why", "one_way_door|two_way_door", "human|agent")
 
 Or via CLI:
 ```bash
-agentic-retro decision "what" --rationale "why" --type two_way_door
+agentic-retrospective decision "what" --rationale "why" --type two_way_door
 ```
 
 **Log when:** Choosing architectures, selecting dependencies, making trade-offs.
@@ -127,5 +127,5 @@ def setup(project_dir: Path | None = None) -> None:
     console.print()
     console.print("Claude Code hooks configured in .claude/settings.json")
     console.print()
-    console.print("Capture feedback:  agentic-retro micro-retro")
-    console.print("Run retrospective: agentic-retro run")
+    console.print("Capture feedback:  agentic-retrospective micro-retrospective")
+    console.print("Run retrospective: agentic-retrospective run")

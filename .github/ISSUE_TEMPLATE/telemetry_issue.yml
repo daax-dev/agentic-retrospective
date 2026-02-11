@@ -1,0 +1,131 @@
+name: Telemetry/Reporting Issue
+description: Report issues with telemetry capture, data quality, or retrospective reports
+title: "[Telemetry]: "
+labels: ["telemetry", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Telemetry & Reporting Issues
+
+        Use this template to report issues with:
+        - Missing or incomplete telemetry data
+        - Incorrect retrospective scores or insights
+        - Hook configuration problems
+        - Data format or schema issues
+
+        - [ ] I have run `agentic-retro setup` to initialize telemetry
+        - [ ] I have checked that `.logs/` directories exist in my project
+
+  - type: dropdown
+    id: issue-type
+    attributes:
+      label: Issue Type
+      description: What kind of telemetry/reporting issue is this?
+      options:
+        - Missing data - telemetry not being captured
+        - Incorrect data - values don't match reality
+        - Scoring issue - retrospective scores seem wrong
+        - Hook failure - hooks not firing or erroring
+        - Data format - JSONL schema or parsing issues
+        - Report generation - run command problems
+    validations:
+      required: true
+
+  - type: dropdown
+    id: data-type
+    attributes:
+      label: Affected Data Type
+      description: Which telemetry data type is affected?
+      options:
+        - Prompts (.logs/prompts/)
+        - Tools (.logs/tools/)
+        - Decisions (.logs/decisions/)
+        - Feedback (.logs/feedback/)
+        - Multiple types
+        - Not applicable
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Issue Description
+      description: Describe the telemetry or reporting issue in detail
+      placeholder: |
+        What's happening with the telemetry capture or report generation?
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected-data
+    attributes:
+      label: Expected Data/Behavior
+      description: What data did you expect to be captured or what report output did you expect?
+      placeholder: |
+        I expected the retrospective to show...
+        The telemetry should have captured...
+
+  - type: textarea
+    id: actual-data
+    attributes:
+      label: Actual Data/Behavior
+      description: What data was actually captured or what report output did you get?
+      placeholder: |
+        Instead, the report showed...
+        The .logs/ files contain...
+
+  - type: textarea
+    id: sample-data
+    attributes:
+      label: Sample Telemetry Data
+      description: Paste relevant entries from .logs/ files (redact sensitive information)
+      render: json
+      placeholder: |
+        {"timestamp": "2024-01-15T10:30:00Z", "tool": "Edit", ...}
+
+  - type: textarea
+    id: hooks-config
+    attributes:
+      label: Hooks Configuration
+      description: Paste your hooks.json or relevant hook configuration
+      render: json
+      placeholder: |
+        {
+          "hooks": [...]
+        }
+
+  - type: input
+    id: version
+    attributes:
+      label: agentic-retrospective Version
+      description: Output of `agentic-retro --version`
+      placeholder: "1.0.0"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: agent-tool
+    attributes:
+      label: AI Agent Tool
+      description: Which AI coding assistant are you using?
+      options:
+        - Claude Code
+        - Gemini CLI
+        - Cursor
+        - VS Code (with agent extension)
+        - Other
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Final Checklist
+      options:
+        - label: I have run `agentic-retro setup` successfully
+          required: true
+        - label: I have verified hooks are configured correctly
+          required: false
+        - label: I have included sample data (with sensitive info redacted)
+          required: false

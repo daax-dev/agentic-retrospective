@@ -22,7 +22,7 @@ uv pip install git+https://github.com/daax-dev/agentic-retrospective
 ### 1. Set Up Telemetry
 
 ```bash
-agentic-retro setup
+agentic-retrospective setup
 ```
 
 Creates `.logs/` directories and configures Claude Code hooks.
@@ -37,7 +37,7 @@ Continue using your AI coding assistant. Hooks capture:
 ### 3. Capture Session Feedback (Optional)
 
 ```bash
-agentic-retro micro-retro
+agentic-retrospective micro-retrospective
 ```
 
 Quick 30-second feedback survey after sessions.
@@ -45,17 +45,17 @@ Quick 30-second feedback survey after sessions.
 ### 4. Run Retrospective
 
 ```bash
-agentic-retro run
+agentic-retrospective run
 ```
 
 ## CLI Commands
 
 | Command | Purpose |
 |---------|---------|
-| `agentic-retro setup` | Initialize .logs/ directories and hooks |
-| `agentic-retro micro-retro` | Capture post-session feedback |
-| `agentic-retro run` | Generate retrospective report |
-| `agentic-retro decision` | Log an architectural decision |
+| `agentic-retrospective setup` | Initialize .logs/ directories and hooks |
+| `agentic-retrospective micro-retrospective` | Capture post-session feedback |
+| `agentic-retrospective run` | Generate retrospective report |
+| `agentic-retrospective decision` | Log an architectural decision |
 
 ## What Gets Captured
 
@@ -64,7 +64,7 @@ agentic-retro run
 | Prompts | `.logs/prompts/YYYY-MM-DD.jsonl` | User prompts with complexity signals |
 | Tools | `.logs/tools/YYYY-MM-DD.jsonl` | All tool invocations |
 | Decisions | `.logs/decisions/YYYY-MM-DD.jsonl` | Architectural decisions |
-| Feedback | `.logs/feedback/YYYY-MM-DD.jsonl` | Post-session micro-retro |
+| Feedback | `.logs/feedback/YYYY-MM-DD.jsonl` | Post-session micro-retrospective |
 
 ## Scoring Dimensions
 
@@ -84,7 +84,7 @@ Reports score across 6 dimensions (0-5 scale):
 Log architectural decisions during development:
 
 ```bash
-agentic-retro decision "Use Zod for validation" \
+agentic-retrospective decision "Use Zod for validation" \
   --rationale "Type inference and runtime validation" \
   --type two_way_door \
   --actor agent

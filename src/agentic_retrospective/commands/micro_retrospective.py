@@ -1,4 +1,4 @@
-"""Post-session micro-retro feedback capture."""
+"""Post-session micro-retrospective feedback capture."""
 
 import json
 import os
@@ -11,7 +11,7 @@ from rich.prompt import IntPrompt, Prompt
 console = Console()
 
 
-def micro_retro(session_id: str | None = None, project_dir: Path | None = None) -> None:
+def micro_retrospective(session_id: str | None = None, project_dir: Path | None = None) -> None:
     """Capture quick post-session feedback."""
     project_dir = project_dir or Path(os.environ.get("CLAUDE_PROJECT_DIR", os.getcwd()))
     project_dir = Path(project_dir)

@@ -7,67 +7,72 @@ Evidence-based sprint retrospectives for human-agent collaboration. An [AgentSki
 
 ## Installation
 
-### From GitHub (recommended for now)
+### Claude Code Marketplace (Recommended)
+
+Add the marketplace and install the plugin:
 
 ```bash
-uv pip install git+https://github.com/daax-dev/agentic-retrospective
+# Add the marketplace
+claude /marketplace add daax-dev/agentic-retrospective
+
+# Install the plugin
+claude /plugin add daax-dev/agentic-retrospective
 ```
 
-### From PyPI (coming soon)
-
-```bash
-uv pip install agentic-retrospective
-# or
-pip install agentic-retrospective
+Or from within a Claude Code session:
+```
+/marketplace add daax-dev/agentic-retrospective
+/plugin add daax-dev/agentic-retrospective
 ```
 
-### As Claude Code Plugin
+### Direct Plugin Install
 
 ```bash
 claude --plugin-dir /path/to/agentic-retrospective
 ```
 
-Or install from a marketplace once published.
+### Python Package (for CLI usage)
+
+```bash
+uv pip install git+https://github.com/daax-dev/agentic-retrospective
+# or
+pip install agentic-retrospective
+```
 
 ## Quick Start
 
-### 1. Set Up Telemetry
+### In Claude Code (after plugin install)
 
-```bash
-agentic-retro setup
+Telemetry starts automatically. Use slash commands:
+
+```
+/retrospective                     # Run full retrospective
+/retrospective --since "1 week"    # Custom time range
+/micro-retrospective               # Quick 30-second feedback
 ```
 
-This creates `.logs/` directories and configures Claude Code hooks.
-
-### 2. Work Normally
-
-Continue using your AI coding assistant. Telemetry is captured automatically via hooks.
-
-### 3. Capture Session Feedback
+### Via CLI
 
 ```bash
-agentic-retro micro-retro
+# Set up telemetry directories
+agentic-retrospective setup
+
+# Run retrospective
+agentic-retrospective run --since "1 week ago" --verbose
+
+# Quick feedback
+agentic-retrospective micro-retrospective
+
+# Log decisions
+agentic-retrospective decision "Use Zod for validation" --rationale "Type inference" --type two_way_door
 ```
 
-Quick 30-second survey after sessions.
+### What Happens Automatically
 
-### 4. Run Retrospective
-
-```bash
-agentic-retro run
-```
-
-Or with options:
-
-```bash
-agentic-retro run --since "1 week ago" --verbose
-```
-
-### 5. Log Decisions
-
-```bash
-agentic-retro decision "Use Zod for validation" --rationale "Type inference" --type two_way_door
-```
+When the plugin is installed, Claude Code hooks capture:
+- Every prompt you send (with complexity analysis)
+- Every tool call the agent makes
+- Session timing and patterns
 
 ## What Gets Captured
 
@@ -76,7 +81,7 @@ agentic-retro decision "Use Zod for validation" --rationale "Type inference" --t
 | Prompts | `.logs/prompts/YYYY-MM-DD.jsonl` | User prompts with complexity signals |
 | Tools | `.logs/tools/YYYY-MM-DD.jsonl` | All tool invocations |
 | Decisions | `.logs/decisions/YYYY-MM-DD.jsonl` | Architectural decisions |
-| Feedback | `.logs/feedback/YYYY-MM-DD.jsonl` | Post-session micro-retro |
+| Feedback | `.logs/feedback/YYYY-MM-DD.jsonl` | Post-session micro-retrospective |
 
 ## Scoring Dimensions
 
@@ -94,11 +99,11 @@ Reports score across 6 dimensions (0-5 scale):
 ## CLI Reference
 
 ```
-Usage: agentic-retro [OPTIONS] COMMAND [ARGS]...
+Usage: agentic-retrospective [OPTIONS] COMMAND [ARGS]...
 
 Commands:
   setup       Set up project for telemetry capture
-  micro-retro Capture post-session feedback (30 seconds)
+  micro-retrospective Capture post-session feedback (30 seconds)
   run         Run retrospective analysis
   decision    Log an architectural decision
 ```
@@ -107,22 +112,34 @@ Commands:
 
 ```
 agentic-retrospective/
-├── .claude-plugin/           # Claude Code plugin manifest
-│   └── plugin.json
-├── hooks/                    # Plugin hooks configuration
-│   └── hooks.json
-├── skills/                   # AgentSkills definition
-│   └── retrospective/
-│       └── SKILL.md
+├── .claude-plugin/           # Claude Code plugin + marketplace
+│   ├── plugin.json           # Plugin manifest
+│   └── marketplace.json      # Marketplace registry
+├── hooks/                    # Auto-registered hooks
+│   └── hooks.json            # SessionStart, UserPromptSubmit, PostToolUse
+├── scripts/                  # Hook implementations (bash)
+│   ├── ensure-logs-dir.sh
+│   ├── log-prompt.sh
+│   ├── log-tool.sh
+│   ├── micro-retrospective.sh
+│   └── run-retrospective.sh
+├── skills/                   # Slash command definitions
+│   ├── retrospective/
+│   │   └── SKILL.md          # /retrospective
+│   └── micro-retrospective/
+│       └── SKILL.md          # /micro-retrospective
 ├── src/
 │   └── agentic_retrospective/
 │       ├── cli.py            # CLI entry points
-│       ├── commands/         # Command implementations
-│       ├── hooks/            # Hook handlers
-│       └── models.py         # Pydantic models
+│       ├── runner.py         # Main orchestration
+│       ├── models.py         # Pydantic models (46 types)
+│       ├── scoring/          # 6-dimension scoring rubrics
+│       ├── analyzers/        # Git, Decision, Human Insights
+│       ├── report/           # Markdown/JSON report generation
+│       └── commands/         # CLI command implementations
+├── tests/                    # 247 tests, 78% coverage
 ├── pyproject.toml            # Python package config
-├── SKILL.md                  # AgentSkills.io format
-└── README.md
+└── SKILL.md                  # AgentSkills.io format
 ```
 
 ## Compatibility

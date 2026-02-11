@@ -1,0 +1,151 @@
+name: Bug Report
+description: Report a bug or unexpected behavior in agentic-retrospective
+title: "[Bug]: "
+labels: ["bug", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Before Submitting
+
+        - [ ] I have searched existing issues to ensure this bug has not been reported
+        - [ ] I have checked the [README](https://github.com/daax-dev/agentic-retrospective#readme) for relevant information
+        - [ ] I am using a supported version of Python (3.10+)
+
+        Thank you for taking the time to report this issue! Please provide as much detail as possible.
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Affected Component
+      description: Which part of agentic-retrospective is affected?
+      options:
+        - CLI - setup command
+        - CLI - micro-retro command
+        - CLI - run command
+        - CLI - decision command
+        - Hooks - prompt logging
+        - Hooks - tool logging
+        - Telemetry - data capture
+        - Telemetry - report generation
+        - Plugin - Claude Code integration
+        - AgentSkills - compatibility
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description
+      description: A clear and concise description of what the bug is
+      placeholder: What happened?
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to Reproduce
+      description: Detailed steps to reproduce the behavior
+      placeholder: |
+        1. Run command `agentic-retro ...`
+        2. See error '...'
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What you expected to happen
+      placeholder: What should have happened?
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Behavior
+      description: What actually happened
+      placeholder: What happened instead?
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: agentic-retrospective Version
+      description: Output of `agentic-retro --version` or `pip show agentic-retrospective`
+      placeholder: "1.0.0"
+    validations:
+      required: true
+
+  - type: input
+    id: python-version
+    attributes:
+      label: Python Version
+      description: Output of `python --version`
+      placeholder: "3.12.0"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating System
+      options:
+        - macOS
+        - Linux (Ubuntu/Debian)
+        - Linux (RHEL/CentOS/Fedora)
+        - Linux (Other)
+        - Windows
+        - Windows WSL
+    validations:
+      required: true
+
+  - type: dropdown
+    id: agent-tool
+    attributes:
+      label: AI Agent Tool
+      description: Which AI coding assistant are you using?
+      options:
+        - Claude Code
+        - Gemini CLI
+        - Cursor
+        - VS Code (with agent extension)
+        - Other
+        - N/A
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant Logs
+      description: Paste any relevant log output, error messages, or .logs/ contents
+      render: shell
+      placeholder: |
+        $ agentic-retro run
+        Error: ...
+
+  - type: textarea
+    id: telemetry-sample
+    attributes:
+      label: Telemetry Sample (if applicable)
+      description: If the bug involves telemetry capture, paste a sample from .logs/ (redact sensitive info)
+      render: json
+      placeholder: |
+        {"timestamp": "...", "tool": "...", ...}
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Final Checklist
+      options:
+        - label: I have provided all requested information
+          required: true
+        - label: I can reproduce this issue consistently
+          required: false
+        - label: I have redacted any sensitive information from logs/telemetry
+          required: false

@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: GitHub Discussions
+    url: https://github.com/daax-dev/agentic-retrospective/discussions
+    about: Ask questions, share ideas, and discuss retrospective practices with the community
+  - name: AgentSkills Documentation
+    url: https://agentskills.io
+    about: Learn about the AgentSkills specification and compatible tools
+  - name: Security Vulnerabilities
+    url: https://github.com/daax-dev/agentic-retrospective/security/policy
+    about: Report security vulnerabilities privately (do not file public issues)

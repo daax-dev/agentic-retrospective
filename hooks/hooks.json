@@ -1,23 +1,34 @@
 {
   "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/scripts/ensure-logs-dir.sh\""
+          }
+        ]
+      }
+    ],
     "UserPromptSubmit": [
       {
         "hooks": [
           {
             "type": "command",
-            "command": "python -m agentic_retrospective.hooks.log_prompt",
-            "timeout": 30
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/scripts/log-prompt.sh\"",
+            "timeout": 5000
           }
         ]
       }
     ],
     "PostToolUse": [
       {
+        "matcher": "*",
         "hooks": [
           {
             "type": "command",
-            "command": "python -m agentic_retrospective.hooks.log_tool",
-            "timeout": 30
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/scripts/log-tool.sh\"",
+            "timeout": 5000
           }
         ]
       }

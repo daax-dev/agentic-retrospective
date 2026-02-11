@@ -1,0 +1,26 @@
+{
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python -m agentic_retrospective.hooks.log_prompt",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python -m agentic_retrospective.hooks.log_tool",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  }
+}

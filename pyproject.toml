@@ -5,7 +5,7 @@ description = "Evidence-based sprint retrospectives for human-agent collaboratio
 readme = "README.md"
 license = "Apache-2.0"
 requires-python = ">=3.10"
-authors = [{ name = "jpoley" }]
+authors = [{ name = "Jason Poley", email = "jason@peregrinesummit.com" }]
 keywords = ["retrospective", "agent", "telemetry", "claude", "agentskills"]
 classifiers = [
     "Development Status :: 4 - Beta",
@@ -33,7 +33,7 @@ dev = [
 ]
 
 [project.scripts]
-agentic-retro = "agentic_retrospective.cli:cli"
+agentic-retrospective = "agentic_retrospective.cli:cli"
 
 [project.urls]
 Homepage = "https://github.com/daax-dev/agentic-retrospective"
@@ -52,6 +52,7 @@ include = [
     "/src",
     "/skills",
     "/hooks",
+    "/scripts",
     "/.claude-plugin",
     "/README.md",
     "/SKILL.md",
