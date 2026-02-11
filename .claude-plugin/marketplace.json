@@ -15,7 +15,7 @@
         "name": "daax-dev",
         "email": "jason@peregrinesummit.com"
       },
-      "source": "./plugins/retrospective",
+      "source": "..",
       "category": "productivity",
       "homepage": "https://github.com/daax-dev/agentic-retrospective"
     }

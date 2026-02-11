@@ -18,6 +18,6 @@
     "collaboration",
     "scoring"
   ],
-  "plugins": "./plugins",
-  "hooks": "./hooks/hooks.json"
+  "skills": "../skills",
+  "hooks": "../hooks/hooks.json"
 }
