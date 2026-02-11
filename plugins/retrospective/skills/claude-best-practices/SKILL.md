@@ -1,7 +1,7 @@
 ---
 name: claude-best-practices
 description: Audit your Claude Code configuration against official Anthropic best practices.
-invocation: claude-best-practices
+invocation: /claude-best-practices
 ---
 
 # Claude Best Practices Audit
