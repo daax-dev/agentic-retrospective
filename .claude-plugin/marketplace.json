@@ -1,26 +1,36 @@
 {
-  "name": "agentic-retrospective-marketplace",
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "agentic-retrospective",
   "owner": {
     "name": "daax-dev",
     "email": "jason@peregrinesummit.com"
   },
-  "description": "Evidence-based sprint retrospectives for human-agent collaboration",
+  "metadata": {
+    "description": "Evidence-based sprint retrospectives for human-agent collaboration",
+    "version": "1.0.0",
+    "pluginRoot": "./plugins"
+  },
   "plugins": [
     {
       "name": "agentic-retrospective",
-      "source": ".",
+      "source": "agentic-retrospective",
       "description": "Evidence-based sprint retrospectives with telemetry capture and 6-dimension scoring. Includes /retrospective and /micro-retrospective skills.",
       "version": "1.0.0",
       "author": {
-        "name": "daax-dev"
+        "name": "daax-dev",
+        "email": "jason@peregrinesummit.com"
       },
+      "homepage": "https://github.com/daax-dev/agentic-retrospective",
+      "repository": "https://github.com/daax-dev/agentic-retrospective",
+      "license": "Apache-2.0",
       "keywords": [
         "retrospective",
         "telemetry",
         "feedback",
         "scoring",
         "collaboration"
-      ]
+      ],
+      "category": "productivity"
     }
   ]
 }
