@@ -10,7 +10,7 @@
     {
       "name": "retrospective",
       "description": "Evidence-based sprint retrospectives with telemetry capture and 6-dimension scoring.",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "author": {
         "name": "daax-dev",
         "email": "jason@peregrinesummit.com"

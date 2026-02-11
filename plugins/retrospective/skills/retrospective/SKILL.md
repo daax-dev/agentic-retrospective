@@ -1,7 +1,7 @@
 ---
 name: retrospective
 description: Evidence-based sprint retrospectives for human-agent collaboration.
-invocation: /retrospective
+invocation: retrospective
 ---
 
 # Retrospective
