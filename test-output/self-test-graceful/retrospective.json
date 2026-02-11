@@ -4,7 +4,7 @@
     "from": "HEAD~10",
     "to": "HEAD"
   },
-  "generated_at": "2026-02-11T18:52:08.334Z",
+  "generated_at": "2026-02-11T19:54:06.915Z",
   "data_completeness": {
     "percentage": 20,
     "sources": {
@@ -46,11 +46,11 @@
     "contributors": 1,
     "human_contributors": 0,
     "agent_contributors": 1,
-    "lines_added": 33342,
-    "lines_removed": 12484,
+    "lines_added": 39029,
+    "lines_removed": 16797,
     "decisions_logged": 0,
-    "agent_commits": 1,
-    "agent_commit_percentage": 10
+    "agent_commits": 2,
+    "agent_commit_percentage": 20
   },
   "scores": {
     "delivery_predictability": {
@@ -58,7 +58,7 @@
       "confidence": "high",
       "evidence": [
         "10 commits",
-        "Average 4583 lines per commit"
+        "Average 5583 lines per commit"
       ]
     },
     "test_loop_completeness": {
@@ -71,7 +71,7 @@
       "score": 1,
       "confidence": "medium",
       "evidence": [
-        "5 large commits (50%)"
+        "7 large commits (70%)"
       ]
     },
     "security_posture": {
@@ -203,6 +203,18 @@
   ],
   "evidence_map": {
     "commits": {
+      "bb18928f2bc04d72d004c40ef03971dc05b3bfb4": {
+        "decisions": [],
+        "findings": []
+      },
+      "3e545be910bea838cf9afb2b4f1b753f9c651655": {
+        "decisions": [],
+        "findings": []
+      },
+      "96c71c05567917e929d9b49461ea6fa85f5f9649": {
+        "decisions": [],
+        "findings": []
+      },
       "f5a3741ad0bd41816e8f0660663a148cc36633e2": {
         "decisions": [],
         "findings": []
@@ -230,33 +242,21 @@
       "c6e08269342d8aa14b0b2f2bc156b6466da90a32": {
         "decisions": [],
         "findings": []
-      },
-      "e58c0d4d1200e21e505daece1eb74e7662cccc07": {
-        "decisions": [],
-        "findings": []
-      },
-      "3a8a05bc0c3295251f92b700e8da88afa8cc0e29": {
-        "decisions": [],
-        "findings": []
-      },
-      "45328828a6527dc1c853ed7be5ffee42bd4fed2e": {
-        "decisions": [],
-        "findings": []
       }
     },
     "decisions": {},
     "orphans": {
       "commits_without_context": [
+        "bb18928f2bc04d72d004c40ef03971dc05b3bfb4",
+        "3e545be910bea838cf9afb2b4f1b753f9c651655",
+        "96c71c05567917e929d9b49461ea6fa85f5f9649",
         "f5a3741ad0bd41816e8f0660663a148cc36633e2",
         "a8d9cd0b29e436879778ca81d0b8b9b8c71b7326",
         "adebb8242b4ce0f075fb858318cce892562139d3",
         "6da3b6035dfa7209463d2da8c65c63440e45820b",
         "14264ba8bf35a19bf528d22792753ddd2173bb79",
         "5b795247a61865fcf57fa36b52f0b59de1220f96",
-        "c6e08269342d8aa14b0b2f2bc156b6466da90a32",
-        "e58c0d4d1200e21e505daece1eb74e7662cccc07",
-        "3a8a05bc0c3295251f92b700e8da88afa8cc0e29",
-        "45328828a6527dc1c853ed7be5ffee42bd4fed2e"
+        "c6e08269342d8aa14b0b2f2bc156b6466da90a32"
       ],
       "decisions_without_implementation": []
     }
@@ -265,31 +265,51 @@
     "hotspots": [
       {
         "path": ".claude-plugin/marketplace.json",
-        "changes": 5,
-        "concernLevel": "high"
-      },
-      {
-        "path": ".claude-plugin/plugin.json",
-        "changes": 5,
-        "concernLevel": "high"
-      },
-      {
-        "path": "skills/retrospective/SKILL.md",
-        "changes": 5,
-        "concernLevel": "high"
-      },
-      {
-        "path": "skills/claude-best-practices/SKILL.md",
         "changes": 4,
         "concernLevel": "medium"
       },
       {
-        "path": "plugins/retrospective/skills/claude-best-practices/SKILL.md",
+        "path": ".claude-plugin/plugin.json",
+        "changes": 4,
+        "concernLevel": "medium"
+      },
+      {
+        "path": "README.md",
         "changes": 3,
         "concernLevel": "medium"
       },
       {
-        "path": "plugins/retrospective/skills/retrospective/SKILL.md",
+        "path": "src/analyzers/decisions.ts",
+        "changes": 3,
+        "concernLevel": "medium"
+      },
+      {
+        "path": "src/analyzers/git.ts",
+        "changes": 3,
+        "concernLevel": "medium"
+      },
+      {
+        "path": "src/analyzers/github.ts",
+        "changes": 3,
+        "concernLevel": "medium"
+      },
+      {
+        "path": "src/cli.ts",
+        "changes": 3,
+        "concernLevel": "medium"
+      },
+      {
+        "path": "src/report/generator.ts",
+        "changes": 3,
+        "concernLevel": "medium"
+      },
+      {
+        "path": "src/types.ts",
+        "changes": 3,
+        "concernLevel": "medium"
+      },
+      {
+        "path": "skills/retrospective/SKILL.md",
         "changes": 3,
         "concernLevel": "medium"
       }
@@ -297,41 +317,41 @@
     "filesByExtension": [
       {
         "extension": ".json",
-        "count": 61,
-        "percentage": 29
+        "count": 85,
+        "percentage": 33
       },
       {
         "extension": ".ts",
-        "count": 46,
+        "count": 56,
         "percentage": 21
       },
       {
         "extension": ".md",
-        "count": 41,
-        "percentage": 19
+        "count": 53,
+        "percentage": 20
       },
       {
         "extension": ".py",
         "count": 31,
-        "percentage": 14
+        "percentage": 12
       },
       {
         "extension": ".sh",
-        "count": 18,
-        "percentage": 8
+        "count": 17,
+        "percentage": 7
       },
       {
         "extension": ".jsonl",
-        "count": 11,
+        "count": 12,
         "percentage": 5
       },
       {
-        "extension": ".yaml",
-        "count": 1,
-        "percentage": 0
+        "extension": ".snap",
+        "count": 2,
+        "percentage": 1
       },
       {
-        "extension": ".snap",
+        "extension": ".yaml",
         "count": 1,
         "percentage": 0
       },
@@ -356,7 +376,7 @@
         "percentage": 0
       }
     ],
-    "totalFilesChanged": 214
+    "totalFilesChanged": 261
   },
   "tools_summary": {
     "totalCalls": 358,

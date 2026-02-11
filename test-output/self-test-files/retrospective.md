@@ -1,7 +1,7 @@
 # Sprint Retrospective: self-test-files
 
 **Period**: HEAD~10 to HEAD
-**Generated**: 2026-02-11T18:52:04.000Z
+**Generated**: 2026-02-11T19:54:01.607Z
 **Data Completeness**: 40% (2/5 sources)
 
 ---
@@ -28,9 +28,9 @@
 |--------|-------|
 | Commits | 10 |
 | Contributors | 1 (0 human, 1 agent) |
-| Lines Changed | +33,342 / -12,484 |
+| Lines Changed | +39,029 / -16,797 |
 | Decisions Logged | 13 |
-| Agent Commits | 1 (10%) |
+| Agent Commits | 2 (20%) |
 
 ### Quality Signals
 - Delivery Predictability: 1/5 (high confidence)
@@ -91,25 +91,29 @@ Files changed 3+ times this sprint (high churn may indicate architectural issues
 
 | File | Changes | Concern Level |
 |------|---------|---------------|
-| `.claude-plugin/marketplace.json` | 5 | **High** |
-| `.claude-plugin/plugin.json` | 5 | **High** |
-| `skills/retrospective/SKILL.md` | 5 | **High** |
-| `skills/claude-best-practices/SKILL.md` | 4 | Medium |
-| `plugins/retrospective/skills/claude-best-practices/SKILL.md` | 3 | Medium |
-| `plugins/retrospective/skills/retrospective/SKILL.md` | 3 | Medium |
+| `.claude-plugin/marketplace.json` | 4 | Medium |
+| `.claude-plugin/plugin.json` | 4 | Medium |
+| `README.md` | 3 | Medium |
+| `src/analyzers/decisions.ts` | 3 | Medium |
+| `src/analyzers/git.ts` | 3 | Medium |
+| `src/analyzers/github.ts` | 3 | Medium |
+| `src/cli.ts` | 3 | Medium |
+| `src/report/generator.ts` | 3 | Medium |
+| `src/types.ts` | 3 | Medium |
+| `skills/retrospective/SKILL.md` | 3 | Medium |
 
 ### File Distribution
 
 | Extension | Files Changed | % of Total |
 |-----------|---------------|------------|
-| .json | 61 | 29% |
-| .ts | 46 | 21% |
-| .md | 41 | 19% |
-| .py | 31 | 14% |
-| .sh | 18 | 8% |
-| .jsonl | 11 | 5% |
+| .json | 85 | 33% |
+| .ts | 56 | 21% |
+| .md | 53 | 20% |
+| .py | 31 | 12% |
+| .sh | 17 | 7% |
+| .jsonl | 12 | 5% |
+| .snap | 2 | 1% |
 | .yaml | 1 | 0% |
-| .snap | 1 | 0% |
 
 
 ---
@@ -168,13 +172,13 @@ Files changed 3+ times this sprint (high churn may indicate architectural issues
 ### Delivery & Outcome
 
 - 10 commits
-- Average 4583 lines per commit
+- Average 5583 lines per commit
 
 **Score**: 1/5 (high confidence)
 
 ### Code Quality & Maintainability
 
-- 5 large commits (50%)
+- 7 large commits (70%)
 
 **Score**: 1/5 (medium confidence)
 
@@ -254,7 +258,7 @@ For detailed instructions, see `docs/fixing-telemetry-gaps.md`
 |-----------|-------|------------|--------------|
 | Delivery Predictability | 1/5 | high | 10 commits |
 | Test Loop Completeness | N/A/5 | none | - |
-| Quality/Maintainability | 1/5 | medium | 5 large commits (50%) |
+| Quality/Maintainability | 1/5 | medium | 7 large commits (70%) |
 | Security Posture | N/A/5 | none | - |
 | Collaboration Efficiency | N/A/5 | none | - |
 | Decision Hygiene | 2/5 | high | 13 decisions logged |

@@ -1,5 +1,17 @@
 {
   "commits": {
+    "bb18928f2bc04d72d004c40ef03971dc05b3bfb4": {
+      "decisions": [],
+      "findings": []
+    },
+    "3e545be910bea838cf9afb2b4f1b753f9c651655": {
+      "decisions": [],
+      "findings": []
+    },
+    "96c71c05567917e929d9b49461ea6fa85f5f9649": {
+      "decisions": [],
+      "findings": []
+    },
     "f5a3741ad0bd41816e8f0660663a148cc36633e2": {
       "decisions": [],
       "findings": []
@@ -67,22 +79,10 @@
     "2b146f1d44528555ea44e85a3bb2b81fb7607f0a": {
       "decisions": [],
       "findings": []
-    },
-    "3f9dfe271c822c92c8003b5bf25d432407ad8a9c": {
-      "decisions": [],
-      "findings": []
-    },
-    "f814933989ef8bcec56776ffe8e36084226046de": {
-      "decisions": [],
-      "findings": []
-    },
-    "29959340e9183eff0e5383a106c49daf61ce0be6": {
-      "decisions": [],
-      "findings": []
     }
   },
   "decisions": {
-    "dec-1770835906402": {
+    "dec-1770839619684": {
       "commits": [],
       "type": "two_way_door",
       "escalated": false,
@@ -91,6 +91,9 @@
   },
   "orphans": {
     "commits_without_context": [
+      "bb18928f2bc04d72d004c40ef03971dc05b3bfb4",
+      "3e545be910bea838cf9afb2b4f1b753f9c651655",
+      "96c71c05567917e929d9b49461ea6fa85f5f9649",
       "f5a3741ad0bd41816e8f0660663a148cc36633e2",
       "a8d9cd0b29e436879778ca81d0b8b9b8c71b7326",
       "adebb8242b4ce0f075fb858318cce892562139d3",
@@ -107,13 +110,10 @@
       "a8534003b21348a5b0521fbc55329031ac12e189",
       "b5cd750b0a381e2fd79fdb32afdc82da8988e478",
       "9c3dbe27fae12a3436e0aabfa4f9fc57f48ab49f",
-      "2b146f1d44528555ea44e85a3bb2b81fb7607f0a",
-      "3f9dfe271c822c92c8003b5bf25d432407ad8a9c",
-      "f814933989ef8bcec56776ffe8e36084226046de",
-      "29959340e9183eff0e5383a106c49daf61ce0be6"
+      "2b146f1d44528555ea44e85a3bb2b81fb7607f0a"
     ],
     "decisions_without_implementation": [
-      "dec-1770835906402"
+      "dec-1770839619684"
     ]
   }
 }

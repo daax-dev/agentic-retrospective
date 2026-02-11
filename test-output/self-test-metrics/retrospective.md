@@ -1,7 +1,7 @@
 # Sprint Retrospective: self-test-metrics
 
 **Period**: HEAD~20 to HEAD
-**Generated**: 2026-02-11T18:51:58.713Z
+**Generated**: 2026-02-11T19:53:55.478Z
 **Data Completeness**: 40% (2/5 sources)
 
 ---
@@ -28,9 +28,9 @@
 |--------|-------|
 | Commits | 20 |
 | Contributors | 1 (0 human, 1 agent) |
-| Lines Changed | +35,781 / -14,240 |
+| Lines Changed | +41,034 / -18,524 |
 | Decisions Logged | 13 |
-| Agent Commits | 2 (10%) |
+| Agent Commits | 3 (15%) |
 
 ### Quality Signals
 - Delivery Predictability: 1/5 (high confidence)
@@ -92,11 +92,11 @@ Files changed 3+ times this sprint (high churn may indicate architectural issues
 | File | Changes | Concern Level |
 |------|---------|---------------|
 | `skills/retrospective/SKILL.md` | 12 | **High** |
-| `.claude-plugin/marketplace.json` | 9 | **High** |
-| `.claude-plugin/plugin.json` | 9 | **High** |
+| `README.md` | 8 | **High** |
 | `plugins/retrospective/skills/retrospective/SKILL.md` | 8 | **High** |
+| `.claude-plugin/marketplace.json` | 7 | **High** |
+| `.claude-plugin/plugin.json` | 7 | **High** |
 | `skills/claude-best-practices/SKILL.md` | 6 | **High** |
-| `README.md` | 6 | **High** |
 | `plugins/retrospective/skills/claude-best-practices/SKILL.md` | 5 | **High** |
 | `plugins/retrospective/.claude-plugin/plugin.json` | 4 | Medium |
 | `src/agentic_retrospective/cli.py` | 4 | Medium |
@@ -106,14 +106,14 @@ Files changed 3+ times this sprint (high churn may indicate architectural issues
 
 | Extension | Files Changed | % of Total |
 |-----------|---------------|------------|
-| .md | 117 | 35% |
-| .json | 77 | 23% |
-| .ts | 46 | 14% |
-| .sh | 41 | 12% |
-| .py | 39 | 12% |
-| .jsonl | 11 | 3% |
+| .md | 135 | 35% |
+| .json | 97 | 25% |
+| .ts | 56 | 15% |
+| .py | 39 | 10% |
+| .sh | 36 | 9% |
+| .jsonl | 12 | 3% |
+| .snap | 2 | 1% |
 | .yaml | 1 | 0% |
-| .snap | 1 | 0% |
 
 
 ---
@@ -172,13 +172,13 @@ Files changed 3+ times this sprint (high churn may indicate architectural issues
 ### Delivery & Outcome
 
 - 20 commits
-- Average 2501 lines per commit
+- Average 2978 lines per commit
 
 **Score**: 1/5 (high confidence)
 
 ### Code Quality & Maintainability
 
-- 10 large commits (50%)
+- 11 large commits (55%)
 
 **Score**: 1/5 (medium confidence)
 
@@ -258,7 +258,7 @@ For detailed instructions, see `docs/fixing-telemetry-gaps.md`
 |-----------|-------|------------|--------------|
 | Delivery Predictability | 1/5 | high | 20 commits |
 | Test Loop Completeness | N/A/5 | none | - |
-| Quality/Maintainability | 1/5 | medium | 10 large commits (50%) |
+| Quality/Maintainability | 1/5 | medium | 11 large commits (55%) |
 | Security Posture | N/A/5 | none | - |
 | Collaboration Efficiency | N/A/5 | none | - |
 | Decision Hygiene | 2/5 | high | 13 decisions logged |
