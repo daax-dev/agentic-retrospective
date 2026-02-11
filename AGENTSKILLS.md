@@ -15,7 +15,7 @@ Evidence-based sprint retrospectives for human-agent collaboration.
 
 | Command | Description |
 |---------|-------------|
-| `/retrospective` | Conduct full retrospective analysis |
+| `/retrospective conduct` | Conduct full retrospective analysis |
 | `/retrospective setup` | Initialize telemetry capture |
 | `/retrospective status` | Check setup and data |
 | `/retrospective repair` | Fix missing dirs/config |
@@ -36,7 +36,7 @@ Hooks automatically capture prompts, tool calls, and timing.
 ### 3. Conduct Retrospective
 
 ```
-/retrospective
+/retrospective conduct
 ```
 
 Output: `docs/retrospectives/YYYY-MM-DD/`

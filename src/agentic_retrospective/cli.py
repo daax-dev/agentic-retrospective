@@ -41,6 +41,15 @@ def repair(project_dir: Path | None) -> None:
     print_status(project_dir, repair=True)
 
 
+@cli.command()
+@click.option("--project-dir", "-p", type=click.Path(exists=True, path_type=Path), default=None)
+def audit(project_dir: Path | None) -> None:
+    """Audit Claude Code configuration against best practices."""
+    from .commands.audit import audit as do_audit
+
+    do_audit(project_dir)
+
+
 @cli.command("feedback")
 @click.option("--session-id", "-s", default=None, help="Session ID for feedback")
 @click.option("--project-dir", "-p", type=click.Path(exists=True, path_type=Path), default=None)

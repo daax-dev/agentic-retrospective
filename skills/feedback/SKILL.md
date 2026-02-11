@@ -6,15 +6,11 @@ invocation: /retrospective feedback
 
 # Session Feedback
 
+Execute immediately. Do not ask for confirmation.
+
+Run: `agentic-retrospective feedback`
+
 **Your chance to tell us what went well and what didn't.**
-
-Takes 30 seconds. Improves future sessions.
-
-## Usage
-
-```
-/retrospective feedback
-```
 
 ## What You'll Share
 

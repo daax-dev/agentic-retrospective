@@ -6,13 +6,9 @@ invocation: /retrospective status
 
 # Retrospective Status
 
-Check if telemetry is set up correctly and has data.
+Execute immediately. Do not ask for confirmation.
 
-## Usage
-
-```
-/retrospective status
-```
+Run: `agentic-retrospective status`
 
 ## What It Checks
 

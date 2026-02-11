@@ -1,20 +1,30 @@
 ---
-name: retrospective
+name: conduct
 description: Conduct evidence-based sprint retrospective with scoring across 6 dimensions.
-invocation: /retrospective
+invocation: /retrospective conduct
 ---
 
-# Retrospective
+# Conduct Retrospective
 
-Conduct a full sprint retrospective analysis.
+Execute immediately. Do not ask for confirmation.
 
-## Usage
+Run: `agentic-retrospective conduct`
 
-```
-/retrospective
-/retrospective --since "1 week ago"
-/retrospective --verbose
-```
+## Options
+
+- `--since "1 week ago"` - Analysis period
+- `--verbose` - Detailed output
+
+## After Completion
+
+1. Report the results to the user
+2. Show where the report was saved
+3. Ask: "Would you like to update CLAUDE.md with improvements from this retrospective?"
+   - If yes: Validate CLAUDE.md size and quality first
+   - Check file isn't too large (warn if > 500 lines)
+   - Check for stale or contradictory instructions
+   - Summarize key learnings and add to CLAUDE.md
+4. Ask: "How did this retrospective go? Run `/retrospective feedback` to share what worked and what didn't."
 
 ## What It Analyzes
 

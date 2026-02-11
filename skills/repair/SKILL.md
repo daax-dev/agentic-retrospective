@@ -6,13 +6,9 @@ invocation: /retrospective repair
 
 # Repair Telemetry Setup
 
-Fix missing directories and configuration.
+Execute immediately. Do not ask for confirmation.
 
-## Usage
-
-```
-/retrospective repair
-```
+Run: `agentic-retrospective repair`
 
 ## What It Fixes
 
@@ -23,4 +19,4 @@ Fix missing directories and configuration.
 
 ## When To Use
 
-Run this if `/retrospective status` shows missing components, or if you see warnings when running `/retrospective`.
+Run this if `/retrospective status` shows missing components.

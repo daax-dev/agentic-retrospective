@@ -6,13 +6,9 @@ invocation: /retrospective setup
 
 # Setup Telemetry
 
-Initialize your project for retrospective telemetry capture.
+Execute immediately. Do not ask for confirmation.
 
-## Usage
-
-```
-/retrospective setup
-```
+Run: `agentic-retrospective setup`
 
 ## What It Does
 
@@ -33,5 +29,5 @@ Initialize your project for retrospective telemetry capture.
 ## After Setup
 
 Telemetry starts automatically. Use:
-- `/retrospective` - Run full retrospective
-- `/retrospective feedback` - Quick 30-second session feedback
+- `/retrospective conduct` - Run full retrospective
+- `/retrospective feedback` - Give session feedback
