@@ -319,6 +319,130 @@ describe('DecisionAnalyzer', () => {
     });
   });
 
+  // GAP-04: Decision Quality Score
+  describe('calculateQualityScore', () => {
+    test('returns 100% when all decisions have rationale AND context', () => {
+      const decisionsDir = tempDir.createDir('decisions');
+      tempDir.createFile('decisions/quality.jsonl',
+        '{"ts":"2026-02-01T10:00:00Z","decision":"Choice A","rationale":"Because X","context":"In situation Y"}\n' +
+        '{"ts":"2026-02-02T10:00:00Z","decision":"Choice B","rationale":"Because Z","context":"During sprint"}\n'
+      );
+
+      const analyzer = new DecisionAnalyzer(decisionsDir);
+      const quality = analyzer.calculateQualityScore();
+
+      expect(quality.qualityScore).toBe(100);
+      expect(quality.decisionsWithBoth).toBe(2);
+      expect(quality.status).toBe('good');
+    });
+
+    test('returns 0% when no decisions have both fields', () => {
+      const decisionsDir = tempDir.createDir('decisions');
+      tempDir.createFile('decisions/quality.jsonl',
+        '{"ts":"2026-02-01T10:00:00Z","decision":"Choice A"}\n' +
+        '{"ts":"2026-02-02T10:00:00Z","decision":"Choice B","rationale":"Because Z"}\n'
+      );
+
+      const analyzer = new DecisionAnalyzer(decisionsDir);
+      const quality = analyzer.calculateQualityScore();
+
+      expect(quality.qualityScore).toBe(0);
+      expect(quality.status).toBe('critical');
+    });
+
+    test('returns 50% when half have both fields', () => {
+      const decisionsDir = tempDir.createDir('decisions');
+      tempDir.createFile('decisions/quality.jsonl',
+        '{"ts":"2026-02-01T10:00:00Z","decision":"Choice A","rationale":"X","context":"Y"}\n' +
+        '{"ts":"2026-02-02T10:00:00Z","decision":"Choice B"}\n'
+      );
+
+      const analyzer = new DecisionAnalyzer(decisionsDir);
+      const quality = analyzer.calculateQualityScore();
+
+      expect(quality.qualityScore).toBe(50);
+      expect(quality.status).toBe('warning');
+    });
+
+    test('handles empty decisions array', () => {
+      const analyzer = new DecisionAnalyzer('/nonexistent');
+      const quality = analyzer.calculateQualityScore();
+
+      expect(quality.qualityScore).toBe(100);
+      expect(quality.totalDecisions).toBe(0);
+      expect(quality.status).toBe('good');
+    });
+
+    test('accepts context as object', () => {
+      const decisionsDir = tempDir.createDir('decisions');
+      tempDir.createFile('decisions/quality.jsonl',
+        '{"ts":"2026-02-01T10:00:00Z","decision":"A","rationale":"X","context":{"file":"test.ts","line":10}}\n'
+      );
+
+      const analyzer = new DecisionAnalyzer(decisionsDir);
+      const quality = analyzer.calculateQualityScore();
+
+      expect(quality.qualityScore).toBe(100);
+      expect(quality.decisionsWithBoth).toBe(1);
+    });
+  });
+
+  // GAP-08: Testing Discipline
+  describe('analyzeTestingDiscipline', () => {
+    test('returns 100% when all decisions mention tests', () => {
+      const decisionsDir = tempDir.createDir('decisions');
+      tempDir.createFile('decisions/testing.jsonl',
+        '{"ts":"2026-02-01T10:00:00Z","decision":"Add feature","rationale":"All tests pass"}\n' +
+        '{"ts":"2026-02-02T10:00:00Z","decision":"Update API","rationale":"Verified with unit test"}\n'
+      );
+
+      const analyzer = new DecisionAnalyzer(decisionsDir);
+      const discipline = analyzer.analyzeTestingDiscipline();
+
+      expect(discipline.adherenceRate).toBe(100);
+      expect(discipline.status).toBe('good');
+    });
+
+    test('returns 0% when no decisions mention tests', () => {
+      const decisionsDir = tempDir.createDir('decisions');
+      tempDir.createFile('decisions/testing.jsonl',
+        '{"ts":"2026-02-01T10:00:00Z","decision":"Add feature","rationale":"Looks good"}\n' +
+        '{"ts":"2026-02-02T10:00:00Z","decision":"Update API","rationale":"LGTM"}\n'
+      );
+
+      const analyzer = new DecisionAnalyzer(decisionsDir);
+      const discipline = analyzer.analyzeTestingDiscipline();
+
+      expect(discipline.adherenceRate).toBe(0);
+      expect(discipline.status).toBe('critical');
+    });
+
+    test('detects various testing patterns', () => {
+      const decisionsDir = tempDir.createDir('decisions');
+      tempDir.createFile('decisions/testing.jsonl',
+        '{"ts":"2026-02-01T10:00:00Z","decision":"A","rationale":"test coverage at 80%"}\n' +
+        '{"ts":"2026-02-02T10:00:00Z","decision":"B","rationale":"e2e tests pass"}\n' +
+        '{"ts":"2026-02-03T10:00:00Z","decision":"C","rationale":"verified manually"}\n' +
+        '{"ts":"2026-02-04T10:00:00Z","decision":"D","rationale":"looks good"}\n'
+      );
+
+      const analyzer = new DecisionAnalyzer(decisionsDir);
+      const discipline = analyzer.analyzeTestingDiscipline();
+
+      expect(discipline.decisionsWithTesting).toBe(3);
+      expect(discipline.adherenceRate).toBe(75);
+      expect(discipline.patternsDetected.length).toBeGreaterThan(0);
+    });
+
+    test('handles empty decisions', () => {
+      const analyzer = new DecisionAnalyzer('/nonexistent');
+      const discipline = analyzer.analyzeTestingDiscipline();
+
+      expect(discipline.adherenceRate).toBe(100);
+      expect(discipline.totalDecisions).toBe(0);
+    });
+  });
+
   describe('field normalization', () => {
     test('handles timestamp alias', () => {
       const decisionsDir = tempDir.createDir('decisions');

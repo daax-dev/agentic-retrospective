@@ -283,4 +283,146 @@ describe('GitAnalyzer', () => {
       expect(result.totalLinesRemoved).toBe(125);
     });
   });
+
+  // GAP-01: Commit Type Classification
+  describe('categorizeCommit', () => {
+    test('categorizes conventional feat commits', () => {
+      const analyzer = new GitAnalyzer();
+      expect(analyzer.categorizeCommit('feat: add new feature')).toBe('feat');
+      expect(analyzer.categorizeCommit('feat(auth): add login')).toBe('feat');
+    });
+
+    test('categorizes conventional fix commits', () => {
+      const analyzer = new GitAnalyzer();
+      expect(analyzer.categorizeCommit('fix: resolve bug')).toBe('fix');
+      expect(analyzer.categorizeCommit('fix(api): handle null')).toBe('fix');
+    });
+
+    test('categorizes conventional docs commits', () => {
+      const analyzer = new GitAnalyzer();
+      expect(analyzer.categorizeCommit('docs: update README')).toBe('docs');
+      expect(analyzer.categorizeCommit('docs(api): add examples')).toBe('docs');
+    });
+
+    test('categorizes conventional test commits', () => {
+      const analyzer = new GitAnalyzer();
+      expect(analyzer.categorizeCommit('test: add unit tests')).toBe('test');
+      expect(analyzer.categorizeCommit('test(auth): cover edge case')).toBe('test');
+    });
+
+    test('categorizes conventional refactor commits', () => {
+      const analyzer = new GitAnalyzer();
+      expect(analyzer.categorizeCommit('refactor: clean up code')).toBe('refactor');
+      expect(analyzer.categorizeCommit('refactor(utils): simplify logic')).toBe('refactor');
+    });
+
+    test('categorizes conventional chore commits', () => {
+      const analyzer = new GitAnalyzer();
+      expect(analyzer.categorizeCommit('chore: update deps')).toBe('chore');
+      expect(analyzer.categorizeCommit('chore(ci): fix workflow')).toBe('chore');
+    });
+
+    test('categorizes by heuristics when not conventional', () => {
+      const analyzer = new GitAnalyzer();
+      expect(analyzer.categorizeCommit('Add new user feature')).toBe('feat');
+      expect(analyzer.categorizeCommit('Fix null pointer bug')).toBe('fix');
+      expect(analyzer.categorizeCommit('Update documentation')).toBe('docs');
+      expect(analyzer.categorizeCommit('Add unit tests')).toBe('test');
+      expect(analyzer.categorizeCommit('Refactor auth module')).toBe('refactor');
+      expect(analyzer.categorizeCommit('Bump version')).toBe('chore');
+    });
+
+    test('returns other for unrecognized commits', () => {
+      const analyzer = new GitAnalyzer();
+      expect(analyzer.categorizeCommit('WIP')).toBe('other');
+      expect(analyzer.categorizeCommit('misc changes')).toBe('other');
+    });
+  });
+
+  // GAP-02: Checkpoint Detection
+  describe('isCheckpointCommit', () => {
+    test('detects WIP commits', () => {
+      const analyzer = new GitAnalyzer();
+      expect(analyzer.isCheckpointCommit('wip')).toBe(true);
+      expect(analyzer.isCheckpointCommit('WIP: in progress')).toBe(true);
+      expect(analyzer.isCheckpointCommit('Work in progress')).toBe(true);
+    });
+
+    test('detects save/tmp commits', () => {
+      const analyzer = new GitAnalyzer();
+      expect(analyzer.isCheckpointCommit('save')).toBe(true);
+      expect(analyzer.isCheckpointCommit('tmp')).toBe(true);
+      expect(analyzer.isCheckpointCommit('temp')).toBe(true);
+      expect(analyzer.isCheckpointCommit('checkpoint')).toBe(true);
+    });
+
+    test('detects placeholder commits', () => {
+      const analyzer = new GitAnalyzer();
+      expect(analyzer.isCheckpointCommit('...')).toBe(true);
+      expect(analyzer.isCheckpointCommit('x')).toBe(true);
+      expect(analyzer.isCheckpointCommit('-')).toBe(true);
+      expect(analyzer.isCheckpointCommit('.')).toBe(true);
+    });
+
+    test('does not flag normal commits', () => {
+      const analyzer = new GitAnalyzer();
+      expect(analyzer.isCheckpointCommit('feat: add login')).toBe(false);
+      expect(analyzer.isCheckpointCommit('Update README')).toBe(false);
+    });
+  });
+
+  // GAP-03: Work Classification
+  describe('calculateWorkClassification', () => {
+    test('calculates proactive/reactive ratio correctly', () => {
+      const analyzer = new GitAnalyzer();
+      const breakdown = {
+        feat: 5,   // proactive
+        docs: 2,   // proactive
+        test: 3,   // proactive
+        fix: 4,    // reactive
+        refactor: 2, // reactive
+        chore: 2,  // reactive
+        other: 0,
+      };
+
+      const result = analyzer.calculateWorkClassification(breakdown);
+
+      expect(result.proactive).toBe(10); // 5+2+3
+      expect(result.reactive).toBe(8);   // 4+2+2
+      expect(result.ratio).toBeCloseTo(10/18, 2);
+    });
+
+    test('handles all proactive commits', () => {
+      const analyzer = new GitAnalyzer();
+      const breakdown = {
+        feat: 10, docs: 0, test: 0,
+        fix: 0, refactor: 0, chore: 0, other: 0,
+      };
+
+      const result = analyzer.calculateWorkClassification(breakdown);
+      expect(result.ratio).toBe(1);
+    });
+
+    test('handles all reactive commits', () => {
+      const analyzer = new GitAnalyzer();
+      const breakdown = {
+        feat: 0, docs: 0, test: 0,
+        fix: 10, refactor: 0, chore: 0, other: 0,
+      };
+
+      const result = analyzer.calculateWorkClassification(breakdown);
+      expect(result.ratio).toBe(0);
+    });
+
+    test('handles empty breakdown', () => {
+      const analyzer = new GitAnalyzer();
+      const breakdown = {
+        feat: 0, docs: 0, test: 0,
+        fix: 0, refactor: 0, chore: 0, other: 0,
+      };
+
+      const result = analyzer.calculateWorkClassification(breakdown);
+      expect(result.ratio).toBe(0);
+    });
+  });
 });

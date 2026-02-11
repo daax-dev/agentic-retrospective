@@ -1,7 +1,7 @@
 # Sprint Retrospective: self-test-scores
 
 **Period**: HEAD~20 to HEAD
-**Generated**: 2026-02-11T17:16:13.395Z
+**Generated**: 2026-02-11T18:51:53.070Z
 **Data Completeness**: 40% (2/5 sources)
 
 ---
@@ -22,10 +22,15 @@
 
 ## Executive Summary
 
-### What Was Delivered
-- 20 commits by 1 contributor(s)
-- 24,074 lines added, 14,572 lines removed
-- 13 decisions documented
+### Metrics at a Glance
+
+| Metric | Value |
+|--------|-------|
+| Commits | 20 |
+| Contributors | 1 (0 human, 1 agent) |
+| Lines Changed | +35,781 / -14,240 |
+| Decisions Logged | 13 |
+| Agent Commits | 2 (10%) |
 
 ### Quality Signals
 - Delivery Predictability: 1/5 (high confidence)
@@ -86,29 +91,29 @@ Files changed 3+ times this sprint (high churn may indicate architectural issues
 
 | File | Changes | Concern Level |
 |------|---------|---------------|
-| `skills/retrospective/SKILL.md` | 13 | **High** |
-| `.claude-plugin/marketplace.json` | 10 | **High** |
-| `.claude-plugin/plugin.json` | 10 | **High** |
+| `skills/retrospective/SKILL.md` | 12 | **High** |
+| `.claude-plugin/marketplace.json` | 9 | **High** |
+| `.claude-plugin/plugin.json` | 9 | **High** |
 | `plugins/retrospective/skills/retrospective/SKILL.md` | 8 | **High** |
-| `README.md` | 7 | **High** |
 | `skills/claude-best-practices/SKILL.md` | 6 | **High** |
+| `README.md` | 6 | **High** |
 | `plugins/retrospective/skills/claude-best-practices/SKILL.md` | 5 | **High** |
-| `src/agentic_retrospective/cli.py` | 5 | **High** |
 | `plugins/retrospective/.claude-plugin/plugin.json` | 4 | Medium |
-| `src/agentic_retrospective/commands/run_retrospective.py` | 4 | Medium |
+| `src/agentic_retrospective/cli.py` | 4 | Medium |
+| `skills/conduct/SKILL.md` | 4 | Medium |
 
 ### File Distribution
 
 | Extension | Files Changed | % of Total |
 |-----------|---------------|------------|
-| .md | 108 | 37% |
-| .py | 65 | 22% |
-| .json | 49 | 17% |
-| .sh | 46 | 16% |
-| .ts | 13 | 4% |
-| .yml | 4 | 1% |
-| .toml | 2 | 1% |
-| .lock | 2 | 1% |
+| .md | 117 | 35% |
+| .json | 77 | 23% |
+| .ts | 46 | 14% |
+| .sh | 41 | 12% |
+| .py | 39 | 12% |
+| .jsonl | 11 | 3% |
+| .yaml | 1 | 0% |
+| .snap | 1 | 0% |
 
 
 ---
@@ -151,12 +156,23 @@ Files changed 3+ times this sprint (high churn may indicate architectural issues
 
 ---
 
+## What Worked / What Didn't
+
+### Needs Attention
+
+| Area | Score | Evidence |
+|------|-------|----------|
+| Escalation Compliance | 50% | 2/4 one-way-doors escalated to humans |
+
+
+---
+
 ## Detailed Analysis
 
 ### Delivery & Outcome
 
 - 20 commits
-- Average 1932 lines per commit
+- Average 2501 lines per commit
 
 **Score**: 1/5 (high confidence)
 
@@ -259,11 +275,11 @@ For detailed instructions, see `docs/fixing-telemetry-gaps.md`
 
 ### Next Sprint
 
-| Action | Why | Owner | Success Metric |
-|--------|-----|-------|----------------|
-| Fix telemetry gap: missing_agent_logs | Cannot analyze agent collaboration patterns or inner loop health | TBD | Data source available in next retrospective |
-| Fix telemetry gap: missing_test_results | Cannot analyze test pass rates, flakiness, or inner loop cycle times | TBD | Data source available in next retrospective |
-| Fix telemetry gap: missing_security_scans | Cannot assess security posture or vulnerability status | TBD | Data source available in next retrospective |
+| Area | Current | Target | Action | Owner |
+|------|---------|--------|--------|-------|
+| Agent | - | Data source available in next retrospective | Fix telemetry gap: missing_agent_logs | TBD |
+| General | - | Data source available in next retrospective | Fix telemetry gap: missing_test_results | TBD |
+| Security | - | Data source available in next retrospective | Fix telemetry gap: missing_security_scans | TBD |
 
 
 ---

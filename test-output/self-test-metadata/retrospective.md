@@ -1,7 +1,7 @@
 # Sprint Retrospective: self-test-metadata
 
 **Period**: HEAD~10 to HEAD
-**Generated**: 2026-02-11T17:16:29.012Z
+**Generated**: 2026-02-11T18:52:06.362Z
 **Data Completeness**: 40% (2/5 sources)
 
 ---
@@ -10,9 +10,9 @@
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│ 🔴 ACTION REQ │ Decision Hygiene (2/5), Delivery (1/5), Quality (2/5) │
+│ 🔴 ACTION REQ │ Decision Hygiene (2/5), Delivery (1/5), Quality (1/5) │
 ├─────────────────────────────────────────────────────────────┤
-│ ⚠️ 2:0 fix-to-feature ratio                                │
+│ ⚠️ 1:0 fix-to-feature ratio                                │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -22,14 +22,19 @@
 
 ## Executive Summary
 
-### What Was Delivered
-- 10 commits by 1 contributor(s)
-- 10,343 lines added, 12,434 lines removed
-- 13 decisions documented
+### Metrics at a Glance
+
+| Metric | Value |
+|--------|-------|
+| Commits | 10 |
+| Contributors | 1 (0 human, 1 agent) |
+| Lines Changed | +33,342 / -12,484 |
+| Decisions Logged | 13 |
+| Agent Commits | 1 (10%) |
 
 ### Quality Signals
 - Delivery Predictability: 1/5 (high confidence)
-- Quality/Maintainability: 2/5 (medium confidence)
+- Quality/Maintainability: 1/5 (medium confidence)
 
 ### Top Findings
 - **One-way-door decision made by agent** (critical): Agent made irreversible decision without human approval: Port all TypeScript to Python with full parity
@@ -65,9 +70,9 @@ Based on this sprint, consider adding to your CLAUDE.md:
 
 | Metric | Value |
 |--------|-------|
-| Fix Commits | 2 |
+| Fix Commits | 1 |
 | Feature Commits | 0 |
-| Ratio (fix:feature) | 2:0 |
+| Ratio (fix:feature) | 1:0 |
 | Status | 🔴 Needs Attention |
 | Threshold | 0.1 (10:1 feature-to-fix is healthy) |
 
@@ -86,26 +91,25 @@ Files changed 3+ times this sprint (high churn may indicate architectural issues
 
 | File | Changes | Concern Level |
 |------|---------|---------------|
-| `.claude-plugin/marketplace.json` | 6 | **High** |
-| `.claude-plugin/plugin.json` | 6 | **High** |
-| `skills/retrospective/SKILL.md` | 6 | **High** |
-| `skills/claude-best-practices/SKILL.md` | 5 | **High** |
-| `plugins/retrospective/skills/claude-best-practices/SKILL.md` | 4 | Medium |
-| `plugins/retrospective/skills/retrospective/SKILL.md` | 4 | Medium |
-| `plugins/retrospective/.claude-plugin/plugin.json` | 3 | Medium |
+| `.claude-plugin/marketplace.json` | 5 | **High** |
+| `.claude-plugin/plugin.json` | 5 | **High** |
+| `skills/retrospective/SKILL.md` | 5 | **High** |
+| `skills/claude-best-practices/SKILL.md` | 4 | Medium |
+| `plugins/retrospective/skills/claude-best-practices/SKILL.md` | 3 | Medium |
+| `plugins/retrospective/skills/retrospective/SKILL.md` | 3 | Medium |
 
 ### File Distribution
 
 | Extension | Files Changed | % of Total |
 |-----------|---------------|------------|
-| .json | 32 | 25% |
-| .md | 31 | 24% |
-| .py | 31 | 24% |
-| .sh | 18 | 14% |
-| .ts | 13 | 10% |
-| .gitignore | 1 | 1% |
-| .jsonl | 1 | 1% |
-| .toml | 1 | 1% |
+| .json | 61 | 29% |
+| .ts | 46 | 21% |
+| .md | 41 | 19% |
+| .py | 31 | 14% |
+| .sh | 18 | 8% |
+| .jsonl | 11 | 5% |
+| .yaml | 1 | 0% |
+| .snap | 1 | 0% |
 
 
 ---
@@ -148,20 +152,31 @@ Files changed 3+ times this sprint (high churn may indicate architectural issues
 
 ---
 
+## What Worked / What Didn't
+
+### Needs Attention
+
+| Area | Score | Evidence |
+|------|-------|----------|
+| Escalation Compliance | 50% | 2/4 one-way-doors escalated to humans |
+
+
+---
+
 ## Detailed Analysis
 
 ### Delivery & Outcome
 
 - 10 commits
-- Average 2278 lines per commit
+- Average 4583 lines per commit
 
 **Score**: 1/5 (high confidence)
 
 ### Code Quality & Maintainability
 
-- 4 large commits (40%)
+- 5 large commits (50%)
 
-**Score**: 2/5 (medium confidence)
+**Score**: 1/5 (medium confidence)
 
 ### Test Loop Completeness (Inner Loop)
 
@@ -239,7 +254,7 @@ For detailed instructions, see `docs/fixing-telemetry-gaps.md`
 |-----------|-------|------------|--------------|
 | Delivery Predictability | 1/5 | high | 10 commits |
 | Test Loop Completeness | N/A/5 | none | - |
-| Quality/Maintainability | 2/5 | medium | 4 large commits (40%) |
+| Quality/Maintainability | 1/5 | medium | 5 large commits (50%) |
 | Security Posture | N/A/5 | none | - |
 | Collaboration Efficiency | N/A/5 | none | - |
 | Decision Hygiene | 2/5 | high | 13 decisions logged |
@@ -256,11 +271,11 @@ For detailed instructions, see `docs/fixing-telemetry-gaps.md`
 
 ### Next Sprint
 
-| Action | Why | Owner | Success Metric |
-|--------|-----|-------|----------------|
-| Fix telemetry gap: missing_agent_logs | Cannot analyze agent collaboration patterns or inner loop health | TBD | Data source available in next retrospective |
-| Fix telemetry gap: missing_test_results | Cannot analyze test pass rates, flakiness, or inner loop cycle times | TBD | Data source available in next retrospective |
-| Fix telemetry gap: missing_security_scans | Cannot assess security posture or vulnerability status | TBD | Data source available in next retrospective |
+| Area | Current | Target | Action | Owner |
+|------|---------|--------|--------|-------|
+| Agent | - | Data source available in next retrospective | Fix telemetry gap: missing_agent_logs | TBD |
+| General | - | Data source available in next retrospective | Fix telemetry gap: missing_test_results | TBD |
+| Security | - | Data source available in next retrospective | Fix telemetry gap: missing_security_scans | TBD |
 
 
 ---

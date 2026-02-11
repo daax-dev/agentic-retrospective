@@ -20,12 +20,42 @@ export interface PRInfo {
   commits: number;
   changedFiles: number;
   labels: string[];
+  body?: string; // GAP-05: for supersession detection
+  files?: string[]; // GAP-06: file paths
+  reviews?: Array<{ state: string; author: string }>; // GAP-07: review states
 }
 
 export interface PRBottleneck {
   pr: PRInfo;
   issue: 'slow_merge' | 'high_revisions' | 'stale';
   metric: number; // hours for slow_merge, revision count for high_revisions, days for stale
+}
+
+// GAP-05: Supersession tracking
+export interface PRSupersession {
+  prNumber: number;
+  supersededBy: number;
+  pattern: string;
+}
+
+// GAP-06: Test coverage
+export interface PRTestCoverageResult {
+  prsWithTests: number;
+  totalPRs: number;
+  coverageRate: number;
+  testFilePatterns: string[];
+}
+
+// GAP-07: Negative reviews
+export interface PRNegativeReviewResult {
+  prsWithNegativeReviews: number;
+  totalReviewedPRs: number;
+  negativeReviewRate: number;
+  prsRequestingChanges: Array<{
+    prNumber: number;
+    title: string;
+    reviewCount: number;
+  }>;
 }
 
 export interface GitHubAnalysisResult {
@@ -43,6 +73,14 @@ export interface GitHubAnalysisResult {
     avgReviewsPerPR: number;
     avgCommitsPerPR: number;
   };
+  // GAP-05, 06, 07 additions
+  supersessionAnalysis?: {
+    supersededPRs: PRSupersession[];
+    supersessionRate: number;
+    chains: number[][];
+  };
+  testCoverage?: PRTestCoverageResult;
+  negativeReviews?: PRNegativeReviewResult;
 }
 
 export class GitHubAnalyzer {
@@ -123,6 +161,11 @@ export class GitHubAnalyzer {
     // Detect bottlenecks
     const bottlenecks = this.detectBottlenecks(allPRs);
 
+    // GAP-05, 06, 07: Additional analysis
+    const supersessionAnalysis = this.detectSupersession(allPRs);
+    const testCoverage = this.analyzeTestCoverage(allPRs);
+    const negativeReviews = this.analyzeNegativeReviews(allPRs);
+
     return {
       available: true,
       prs: allPRs,
@@ -133,6 +176,9 @@ export class GitHubAnalyzer {
       prsByAuthor,
       bottlenecks,
       reviewStats,
+      supersessionAnalysis,
+      testCoverage,
+      negativeReviews,
     };
   }
 
@@ -141,9 +187,9 @@ export class GitHubAnalyzer {
    */
   private async enrichPRWithReviewData(pr: PRInfo): Promise<PRInfo> {
     try {
-      // Fetch reviews for this PR
+      // Fetch reviews, comments, commits, files, and body for this PR
       const reviewsOutput = execSync(
-        `gh pr view ${pr.number} --json reviews,comments,commits`,
+        `gh pr view ${pr.number} --json reviews,comments,commits,files,body`,
         { encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'] }
       );
 
@@ -154,6 +200,12 @@ export class GitHubAnalyzer {
         reviewCount: data.reviews?.length || 0,
         commentCount: data.comments?.length || 0,
         commits: data.commits?.length || 0,
+        body: data.body || '',
+        files: data.files?.map((f: { path: string }) => f.path) || [],
+        reviews: data.reviews?.map((r: { state: string; author: { login: string } }) => ({
+          state: r.state,
+          author: r.author?.login || 'unknown',
+        })) || [],
       };
     } catch {
       // If fetching fails, return original PR with zeros
@@ -212,6 +264,196 @@ export class GitHubAnalyzer {
     }
 
     return bottlenecks;
+  }
+
+  /**
+   * Detect PR supersession patterns (GAP-05)
+   * Looks for: "Supersedes #X", "Replaces #X", "v2/v3" in title
+   */
+  detectSupersession(prs: PRInfo[]): {
+    supersededPRs: PRSupersession[];
+    supersessionRate: number;
+    chains: number[][];
+  } {
+    const supersededPRs: PRSupersession[] = [];
+    const supersessionPatterns = [
+      { regex: /supersedes?\s*#?(\d+)/i, name: 'Supersedes' },
+      { regex: /replaces?\s*#?(\d+)/i, name: 'Replaces' },
+      { regex: /closes?\s*#?(\d+)/i, name: 'Closes' },
+      { regex: /instead\s*of\s*#?(\d+)/i, name: 'Instead of' },
+    ];
+
+    const prNumbers = new Set(prs.map(pr => pr.number));
+
+    for (const pr of prs) {
+      const textToSearch = `${pr.title} ${pr.body || ''}`;
+
+      // Check for explicit supersession patterns
+      for (const { regex, name } of supersessionPatterns) {
+        const match = textToSearch.match(regex);
+        if (match) {
+          const supersededNumber = parseInt(match[1], 10);
+          // Only count if the referenced PR exists in our set
+          if (prNumbers.has(supersededNumber)) {
+            supersededPRs.push({
+              prNumber: supersededNumber,
+              supersededBy: pr.number,
+              pattern: name,
+            });
+          }
+        }
+      }
+
+      // Check for v2/v3 pattern in title
+      const versionMatch = pr.title.match(/\b(?:v(\d+)|version\s*(\d+))\b/i);
+      if (versionMatch) {
+        const version = parseInt(versionMatch[1] || versionMatch[2], 10);
+        if (version > 1) {
+          // Look for earlier PRs with similar title (without version)
+          const baseTitle = pr.title.replace(/\s*\bv\d+\b|\bversion\s*\d+\b/gi, '').trim().toLowerCase();
+          for (const otherPR of prs) {
+            if (otherPR.number < pr.number) {
+              const otherBaseTitle = otherPR.title.replace(/\s*\bv\d+\b|\bversion\s*\d+\b/gi, '').trim().toLowerCase();
+              if (baseTitle === otherBaseTitle || baseTitle.includes(otherBaseTitle) || otherBaseTitle.includes(baseTitle)) {
+                supersededPRs.push({
+                  prNumber: otherPR.number,
+                  supersededBy: pr.number,
+                  pattern: `v${version}`,
+                });
+                break;
+              }
+            }
+          }
+        }
+      }
+    }
+
+    // Build chains
+    const chains: number[][] = [];
+    const visited = new Set<number>();
+
+    for (const supersession of supersededPRs) {
+      if (visited.has(supersession.prNumber)) continue;
+
+      const chain: number[] = [supersession.prNumber];
+      let current = supersession.supersededBy;
+
+      while (current) {
+        chain.push(current);
+        visited.add(current);
+        const nextSupersession = supersededPRs.find(s => s.prNumber === current);
+        current = nextSupersession?.supersededBy ?? 0;
+      }
+
+      if (chain.length > 1) {
+        chains.push(chain);
+      }
+    }
+
+    const supersessionRate = prs.length > 0
+      ? Math.round((supersededPRs.length / prs.length) * 100)
+      : 0;
+
+    return {
+      supersededPRs,
+      supersessionRate,
+      chains,
+    };
+  }
+
+  /**
+   * Detect test files in PRs (GAP-06)
+   */
+  analyzeTestCoverage(prs: PRInfo[]): PRTestCoverageResult {
+    const testFilePatterns = [
+      /\.test\.[jt]sx?$/,
+      /\.spec\.[jt]sx?$/,
+      /_test\.go$/,
+      /test_.*\.py$/,
+      /.*_test\.py$/,
+      /^test\//,
+      /^tests\//,
+      /__tests__\//,
+    ];
+
+    let prsWithTests = 0;
+    const patternCounts = new Map<string, number>();
+
+    for (const pr of prs) {
+      if (!pr.files || pr.files.length === 0) continue;
+
+      let hasTestFile = false;
+      for (const file of pr.files) {
+        for (const pattern of testFilePatterns) {
+          if (pattern.test(file)) {
+            hasTestFile = true;
+            const patternStr = pattern.source;
+            patternCounts.set(patternStr, (patternCounts.get(patternStr) || 0) + 1);
+          }
+        }
+      }
+
+      if (hasTestFile) {
+        prsWithTests++;
+      }
+    }
+
+    const prsWithFiles = prs.filter(pr => pr.files && pr.files.length > 0).length;
+    const coverageRate = prsWithFiles > 0
+      ? Math.round((prsWithTests / prsWithFiles) * 100)
+      : 0;
+
+    const testFilePatternsList = Array.from(patternCounts.keys());
+
+    return {
+      prsWithTests,
+      totalPRs: prsWithFiles,
+      coverageRate,
+      testFilePatterns: testFilePatternsList,
+    };
+  }
+
+  /**
+   * Analyze negative reviews (CHANGES_REQUESTED) (GAP-07)
+   */
+  analyzeNegativeReviews(prs: PRInfo[]): PRNegativeReviewResult {
+    const prsRequestingChanges: Array<{
+      prNumber: number;
+      title: string;
+      reviewCount: number;
+    }> = [];
+
+    let prsWithNegativeReviews = 0;
+    let totalReviewedPRs = 0;
+
+    for (const pr of prs) {
+      if (!pr.reviews || pr.reviews.length === 0) continue;
+      totalReviewedPRs++;
+
+      const negativeReviews = pr.reviews.filter(
+        r => r.state === 'CHANGES_REQUESTED' || r.state === 'REQUEST_CHANGES'
+      );
+
+      if (negativeReviews.length > 0) {
+        prsWithNegativeReviews++;
+        prsRequestingChanges.push({
+          prNumber: pr.number,
+          title: pr.title,
+          reviewCount: negativeReviews.length,
+        });
+      }
+    }
+
+    const negativeReviewRate = totalReviewedPRs > 0
+      ? Math.round((prsWithNegativeReviews / totalReviewedPRs) * 100)
+      : 0;
+
+    return {
+      prsWithNegativeReviews,
+      totalReviewedPRs,
+      negativeReviewRate,
+      prsRequestingChanges: prsRequestingChanges.sort((a, b) => b.reviewCount - a.reviewCount),
+    };
   }
 
   private async getPRs(since?: string): Promise<PRInfo[]> {

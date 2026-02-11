@@ -1,0 +1,26 @@
+{"id":"GAP-01","task":"Commit Type Classification","phase":"A.1","file":"src/analyzers/git.ts","priority":"P0","status":"pending","depends":[],"created":"2026-02-11T00:00:00Z"}
+{"id":"GAP-02","task":"Checkpoint Commit Detection","phase":"A.1","file":"src/analyzers/git.ts","priority":"P1","status":"pending","depends":[],"created":"2026-02-11T00:00:00Z"}
+{"id":"GAP-03","task":"Reactive/Proactive Ratio","phase":"A.1","file":"src/analyzers/git.ts","priority":"P1","status":"pending","depends":["GAP-01"],"created":"2026-02-11T00:00:00Z"}
+{"id":"GAP-04","task":"Decision Quality Score","phase":"A.2","file":"src/analyzers/decisions.ts","priority":"P0","status":"pending","depends":[],"created":"2026-02-11T00:00:00Z"}
+{"id":"GAP-05","task":"PR Supersession Tracking","phase":"A.3","file":"src/analyzers/github.ts","priority":"P0","status":"pending","depends":[],"created":"2026-02-11T00:00:00Z"}
+{"id":"GAP-06","task":"PR Test File Detection","phase":"A.3","file":"src/analyzers/github.ts","priority":"P1","status":"pending","depends":[],"created":"2026-02-11T00:00:00Z"}
+{"id":"GAP-07","task":"PRs with Negative Reviews","phase":"A.3","file":"src/analyzers/github.ts","priority":"P2","status":"pending","depends":[],"created":"2026-02-11T00:00:00Z"}
+{"id":"GAP-08","task":"Testing Discipline Analysis","phase":"B.1","file":"src/analyzers/decisions.ts","priority":"P0","status":"pending","depends":["GAP-04"],"created":"2026-02-11T00:00:00Z"}
+{"id":"GAP-09","task":"Executive Summary Extension","phase":"C.1","file":"src/report/generator.ts","priority":"P1","status":"pending","depends":["GAP-01","GAP-02","GAP-03","GAP-04","GAP-05","GAP-06","GAP-07","GAP-08"],"created":"2026-02-11T00:00:00Z"}
+{"id":"GAP-10","task":"What Worked/Didn't Section","phase":"C.2","file":"src/report/generator.ts","priority":"P0","status":"pending","depends":["GAP-01","GAP-04","GAP-05","GAP-08"],"created":"2026-02-11T00:00:00Z"}
+{"id":"GAP-11","task":"Mistakes & Corrections Section","phase":"C.3","file":"src/report/generator.ts","priority":"P2","status":"pending","depends":[],"created":"2026-02-11T00:00:00Z"}
+{"id":"GAP-12","task":"Recommendation Format","phase":"C.4","file":"src/report/generator.ts","priority":"P1","status":"pending","depends":[],"created":"2026-02-11T00:00:00Z"}
+{"id":"GAP-13","task":"PRs Merged in Summary","phase":"C.1","file":"src/report/generator.ts","priority":"P1","status":"pending","depends":["GAP-05"],"created":"2026-02-11T00:00:00Z"}
+{"id":"GAP-01","phase":"gap","status":"completed","completed_at":"2026-02-11T18:52:59Z"}
+{"id":"GAP-02","phase":"gap","status":"completed","completed_at":"2026-02-11T18:52:59Z"}
+{"id":"GAP-03","phase":"gap","status":"completed","completed_at":"2026-02-11T18:52:59Z"}
+{"id":"GAP-04","phase":"gap","status":"completed","completed_at":"2026-02-11T18:52:59Z"}
+{"id":"GAP-05","phase":"gap","status":"completed","completed_at":"2026-02-11T18:52:59Z"}
+{"id":"GAP-06","phase":"gap","status":"completed","completed_at":"2026-02-11T18:52:59Z"}
+{"id":"GAP-07","phase":"gap","status":"completed","completed_at":"2026-02-11T18:52:59Z"}
+{"id":"GAP-08","phase":"gap","status":"completed","completed_at":"2026-02-11T18:52:59Z"}
+{"id":"GAP-09","phase":"gap","status":"completed","completed_at":"2026-02-11T18:52:59Z"}
+{"id":"GAP-10","phase":"gap","status":"completed","completed_at":"2026-02-11T18:52:59Z"}
+{"id":"GAP-11","phase":"gap","status":"completed","completed_at":"2026-02-11T18:52:59Z"}
+{"id":"GAP-12","phase":"gap","status":"completed","completed_at":"2026-02-11T18:52:59Z"}
+{"id":"GAP-13","phase":"gap","status":"completed","completed_at":"2026-02-11T18:52:59Z"}

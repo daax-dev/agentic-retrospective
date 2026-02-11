@@ -33,6 +33,25 @@ export interface DecisionRecord {
   [key: string]: unknown; // Allow additional properties
 }
 
+// Commit Type Classification (GAP-01)
+export type CommitType = 'feat' | 'fix' | 'docs' | 'test' | 'refactor' | 'chore' | 'other';
+
+export interface CommitTypeBreakdown {
+  feat: number;
+  fix: number;
+  docs: number;
+  test: number;
+  refactor: number;
+  chore: number;
+  other: number;
+}
+
+export interface WorkClassification {
+  proactive: number; // feat + docs + test
+  reactive: number;  // fix + refactor + chore
+  ratio: number;     // proactive / (proactive + reactive), 0-1
+}
+
 // Git Types
 export interface CommitInfo {
   hash: string;
@@ -226,6 +245,10 @@ export interface GitMetrics {
     percentage: number;
   }>;
   totalFilesChanged: number;
+  // GAP-01, GAP-02, GAP-03 additions
+  commitTypeBreakdown?: CommitTypeBreakdown;
+  checkpointCommits?: number;
+  workClassification?: WorkClassification;
 }
 
 // Tools Summary Types (Phase 1 - surfaced from ToolsAnalyzer)
@@ -245,6 +268,21 @@ export interface ToolsSummary {
 }
 
 // Decision Analysis Types (Phase 1 - surfaced from DecisionAnalyzer)
+export interface DecisionQualityMetrics {
+  qualityScore: number; // 0-100, % with both rationale AND context
+  totalDecisions: number;
+  decisionsWithBoth: number;
+  status: 'good' | 'warning' | 'critical'; // >70% good, 50-70% warning, <50% critical
+}
+
+export interface TestingDisciplineMetrics {
+  adherenceRate: number; // 0-100
+  totalDecisions: number;
+  decisionsWithTesting: number;
+  patternsDetected: Array<{ pattern: string; count: number }>;
+  status: 'good' | 'warning' | 'critical'; // >70% good, 20-70% warning, <20% critical
+}
+
 export interface DecisionAnalysis {
   byCategory: Array<{
     category: string;
@@ -275,6 +313,37 @@ export interface DecisionAnalysis {
     low: number;
     missingReversibilityPlan: string[];
   };
+  qualityMetrics?: DecisionQualityMetrics;
+  testingDiscipline?: TestingDisciplineMetrics;
+}
+
+// PR Analysis Types (GAP-05, GAP-06, GAP-07)
+export interface PRSupersessionAnalysis {
+  supersededPRs: Array<{
+    prNumber: number;
+    supersededBy: number;
+    pattern: string; // e.g., "Supersedes #X", "v2"
+  }>;
+  supersessionRate: number; // % of PRs that were superseded
+  chains: Array<number[]>; // chains of superseding PRs
+}
+
+export interface PRTestCoverage {
+  prsWithTests: number;
+  totalPRs: number;
+  coverageRate: number; // 0-100
+  testFilePatterns: string[]; // e.g., "*.test.ts", "test/"
+}
+
+export interface PRReviewAnalysis {
+  prsWithNegativeReviews: number;
+  totalReviewedPRs: number;
+  negativeReviewRate: number; // 0-100
+  prsRequestingChanges: Array<{
+    prNumber: number;
+    title: string;
+    reviewCount: number;
+  }>;
 }
 
 // Evidence Map Types
@@ -356,6 +425,10 @@ export interface RetroReport {
   decision_analysis?: DecisionAnalysis;
   human_insights?: HumanInsights;
   fix_to_feature_ratio?: FixToFeatureRatio;
+  // Gap implementation additions
+  pr_supersession?: PRSupersessionAnalysis;
+  pr_test_coverage?: PRTestCoverage;
+  pr_review_analysis?: PRReviewAnalysis;
   metadata: {
     tool_version: string;
     schema_version: string;

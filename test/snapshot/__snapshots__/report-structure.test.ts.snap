@@ -3,6 +3,7 @@
 exports[`Report Structure Snapshots > minimal report structure matches snapshot > section-headers 1`] = `
 "## ⚡ TL;DR (30 seconds)
 ## Executive Summary
+## What Worked / What Didn't
 ## Detailed Analysis
 ## Scoring Summary
 ## Action Items"
@@ -13,15 +14,15 @@ exports[`Report Structure Snapshots > report with action items matches snapshot 
 
 ### Must Do (This Sprint)
 
-| Action | Why | Owner | Success Metric |
-|--------|-----|-------|----------------|
-| Fix telemetry gap: missing_decisions | Cannot evaluate decision quality | TBD | Decisions logged |
+| Area | Current | Target | Action | Owner |
+|------|---------|--------|--------|-------|
+| Decision | - | Decisions logged | Fix telemetry gap: missing_decisions | TBD |
 
 ### Next Sprint
 
-| Action | Why | Owner | Success Metric |
-|--------|-----|-------|----------------|
-| Add security scanning | No vulnerability data | DevOps | Security score populated |
+| Area | Current | Target | Action | Owner |
+|------|---------|--------|--------|-------|
+| Security | - | Security score populated | Add security scanning | DevOps |
 
 "
 `;

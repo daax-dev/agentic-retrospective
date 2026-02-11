@@ -1,6 +1,6 @@
 # Fixing Telemetry Gaps
 
-When the `/retro` skill reports telemetry gaps, follow these guides to enable the missing data collection.
+When the `/retrospective` command reports telemetry gaps, follow these guides to enable the missing data collection.
 
 ---
 
@@ -114,8 +114,8 @@ echo '{"ts":"2024-01-15T10:00:00Z","decision":"Test decision","rationale":"Testi
 # Verify it parses
 cat .logs/decisions/*.jsonl | head -1 | python3 -m json.tool
 
-# Run retro to confirm detection
-/retro --from HEAD~5
+# Run retrospective to confirm detection
+/retrospective --from HEAD~5
 ```
 
 ---
@@ -352,8 +352,8 @@ Output format:
 After setting up data collection, verify with:
 
 ```bash
-# Run retro with verbose output
-/retro --from HEAD~10
+# Run retrospective with verbose output
+/retrospective --from HEAD~10
 
 # Check data completeness in output
 # Should show improved percentage
@@ -374,6 +374,6 @@ Expected improvements:
 
 If you encounter issues setting up telemetry:
 
-1. Check the schema files in `skills/retro/schemas/`
-2. Review example data in `skills/retro/examples/`
-3. Open an issue in the Daax repository
+1. Check the schema files in `schemas/`
+2. Review example data in `examples/`
+3. Open an issue in the repository

@@ -54,6 +54,17 @@ export class ReportGenerator {
       sections.push(this.generateDecisionAnalysisSection(report.decision_analysis));
     }
 
+    // GAP-10: What Worked / What Didn't Work
+    sections.push(this.generateWhatWorkedSection(report));
+
+    // GAP-11: Mistakes & Corrections (if decisions have that data)
+    if (report.decision_analysis) {
+      const mistakesSection = this.generateMistakesSection(report);
+      if (mistakesSection) {
+        sections.push(mistakesSection);
+      }
+    }
+
     // Detailed Analysis
     sections.push(this.generateDetailedAnalysis(report));
 
@@ -91,13 +102,58 @@ export class ReportGenerator {
 
     let md = `## Executive Summary
 
-### What Was Delivered
-- ${summary.commits} commits by ${summary.contributors} contributor(s)
-- ${summary.lines_added.toLocaleString()} lines added, ${summary.lines_removed.toLocaleString()} lines removed
+### Metrics at a Glance
+
+| Metric | Value |
+|--------|-------|
+| Commits | ${summary.commits} |
+| Contributors | ${summary.contributors} (${summary.human_contributors} human, ${summary.agent_contributors} agent) |
+| Lines Changed | +${summary.lines_added.toLocaleString()} / -${summary.lines_removed.toLocaleString()} |
+| Decisions Logged | ${summary.decisions_logged} |
+| Agent Commits | ${summary.agent_commits} (${summary.agent_commit_percentage}%) |
 `;
 
-    if (summary.decisions_logged > 0) {
-      md += `- ${summary.decisions_logged} decisions documented\n`;
+    // GAP-13: Add PR metrics if available
+    if (report.pr_supersession) {
+      md += `| PRs Total | ${report.pr_supersession.supersededPRs.length > 0 ? 'See PR analysis' : 'N/A'} |
+`;
+    }
+    if (report.pr_test_coverage) {
+      md += `| PRs with Tests | ${report.pr_test_coverage.prsWithTests}/${report.pr_test_coverage.totalPRs} (${report.pr_test_coverage.coverageRate}%) |
+`;
+    }
+    if (report.pr_supersession && report.pr_supersession.supersessionRate > 0) {
+      md += `| PR Rework Rate | ${report.pr_supersession.supersessionRate}% |
+`;
+    }
+
+    // GAP-01: Commit type breakdown
+    if (report.git_metrics?.commitTypeBreakdown) {
+      const b = report.git_metrics.commitTypeBreakdown;
+      md += `| Commit Types | feat:${b.feat} fix:${b.fix} docs:${b.docs} test:${b.test} refactor:${b.refactor} chore:${b.chore} |
+`;
+    }
+
+    // GAP-03: Reactive/Proactive ratio
+    if (report.git_metrics?.workClassification) {
+      const w = report.git_metrics.workClassification;
+      const ratio = Math.round(w.ratio * 100);
+      md += `| Work Balance | ${ratio}% proactive, ${100 - ratio}% reactive |
+`;
+    }
+
+    // GAP-04: Decision quality
+    if (report.decision_analysis?.qualityMetrics) {
+      const q = report.decision_analysis.qualityMetrics;
+      md += `| Decision Quality | ${q.qualityScore}% (${q.status}) |
+`;
+    }
+
+    // GAP-08: Testing discipline
+    if (report.decision_analysis?.testingDiscipline) {
+      const t = report.decision_analysis.testingDiscipline;
+      md += `| Testing Discipline | ${t.adherenceRate}% (${t.status}) |
+`;
     }
 
     md += `
@@ -106,7 +162,7 @@ export class ReportGenerator {
 - Quality/Maintainability: ${this.formatScore(scores.quality_maintainability)}
 `;
 
-    // Top wins (from findings marked as positive)
+    // Top findings
     md += `
 ### Top Findings
 `;
@@ -118,18 +174,35 @@ export class ReportGenerator {
       md += `- No significant findings detected (may indicate missing data sources)\n`;
     }
 
-    // Recommendations
+    // GAP-12: Updated recommendations format
     const mustDo = report.action_items.filter(a => a.priority === 'must_do');
     if (mustDo.length > 0) {
       md += `
 ### Top Recommendations
+
+| Area | Current | Target | Action |
+|------|---------|--------|--------|
 `;
       for (const action of mustDo.slice(0, 3)) {
-        md += `1. **${action.action}** - ${action.rationale}\n`;
+        md += `| ${this.extractArea(action.action)} | - | - | ${action.action} |\n`;
       }
     }
 
     return md;
+  }
+
+  /**
+   * Extract area from action text (first word or category)
+   */
+  private extractArea(action: string): string {
+    const areas = ['testing', 'security', 'quality', 'documentation', 'decision', 'agent', 'collaboration', 'process'];
+    const lower = action.toLowerCase();
+    for (const area of areas) {
+      if (lower.includes(area)) {
+        return area.charAt(0).toUpperCase() + area.slice(1);
+      }
+    }
+    return 'General';
   }
 
   private formatScore(score: Score): string {
@@ -382,11 +455,13 @@ ${gap.recommendation}
     if (mustDo.length === 0) {
       md += `*No critical actions identified*\n`;
     } else {
-      md += `| Action | Why | Owner | Success Metric |
-|--------|-----|-------|----------------|
+      // GAP-12: Updated recommendation format
+      md += `| Area | Current | Target | Action | Owner |
+|------|---------|--------|--------|-------|
 `;
       for (const item of mustDo) {
-        md += `| ${item.action} | ${item.rationale} | ${item.owner || 'TBD'} | ${item.success_metric} |\n`;
+        const area = this.extractArea(item.action);
+        md += `| ${area} | - | ${item.success_metric} | ${item.action} | ${item.owner || 'TBD'} |\n`;
       }
     }
 
@@ -398,11 +473,12 @@ ${gap.recommendation}
     if (nextSprint.length === 0) {
       md += `*No deferred actions*\n`;
     } else {
-      md += `| Action | Why | Owner | Success Metric |
-|--------|-----|-------|----------------|
+      md += `| Area | Current | Target | Action | Owner |
+|------|---------|--------|--------|-------|
 `;
       for (const item of nextSprint) {
-        md += `| ${item.action} | ${item.rationale} | ${item.owner || 'TBD'} | ${item.success_metric} |\n`;
+        const area = this.extractArea(item.action);
+        md += `| ${area} | - | ${item.success_metric} | ${item.action} | ${item.owner || 'TBD'} |\n`;
       }
     }
 
@@ -410,11 +486,12 @@ ${gap.recommendation}
       md += `
 ### Backlog
 
-| Action | Why | Priority |
-|--------|-----|----------|
+| Area | Action | Priority |
+|------|--------|----------|
 `;
       for (const item of backlog) {
-        md += `| ${item.action} | ${item.rationale} | Low |\n`;
+        const area = this.extractArea(item.action);
+        md += `| ${area} | ${item.action} | Low |\n`;
       }
     }
 
@@ -425,5 +502,178 @@ ${gap.recommendation}
     return `*Generated by \`agentic-retrospective\` - Agentic Retrospective*
 *Tool version: ${report.metadata.tool_version}*
 *Report schema: ${report.metadata.schema_version}*`;
+  }
+
+  /**
+   * GAP-10: Generate What Worked / What Didn't Work section
+   * Thresholds: > 70% = WORKED, < 50% = DIDN'T WORK, 50-70% = NEEDS ATTENTION
+   */
+  private generateWhatWorkedSection(report: RetroReport): string {
+    const worked: Array<{ area: string; value: number; evidence: string }> = [];
+    const didntWork: Array<{ area: string; value: number; evidence: string }> = [];
+    const needsAttention: Array<{ area: string; value: number; evidence: string }> = [];
+
+    // Check decision quality
+    if (report.decision_analysis?.qualityMetrics) {
+      const q = report.decision_analysis.qualityMetrics;
+      const item = { area: 'Decision Quality', value: q.qualityScore, evidence: `${q.decisionsWithBoth}/${q.totalDecisions} decisions have rationale and context` };
+      if (q.qualityScore >= 70) worked.push(item);
+      else if (q.qualityScore < 50) didntWork.push(item);
+      else needsAttention.push(item);
+    }
+
+    // Check testing discipline
+    if (report.decision_analysis?.testingDiscipline) {
+      const t = report.decision_analysis.testingDiscipline;
+      const item = { area: 'Testing Discipline', value: t.adherenceRate, evidence: `${t.decisionsWithTesting}/${t.totalDecisions} decisions reference testing` };
+      if (t.adherenceRate >= 70) worked.push(item);
+      else if (t.adherenceRate < 50) didntWork.push(item);
+      else needsAttention.push(item);
+    }
+
+    // Check PR test coverage
+    if (report.pr_test_coverage) {
+      const p = report.pr_test_coverage;
+      const item = { area: 'PR Test Coverage', value: p.coverageRate, evidence: `${p.prsWithTests}/${p.totalPRs} PRs include test files` };
+      if (p.coverageRate >= 70) worked.push(item);
+      else if (p.coverageRate < 50) didntWork.push(item);
+      else needsAttention.push(item);
+    }
+
+    // Check escalation compliance
+    if (report.decision_analysis?.escalationCompliance) {
+      const e = report.decision_analysis.escalationCompliance;
+      const item = { area: 'Escalation Compliance', value: e.rate, evidence: `${e.escalated}/${e.total} one-way-doors escalated to humans` };
+      if (e.rate >= 70) worked.push(item);
+      else if (e.rate < 50) didntWork.push(item);
+      else needsAttention.push(item);
+    }
+
+    // Check proactive work ratio
+    if (report.git_metrics?.workClassification) {
+      const w = report.git_metrics.workClassification;
+      const ratio = Math.round(w.ratio * 100);
+      const item = { area: 'Proactive Work', value: ratio, evidence: `${w.proactive} proactive vs ${w.reactive} reactive commits` };
+      if (ratio >= 70) worked.push(item);
+      else if (ratio < 50) didntWork.push(item);
+      else needsAttention.push(item);
+    }
+
+    // Check negative review rate (inverse - lower is better)
+    if (report.pr_review_analysis) {
+      const n = report.pr_review_analysis;
+      // For negative reviews, we invert: >30% negative is bad, <10% is good
+      const successRate = 100 - n.negativeReviewRate;
+      const item = { area: 'PR Review Quality', value: successRate, evidence: `${n.prsWithNegativeReviews}/${n.totalReviewedPRs} PRs had change requests` };
+      if (n.negativeReviewRate < 30) worked.push(item);
+      else if (n.negativeReviewRate > 50) didntWork.push(item);
+      else needsAttention.push(item);
+    }
+
+    let md = `## What Worked / What Didn't
+
+`;
+
+    if (worked.length > 0) {
+      md += `### What Worked Well
+
+| Area | Score | Evidence |
+|------|-------|----------|
+`;
+      for (const item of worked) {
+        md += `| ${item.area} | ${item.value}% | ${item.evidence} |
+`;
+      }
+      md += '\n';
+    }
+
+    if (didntWork.length > 0) {
+      md += `### What Didn't Work
+
+| Area | Score | Evidence | Recommendation |
+|------|-------|----------|----------------|
+`;
+      for (const item of didntWork) {
+        md += `| ${item.area} | ${item.value}% | ${item.evidence} | Improve ${item.area.toLowerCase()} processes |
+`;
+      }
+      md += '\n';
+    }
+
+    if (needsAttention.length > 0) {
+      md += `### Needs Attention
+
+| Area | Score | Evidence |
+|------|-------|----------|
+`;
+      for (const item of needsAttention) {
+        md += `| ${item.area} | ${item.value}% | ${item.evidence} |
+`;
+      }
+    }
+
+    if (worked.length === 0 && didntWork.length === 0 && needsAttention.length === 0) {
+      md += `*Insufficient data to evaluate. Ensure decision logs and PR data are available.*`;
+    }
+
+    return md;
+  }
+
+  /**
+   * GAP-11: Generate Mistakes & Corrections section
+   * Extracts decisions that have mistake or correction fields
+   */
+  private generateMistakesSection(report: RetroReport): string | null {
+    // This would need decisions with mistake/correction fields
+    // For now, extract from evidence_map.decisions or findings that indicate corrections
+    const corrections: Array<{
+      decision: string;
+      mistake: string;
+      correction: string;
+      timeToCorrect: string;
+    }> = [];
+
+    // Check findings for correction patterns
+    for (const finding of report.findings) {
+      if (finding.category === 'scope_drift' || finding.title.toLowerCase().includes('correction') || finding.title.toLowerCase().includes('revert')) {
+        corrections.push({
+          decision: finding.title,
+          mistake: finding.summary,
+          correction: finding.recommendation || 'See finding details',
+          timeToCorrect: 'Within sprint',
+        });
+      }
+    }
+
+    // Check for PR supersession chains as mistakes
+    if (report.pr_supersession && report.pr_supersession.chains.length > 0) {
+      for (const chain of report.pr_supersession.chains) {
+        if (chain.length >= 2) {
+          corrections.push({
+            decision: `PR #${chain[0]}`,
+            mistake: `Superseded ${chain.length - 1} time(s)`,
+            correction: `Final PR #${chain[chain.length - 1]}`,
+            timeToCorrect: `${chain.length - 1} iterations`,
+          });
+        }
+      }
+    }
+
+    if (corrections.length === 0) {
+      return null; // Don't show section if no corrections
+    }
+
+    let md = `## Mistakes & Corrections
+
+| Decision | Mistake | Correction | Time to Correct |
+|----------|---------|------------|-----------------|
+`;
+
+    for (const c of corrections.slice(0, 10)) {
+      md += `| ${c.decision} | ${c.mistake} | ${c.correction} | ${c.timeToCorrect} |
+`;
+    }
+
+    return md;
   }
 }

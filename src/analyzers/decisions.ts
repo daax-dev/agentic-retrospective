@@ -4,7 +4,7 @@
 
 import { existsSync, readdirSync, readFileSync } from 'fs';
 import { join } from 'path';
-import type { DecisionRecord } from '../types.js';
+import type { DecisionRecord, DecisionQualityMetrics, TestingDisciplineMetrics } from '../types.js';
 
 export interface DecisionAnalysisResult {
   records: DecisionRecord[];
@@ -305,6 +305,124 @@ export class DecisionAnalyzer {
       .split(/\s+/)
       .map(w => w.replace(/[^a-z0-9]/gi, '').toLowerCase())
       .filter(w => w.length >= 3 && !stopWords.has(w));
+  }
+
+  /**
+   * Calculate decision quality score (GAP-04)
+   * Quality = decisions with BOTH rationale AND context / total * 100
+   */
+  calculateQualityScore(): DecisionQualityMetrics {
+    const result = this.analyze();
+    const records = result.records;
+
+    if (records.length === 0) {
+      return {
+        qualityScore: 100, // No decisions = no quality issues
+        totalDecisions: 0,
+        decisionsWithBoth: 0,
+        status: 'good',
+      };
+    }
+
+    const decisionsWithBoth = records.filter(r => {
+      const hasRationale = Boolean(r.rationale && r.rationale.trim());
+      const hasContext = Boolean(
+        r.context &&
+        (typeof r.context === 'string' ? r.context.trim() : Object.keys(r.context).length > 0)
+      );
+      return hasRationale && hasContext;
+    }).length;
+
+    const qualityScore = Math.round((decisionsWithBoth / records.length) * 100);
+
+    let status: 'good' | 'warning' | 'critical';
+    if (qualityScore >= 70) {
+      status = 'good';
+    } else if (qualityScore >= 50) {
+      status = 'warning';
+    } else {
+      status = 'critical';
+    }
+
+    return {
+      qualityScore,
+      totalDecisions: records.length,
+      decisionsWithBoth,
+      status,
+    };
+  }
+
+  /**
+   * Analyze testing discipline in decisions (GAP-08)
+   * Scans for testing-related patterns: test, spec, passed, failed, coverage
+   */
+  analyzeTestingDiscipline(): TestingDisciplineMetrics {
+    const result = this.analyze();
+    const records = result.records;
+
+    const testingPatterns = [
+      { pattern: 'test', regex: /\btest(s|ed|ing)?\b/i },
+      { pattern: 'spec', regex: /\bspec(s)?\b/i },
+      { pattern: 'passed', regex: /\bpass(ed|es|ing)?\b/i },
+      { pattern: 'failed', regex: /\bfail(ed|s|ing|ure)?\b/i },
+      { pattern: 'coverage', regex: /\bcoverage\b/i },
+      { pattern: 'unit test', regex: /\bunit\s*test/i },
+      { pattern: 'integration test', regex: /\bintegration\s*test/i },
+      { pattern: 'e2e', regex: /\be2e\b|\bend[-\s]to[-\s]end\b/i },
+      { pattern: 'TDD', regex: /\btdd\b/i },
+      { pattern: 'verified', regex: /\bverif(y|ied|ication)\b/i },
+    ];
+
+    const patternCounts = new Map<string, number>();
+    let decisionsWithTesting = 0;
+
+    for (const record of records) {
+      // Check all text fields for testing mentions
+      const textToCheck = [
+        record.decision || '',
+        record.rationale || '',
+        typeof record.context === 'string' ? record.context : '',
+        ...(record.followups || []),
+      ].join(' ');
+
+      let hasTestingMention = false;
+
+      for (const { pattern, regex } of testingPatterns) {
+        if (regex.test(textToCheck)) {
+          hasTestingMention = true;
+          patternCounts.set(pattern, (patternCounts.get(pattern) || 0) + 1);
+        }
+      }
+
+      if (hasTestingMention) {
+        decisionsWithTesting++;
+      }
+    }
+
+    const adherenceRate = records.length > 0
+      ? Math.round((decisionsWithTesting / records.length) * 100)
+      : 100;
+
+    let status: 'good' | 'warning' | 'critical';
+    if (adherenceRate >= 70) {
+      status = 'good';
+    } else if (adherenceRate >= 20) {
+      status = 'warning';
+    } else {
+      status = 'critical';
+    }
+
+    const patternsDetected = Array.from(patternCounts.entries())
+      .map(([pattern, count]) => ({ pattern, count }))
+      .sort((a, b) => b.count - a.count);
+
+    return {
+      adherenceRate,
+      totalDecisions: records.length,
+      decisionsWithTesting,
+      patternsDetected,
+      status,
+    };
   }
 
   /**

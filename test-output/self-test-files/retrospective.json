@@ -4,7 +4,7 @@
     "from": "HEAD~10",
     "to": "HEAD"
   },
-  "generated_at": "2026-02-11T17:16:26.792Z",
+  "generated_at": "2026-02-11T18:52:04.000Z",
   "data_completeness": {
     "percentage": 40,
     "sources": {
@@ -40,11 +40,11 @@
     "contributors": 1,
     "human_contributors": 0,
     "agent_contributors": 1,
-    "lines_added": 10343,
-    "lines_removed": 12434,
+    "lines_added": 33342,
+    "lines_removed": 12484,
     "decisions_logged": 13,
-    "agent_commits": 2,
-    "agent_commit_percentage": 20
+    "agent_commits": 1,
+    "agent_commit_percentage": 10
   },
   "scores": {
     "delivery_predictability": {
@@ -52,7 +52,7 @@
       "confidence": "high",
       "evidence": [
         "10 commits",
-        "Average 2278 lines per commit"
+        "Average 4583 lines per commit"
       ]
     },
     "test_loop_completeness": {
@@ -62,10 +62,10 @@
       "details": "No test data"
     },
     "quality_maintainability": {
-      "score": 2,
+      "score": 1,
       "confidence": "medium",
       "evidence": [
-        "4 large commits (40%)"
+        "5 large commits (50%)"
       ]
     },
     "security_posture": {
@@ -393,6 +393,10 @@
   ],
   "evidence_map": {
     "commits": {
+      "f5a3741ad0bd41816e8f0660663a148cc36633e2": {
+        "decisions": [],
+        "findings": []
+      },
       "a8d9cd0b29e436879778ca81d0b8b9b8c71b7326": {
         "decisions": [],
         "findings": []
@@ -428,14 +432,10 @@
       "45328828a6527dc1c853ed7be5ffee42bd4fed2e": {
         "decisions": [],
         "findings": []
-      },
-      "27101c09688ecd2dff61047f8b9c3c15f3805170": {
-        "decisions": [],
-        "findings": []
       }
     },
     "decisions": {
-      "dec-1770830186792": {
+      "dec-1770835924000": {
         "commits": [],
         "type": "two_way_door",
         "escalated": false,
@@ -444,6 +444,7 @@
     },
     "orphans": {
       "commits_without_context": [
+        "f5a3741ad0bd41816e8f0660663a148cc36633e2",
         "a8d9cd0b29e436879778ca81d0b8b9b8c71b7326",
         "adebb8242b4ce0f075fb858318cce892562139d3",
         "6da3b6035dfa7209463d2da8c65c63440e45820b",
@@ -452,11 +453,10 @@
         "c6e08269342d8aa14b0b2f2bc156b6466da90a32",
         "e58c0d4d1200e21e505daece1eb74e7662cccc07",
         "3a8a05bc0c3295251f92b700e8da88afa8cc0e29",
-        "45328828a6527dc1c853ed7be5ffee42bd4fed2e",
-        "27101c09688ecd2dff61047f8b9c3c15f3805170"
+        "45328828a6527dc1c853ed7be5ffee42bd4fed2e"
       ],
       "decisions_without_implementation": [
-        "dec-1770830186792"
+        "dec-1770835924000"
       ]
     }
   },
@@ -464,36 +464,31 @@
     "hotspots": [
       {
         "path": ".claude-plugin/marketplace.json",
-        "changes": 6,
-        "concernLevel": "high"
-      },
-      {
-        "path": ".claude-plugin/plugin.json",
-        "changes": 6,
-        "concernLevel": "high"
-      },
-      {
-        "path": "skills/retrospective/SKILL.md",
-        "changes": 6,
-        "concernLevel": "high"
-      },
-      {
-        "path": "skills/claude-best-practices/SKILL.md",
         "changes": 5,
         "concernLevel": "high"
       },
       {
-        "path": "plugins/retrospective/skills/claude-best-practices/SKILL.md",
+        "path": ".claude-plugin/plugin.json",
+        "changes": 5,
+        "concernLevel": "high"
+      },
+      {
+        "path": "skills/retrospective/SKILL.md",
+        "changes": 5,
+        "concernLevel": "high"
+      },
+      {
+        "path": "skills/claude-best-practices/SKILL.md",
         "changes": 4,
+        "concernLevel": "medium"
+      },
+      {
+        "path": "plugins/retrospective/skills/claude-best-practices/SKILL.md",
+        "changes": 3,
         "concernLevel": "medium"
       },
       {
         "path": "plugins/retrospective/skills/retrospective/SKILL.md",
-        "changes": 4,
-        "concernLevel": "medium"
-      },
-      {
-        "path": "plugins/retrospective/.claude-plugin/plugin.json",
         "changes": 3,
         "concernLevel": "medium"
       }
@@ -501,56 +496,66 @@
     "filesByExtension": [
       {
         "extension": ".json",
-        "count": 32,
-        "percentage": 25
+        "count": 61,
+        "percentage": 29
+      },
+      {
+        "extension": ".ts",
+        "count": 46,
+        "percentage": 21
       },
       {
         "extension": ".md",
-        "count": 31,
-        "percentage": 24
+        "count": 41,
+        "percentage": 19
       },
       {
         "extension": ".py",
         "count": 31,
-        "percentage": 24
+        "percentage": 14
       },
       {
         "extension": ".sh",
         "count": 18,
-        "percentage": 14
+        "percentage": 8
       },
       {
-        "extension": ".ts",
-        "count": 13,
-        "percentage": 10
+        "extension": ".jsonl",
+        "count": 11,
+        "percentage": 5
+      },
+      {
+        "extension": ".yaml",
+        "count": 1,
+        "percentage": 0
+      },
+      {
+        "extension": ".snap",
+        "count": 1,
+        "percentage": 0
       },
       {
         "extension": ".gitignore",
         "count": 1,
-        "percentage": 1
-      },
-      {
-        "extension": ".jsonl",
-        "count": 1,
-        "percentage": 1
+        "percentage": 0
       },
       {
         "extension": ".toml",
         "count": 1,
-        "percentage": 1
+        "percentage": 0
       },
       {
         "extension": ".typed",
         "count": 1,
-        "percentage": 1
+        "percentage": 0
       },
       {
         "extension": ".lock",
         "count": 1,
-        "percentage": 1
+        "percentage": 0
       }
     ],
-    "totalFilesChanged": 130
+    "totalFilesChanged": 214
   },
   "tools_summary": {
     "totalCalls": 358,
@@ -683,7 +688,7 @@
   },
   "fix_to_feature_ratio": {
     "ratio": null,
-    "fixCommits": 2,
+    "fixCommits": 1,
     "featureCommits": 0,
     "isHealthy": false,
     "threshold": 0.1

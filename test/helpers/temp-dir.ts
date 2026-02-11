@@ -16,7 +16,7 @@ export interface TempDir {
 /**
  * Create a temporary directory for testing
  */
-export function createTempDir(prefix = 'agentic-retro-test-'): TempDir {
+export function createTempDir(prefix = 'agentic-retrospective-test-'): TempDir {
   const path = mkdtempSync(join(tmpdir(), prefix));
 
   return {

@@ -3,7 +3,7 @@
  */
 
 import { execSync } from 'child_process';
-import type { CommitInfo, FileChange } from '../types.js';
+import type { CommitInfo, FileChange, CommitType, CommitTypeBreakdown, WorkClassification } from '../types.js';
 
 export interface GitAnalysisResult {
   commits: CommitInfo[];
@@ -11,6 +11,10 @@ export interface GitAnalysisResult {
   totalLinesRemoved: number;
   filesByExtension: Map<string, number>;
   hotspots: Array<{ path: string; changes: number }>;
+  // GAP-01, GAP-02, GAP-03 additions
+  commitTypeBreakdown: CommitTypeBreakdown;
+  checkpointCommits: number;
+  workClassification: WorkClassification;
 }
 
 export class GitAnalyzer {
@@ -62,12 +66,20 @@ export class GitAnalyzer {
       .sort((a, b) => b.changes - a.changes)
       .slice(0, 10);
 
+    // GAP-01, GAP-02, GAP-03: Commit classification
+    const commitTypeBreakdown = this.calculateCommitTypeBreakdown(commits);
+    const checkpointCommits = this.countCheckpointCommits(commits);
+    const workClassification = this.calculateWorkClassification(commitTypeBreakdown);
+
     return {
       commits,
       totalLinesAdded,
       totalLinesRemoved,
       filesByExtension,
       hotspots,
+      commitTypeBreakdown,
+      checkpointCommits,
+      workClassification,
     };
   }
 
@@ -230,6 +242,124 @@ export class GitAnalyzer {
   /**
    * Check if a commit is agent-authored
    */
+  /**
+   * Categorize a commit message into a type (GAP-01)
+   * Follows conventional commits pattern: type(scope): description
+   */
+  categorizeCommit(message: string): CommitType {
+    const lowerMessage = message.toLowerCase().trim();
+
+    // Conventional commit patterns
+    const patterns: Array<{ type: CommitType; regex: RegExp }> = [
+      { type: 'feat', regex: /^feat(\(.*?\))?[:\s]/i },
+      { type: 'fix', regex: /^fix(\(.*?\))?[:\s]/i },
+      { type: 'docs', regex: /^docs(\(.*?\))?[:\s]/i },
+      { type: 'test', regex: /^test(\(.*?\))?[:\s]/i },
+      { type: 'refactor', regex: /^refactor(\(.*?\))?[:\s]/i },
+      { type: 'chore', regex: /^chore(\(.*?\))?[:\s]/i },
+    ];
+
+    for (const { type, regex } of patterns) {
+      if (regex.test(message)) {
+        return type;
+      }
+    }
+
+    // Fallback heuristics based on common patterns
+    // Order matters - more specific patterns first
+    if (/^test|^spec|add.*test|test.*add/i.test(lowerMessage)) {
+      return 'test';
+    }
+    if (/^add\b|^implement|^create|^new\b/i.test(lowerMessage)) {
+      return 'feat';
+    }
+    if (/^fix\b|^bug\b|^patch|^hotfix/i.test(lowerMessage)) {
+      return 'fix';
+    }
+    if (/^doc|^readme|^update.*doc|^comment/i.test(lowerMessage)) {
+      return 'docs';
+    }
+    if (/^refactor|^clean|^reorganize|^restructure/i.test(lowerMessage)) {
+      return 'refactor';
+    }
+    if (/^chore|^bump|^update.*dep|^upgrade|^config|^ci\b|^build\b/i.test(lowerMessage)) {
+      return 'chore';
+    }
+
+    return 'other';
+  }
+
+  /**
+   * Check if a commit is a checkpoint/WIP commit (GAP-02)
+   */
+  isCheckpointCommit(message: string): boolean {
+    const lowerMessage = message.toLowerCase().trim();
+
+    const checkpointPatterns = [
+      /^wip\b/i,
+      /^wip:/i,
+      /\bwip\b$/i,
+      /^save\b/i,
+      /^tmp\b/i,
+      /^temp\b/i,
+      /^checkpoint\b/i,
+      /^progress\b/i,
+      /^work in progress/i,
+      /^saving/i,
+      /^backup\b/i,
+      /^\.\.\.*$/,  // Just dots
+      /^x$/i,       // Single letter placeholders
+      /^-$/,
+      /^\.$/,
+    ];
+
+    return checkpointPatterns.some(pattern => pattern.test(lowerMessage));
+  }
+
+  /**
+   * Calculate commit type breakdown for a set of commits (GAP-01)
+   */
+  calculateCommitTypeBreakdown(commits: CommitInfo[]): CommitTypeBreakdown {
+    const breakdown: CommitTypeBreakdown = {
+      feat: 0,
+      fix: 0,
+      docs: 0,
+      test: 0,
+      refactor: 0,
+      chore: 0,
+      other: 0,
+    };
+
+    for (const commit of commits) {
+      const type = this.categorizeCommit(commit.subject);
+      breakdown[type]++;
+    }
+
+    return breakdown;
+  }
+
+  /**
+   * Calculate work classification (proactive vs reactive) (GAP-03)
+   */
+  calculateWorkClassification(breakdown: CommitTypeBreakdown): WorkClassification {
+    const proactive = breakdown.feat + breakdown.docs + breakdown.test;
+    const reactive = breakdown.fix + breakdown.refactor + breakdown.chore;
+    const total = proactive + reactive;
+
+    return {
+      proactive,
+      reactive,
+      ratio: total > 0 ? proactive / total : 0,
+    };
+  }
+
+  /**
+   * Count checkpoint commits (GAP-02)
+   */
+  countCheckpointCommits(commits: CommitInfo[]): number {
+    return commits.filter(c => this.isCheckpointCommit(c.subject)).length;
+  }
+
   private isAgentCommit(commit: CommitInfo): boolean {
     // Check email patterns
     const botEmailPatterns = [

@@ -149,7 +149,7 @@ async function promptForFeedback(): Promise<void> {
 // Feedback command for capturing human input on retrospective quality
 program
   .command('feedback')
-  .description('Provide micro-retro feedback on agent collaboration quality')
+  .description('Provide session feedback on agent collaboration quality')
   .option('--alignment <score>', 'How well did the agent understand your intent? (1-5)')
   .option('--rework <level>', 'How much rework was needed? (none/minor/significant)')
   .option('--cycles <number>', 'Number of revision cycles before task completion')
