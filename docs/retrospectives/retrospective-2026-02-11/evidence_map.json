@@ -1,0 +1,114 @@
+{
+  "commits": {
+    "e58c0d4d1200e21e505daece1eb74e7662cccc07": {
+      "decisions": [],
+      "findings": []
+    },
+    "3a8a05bc0c3295251f92b700e8da88afa8cc0e29": {
+      "decisions": [],
+      "findings": []
+    },
+    "45328828a6527dc1c853ed7be5ffee42bd4fed2e": {
+      "decisions": [],
+      "findings": []
+    },
+    "27101c09688ecd2dff61047f8b9c3c15f3805170": {
+      "decisions": [],
+      "findings": []
+    },
+    "cd46a7a25ab0427922a354ce5cf73eed00f603e3": {
+      "decisions": [],
+      "findings": []
+    },
+    "d1f1da8ae299e1f29d27b0d96914bdc05210e6d0": {
+      "decisions": [],
+      "findings": []
+    },
+    "a8534003b21348a5b0521fbc55329031ac12e189": {
+      "decisions": [],
+      "findings": []
+    },
+    "b5cd750b0a381e2fd79fdb32afdc82da8988e478": {
+      "decisions": [],
+      "findings": []
+    },
+    "9c3dbe27fae12a3436e0aabfa4f9fc57f48ab49f": {
+      "decisions": [],
+      "findings": []
+    },
+    "2b146f1d44528555ea44e85a3bb2b81fb7607f0a": {
+      "decisions": [],
+      "findings": []
+    },
+    "3f9dfe271c822c92c8003b5bf25d432407ad8a9c": {
+      "decisions": [],
+      "findings": []
+    },
+    "f814933989ef8bcec56776ffe8e36084226046de": {
+      "decisions": [],
+      "findings": []
+    },
+    "29959340e9183eff0e5383a106c49daf61ce0be6": {
+      "decisions": [],
+      "findings": []
+    },
+    "832dd33c29ee748dda14938b475c2dcb005f933a": {
+      "decisions": [],
+      "findings": []
+    },
+    "ed6867a1d8ba62d72b2a047d1afe6c21d02ab13f": {
+      "decisions": [],
+      "findings": []
+    },
+    "430b135b3af98be0f074f817514426ccdc66cd70": {
+      "decisions": [],
+      "findings": []
+    },
+    "1cf5eab5eca70a423b170edf0cb748c76e5ed303": {
+      "decisions": [],
+      "findings": []
+    },
+    "932f45f83b84144a21eeadee3ff89986593cf578": {
+      "decisions": [],
+      "findings": []
+    },
+    "a96c6d86725b3692dcda6e44f10a22fea5242e3f": {
+      "decisions": [],
+      "findings": []
+    }
+  },
+  "decisions": {
+    "dec-1770783433142": {
+      "commits": [],
+      "type": "two_way_door",
+      "escalated": false,
+      "category": "architecture"
+    }
+  },
+  "orphans": {
+    "commits_without_context": [
+      "e58c0d4d1200e21e505daece1eb74e7662cccc07",
+      "3a8a05bc0c3295251f92b700e8da88afa8cc0e29",
+      "45328828a6527dc1c853ed7be5ffee42bd4fed2e",
+      "27101c09688ecd2dff61047f8b9c3c15f3805170",
+      "cd46a7a25ab0427922a354ce5cf73eed00f603e3",
+      "d1f1da8ae299e1f29d27b0d96914bdc05210e6d0",
+      "a8534003b21348a5b0521fbc55329031ac12e189",
+      "b5cd750b0a381e2fd79fdb32afdc82da8988e478",
+      "9c3dbe27fae12a3436e0aabfa4f9fc57f48ab49f",
+      "2b146f1d44528555ea44e85a3bb2b81fb7607f0a",
+      "3f9dfe271c822c92c8003b5bf25d432407ad8a9c",
+      "f814933989ef8bcec56776ffe8e36084226046de",
+      "29959340e9183eff0e5383a106c49daf61ce0be6",
+      "832dd33c29ee748dda14938b475c2dcb005f933a",
+      "ed6867a1d8ba62d72b2a047d1afe6c21d02ab13f",
+      "430b135b3af98be0f074f817514426ccdc66cd70",
+      "1cf5eab5eca70a423b170edf0cb748c76e5ed303",
+      "932f45f83b84144a21eeadee3ff89986593cf578",
+      "a96c6d86725b3692dcda6e44f10a22fea5242e3f"
+    ],
+    "decisions_without_implementation": [
+      "dec-1770783433142"
+    ]
+  }
+}

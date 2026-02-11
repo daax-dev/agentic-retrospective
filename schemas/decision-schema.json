@@ -1,0 +1,163 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://daax.dev/schemas/decision-log-v1.json",
+  "title": "Decision Log Entry",
+  "description": "Schema for JSONL decision log entries used by the Agentic Retrospective skill",
+  "type": "object",
+  "required": ["ts"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique identifier for the decision (e.g., 'dec-001')"
+    },
+    "ts": {
+      "type": "string",
+      "format": "date-time",
+      "description": "RFC3339 timestamp when decision was made"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Alias for ts (for backward compatibility)"
+    },
+    "sprint_id": {
+      "type": "string",
+      "description": "Sprint or cycle identifier (e.g., 'sprint-42')"
+    },
+    "actor": {
+      "type": "string",
+      "enum": ["human", "agent", "system"],
+      "description": "Who made the decision"
+    },
+    "category": {
+      "type": "string",
+      "enum": ["architecture", "security", "api", "data", "deps", "ux", "delivery", "process", "other"],
+      "description": "Category of decision for analysis grouping"
+    },
+    "decision_type": {
+      "type": "string",
+      "enum": ["one_way_door", "two_way_door", "reversible", "unknown"],
+      "description": "Reversibility classification (Amazon's one-way/two-way door concept)"
+    },
+    "decision": {
+      "type": "string",
+      "description": "Short summary of what was decided"
+    },
+    "summary": {
+      "type": "string",
+      "description": "Alias for decision field"
+    },
+    "title": {
+      "type": "string",
+      "description": "Alias for decision/summary field"
+    },
+    "context": {
+      "oneOf": [
+        { "type": "string" },
+        { "type": "object" }
+      ],
+      "description": "Links to related artifacts (PRs, files, docs) or structured context object"
+    },
+    "options_considered": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "option": { "type": "string" },
+          "pros": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "cons": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        },
+        "required": ["option"]
+      },
+      "description": "Alternatives that were evaluated"
+    },
+    "chosen_option": {
+      "type": "string",
+      "description": "Which option was selected"
+    },
+    "chosen": {
+      "type": "string",
+      "description": "Alias for chosen_option"
+    },
+    "rationale": {
+      "type": "string",
+      "description": "Why this option was chosen"
+    },
+    "reasoning": {
+      "type": "string",
+      "description": "Alias for rationale"
+    },
+    "risk_level": {
+      "type": "string",
+      "enum": ["low", "medium", "high"],
+      "description": "Assessed risk level of the decision"
+    },
+    "risk_notes": {
+      "type": "string",
+      "description": "Additional notes about risks or concerns"
+    },
+    "reversibility_plan": {
+      "type": "string",
+      "description": "How to roll back or migrate if decision needs to change"
+    },
+    "owner": {
+      "type": ["string", "null"],
+      "description": "Person or team responsible for the decision"
+    },
+    "followups": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Action items or tasks that follow from this decision"
+    },
+    "evidence_refs": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "References to related artifacts (commit:abc123, pr:45, file:path/to/file)"
+    },
+    "decision_id": {
+      "type": "string",
+      "description": "Alias for id field"
+    },
+    "alternatives_considered": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Simple list of alternatives (alternative to options_considered)"
+    }
+  },
+  "additionalProperties": true,
+  "examples": [
+    {
+      "id": "dec-001",
+      "ts": "2024-01-15T10:30:00Z",
+      "sprint_id": "sprint-42",
+      "actor": "human",
+      "category": "architecture",
+      "decision_type": "one_way_door",
+      "decision": "Chose PostgreSQL over MongoDB for user data",
+      "context": "docs/adr/001-database-choice.md",
+      "options_considered": [
+        {"option": "PostgreSQL", "pros": ["ACID", "familiar"], "cons": ["scaling complexity"]},
+        {"option": "MongoDB", "pros": ["flexible schema"], "cons": ["eventual consistency"]}
+      ],
+      "chosen_option": "PostgreSQL",
+      "rationale": "Strong consistency required for financial data",
+      "risk_level": "high",
+      "reversibility_plan": "Would require full data migration, estimated 2 weeks effort",
+      "owner": "jane@example.com",
+      "followups": ["Create migration runbook", "Set up read replicas"],
+      "evidence_refs": ["commit:abc123", "pr:45"]
+    },
+    {
+      "ts": "2024-01-15T14:00:00Z",
+      "decision": "Used Button component from shadcn instead of custom",
+      "rationale": "Faster to implement, well-tested, accessible by default",
+      "context": "src/components/ui/button.tsx"
+    }
+  ]
+}

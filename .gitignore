@@ -1,29 +1,8 @@
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-*.egg
-.installed.cfg
+# Dependencies
+node_modules/
 
-# Virtual environments
-.venv/
-venv/
-ENV/
+# Build output
+dist/
 
 # IDE
 .idea/
@@ -36,15 +15,7 @@ ENV/
 Thumbs.db
 
 # Test / Coverage
-.pytest_cache/
-.coverage
-htmlcov/
 coverage/
-.tox/
-.nox/
-
-# Type checking
-.mypy_cache/
 
 # Environment
 .env
@@ -55,3 +26,6 @@ coverage/
 
 # Claude Code local settings (user-specific)
 .claude/settings.local.json
+
+# Generated retrospective reports (optional - may want to commit these)
+# docs/retro/
