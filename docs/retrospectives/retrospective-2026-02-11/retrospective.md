@@ -1,7 +1,7 @@
 # Sprint Retrospective: retrospective-2026-02-11
 
 **Period**: HEAD~100 to HEAD
-**Generated**: 2026-02-11T04:17:13.143Z
+**Generated**: 2026-02-11T04:29:47.519Z
 **Data Completeness**: 40% (2/5 sources)
 
 ---
@@ -23,8 +23,8 @@
 ## Executive Summary
 
 ### What Was Delivered
-- 19 commits by 1 contributor(s)
-- 22,555 lines added, 14,781 lines removed
+- 20 commits by 1 contributor(s)
+- 32,186 lines added, 26,250 lines removed
 - 13 decisions documented
 
 ### Quality Signals
@@ -33,7 +33,7 @@
 
 ### Top Findings
 - **Tool Usage Pattern** (low): 358 tool calls across 1 unique tools
-- **Tool Usage Pattern** (low): Heavy tool usage: undefined (358)
+- **Tool Usage Pattern** (low): Heavy tool usage: unknown (358)
 - **Spec-Driven Development** (medium): No specification documents found - consider adding docs/specs/ or docs/prd/
 
 
@@ -84,14 +84,14 @@ Based on this sprint, consider adding to your CLAUDE.md:
 
 ### Delivery & Outcome
 
-- 19 commits
-- Average 1965 lines per commit
+- 20 commits
+- Average 2922 lines per commit
 
 **Score**: 1/5 (high confidence)
 
 ### Code Quality & Maintainability
 
-- 10 large commits (53%)
+- 11 large commits (55%)
 
 **Score**: 1/5 (medium confidence)
 
@@ -159,9 +159,9 @@ For detailed instructions, see `docs/fixing-telemetry-gaps.md`
 
 | Dimension | Score | Confidence | Key Evidence |
 |-----------|-------|------------|--------------|
-| Delivery Predictability | 1/5 | high | 19 commits |
+| Delivery Predictability | 1/5 | high | 20 commits |
 | Test Loop Completeness | N/A/5 | none | - |
-| Quality/Maintainability | 1/5 | medium | 10 large commits (53%) |
+| Quality/Maintainability | 1/5 | medium | 11 large commits (55%) |
 | Security Posture | N/A/5 | none | - |
 | Collaboration Efficiency | N/A/5 | none | - |
 | Decision Hygiene | 2/5 | high | 13 decisions logged |

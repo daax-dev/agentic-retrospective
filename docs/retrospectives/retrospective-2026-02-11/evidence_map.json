@@ -1,5 +1,9 @@
 {
   "commits": {
+    "c6e08269342d8aa14b0b2f2bc156b6466da90a32": {
+      "decisions": [],
+      "findings": []
+    },
     "e58c0d4d1200e21e505daece1eb74e7662cccc07": {
       "decisions": [],
       "findings": []
@@ -78,7 +82,7 @@
     }
   },
   "decisions": {
-    "dec-1770783433142": {
+    "dec-1770784187518": {
       "commits": [],
       "type": "two_way_door",
       "escalated": false,
@@ -87,6 +91,7 @@
   },
   "orphans": {
     "commits_without_context": [
+      "c6e08269342d8aa14b0b2f2bc156b6466da90a32",
       "e58c0d4d1200e21e505daece1eb74e7662cccc07",
       "3a8a05bc0c3295251f92b700e8da88afa8cc0e29",
       "45328828a6527dc1c853ed7be5ffee42bd4fed2e",
@@ -108,7 +113,7 @@
       "a96c6d86725b3692dcda6e44f10a22fea5242e3f"
     ],
     "decisions_without_implementation": [
-      "dec-1770783433142"
+      "dec-1770784187518"
     ]
   }
 }

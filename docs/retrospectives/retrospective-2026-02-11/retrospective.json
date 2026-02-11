@@ -4,7 +4,7 @@
     "from": "HEAD~100",
     "to": "HEAD"
   },
-  "generated_at": "2026-02-11T04:17:13.143Z",
+  "generated_at": "2026-02-11T04:29:47.519Z",
   "data_completeness": {
     "percentage": 40,
     "sources": {
@@ -30,12 +30,12 @@
     ]
   },
   "summary": {
-    "commits": 19,
+    "commits": 20,
     "contributors": 1,
     "human_contributors": 1,
     "agent_contributors": 0,
-    "lines_added": 22555,
-    "lines_removed": 14781,
+    "lines_added": 32186,
+    "lines_removed": 26250,
     "decisions_logged": 13,
     "agent_commits": 0,
     "agent_commit_percentage": 0
@@ -45,8 +45,8 @@
       "score": 1,
       "confidence": "high",
       "evidence": [
-        "19 commits",
-        "Average 1965 lines per commit"
+        "20 commits",
+        "Average 2922 lines per commit"
       ]
     },
     "test_loop_completeness": {
@@ -59,7 +59,7 @@
       "score": 1,
       "confidence": "medium",
       "evidence": [
-        "10 large commits (53%)"
+        "11 large commits (55%)"
       ]
     },
     "security_posture": {
@@ -99,7 +99,7 @@
       "category": "collaboration",
       "severity": "low",
       "title": "Tool Usage Pattern",
-      "summary": "Heavy tool usage: undefined (358)",
+      "summary": "Heavy tool usage: unknown (358)",
       "evidence": [],
       "confidence": "medium"
     },
@@ -168,6 +168,10 @@
   ],
   "evidence_map": {
     "commits": {
+      "c6e08269342d8aa14b0b2f2bc156b6466da90a32": {
+        "decisions": [],
+        "findings": []
+      },
       "e58c0d4d1200e21e505daece1eb74e7662cccc07": {
         "decisions": [],
         "findings": []
@@ -246,7 +250,7 @@
       }
     },
     "decisions": {
-      "dec-1770783433142": {
+      "dec-1770784187518": {
         "commits": [],
         "type": "two_way_door",
         "escalated": false,
@@ -255,6 +259,7 @@
     },
     "orphans": {
       "commits_without_context": [
+        "c6e08269342d8aa14b0b2f2bc156b6466da90a32",
         "e58c0d4d1200e21e505daece1eb74e7662cccc07",
         "3a8a05bc0c3295251f92b700e8da88afa8cc0e29",
         "45328828a6527dc1c853ed7be5ffee42bd4fed2e",
@@ -276,7 +281,7 @@
         "a96c6d86725b3692dcda6e44f10a22fea5242e3f"
       ],
       "decisions_without_implementation": [
-        "dec-1770783433142"
+        "dec-1770784187518"
       ]
     }
   },
