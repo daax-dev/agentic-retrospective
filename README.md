@@ -46,8 +46,8 @@ pip install agentic-retrospective
 Telemetry starts automatically. Use slash commands:
 
 ```
-/retrospective                     # Run full retrospective
-/retrospective --since "1 week"    # Custom time range
+/retrospective conduct             # Conduct full retrospective
+/retrospective conduct --since "1 week"  # Custom time range
 /micro-retrospective               # Quick 30-second feedback
 ```
 
@@ -57,8 +57,8 @@ Telemetry starts automatically. Use slash commands:
 # Set up telemetry directories
 agentic-retrospective setup
 
-# Run retrospective
-agentic-retrospective run --since "1 week ago" --verbose
+# Conduct retrospective (outputs to docs/retrospectives/YYYY-MM-DD/)
+agentic-retrospective conduct --since "1 week ago" --verbose
 
 # Quick feedback
 agentic-retrospective micro-retrospective
@@ -104,7 +104,7 @@ Usage: agentic-retrospective [OPTIONS] COMMAND [ARGS]...
 Commands:
   setup       Set up project for telemetry capture
   micro-retrospective Capture post-session feedback (30 seconds)
-  run         Run retrospective analysis
+  conduct     Conduct retrospective analysis
   decision    Log an architectural decision
 ```
 

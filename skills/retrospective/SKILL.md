@@ -1,7 +1,7 @@
 ---
 name: retrospective
-description: Run evidence-based sprint retrospectives with scoring across 6 dimensions. Analyzes git history, telemetry logs, and decisions to generate actionable insights.
-invocation: /retrospective
+description: Conduct evidence-based sprint retrospectives with scoring across 6 dimensions. Analyzes git history, telemetry logs, and decisions to generate actionable insights.
+invocation: /retrospective conduct
 ---
 
 # Agentic Retrospective Skill
@@ -13,12 +13,12 @@ This skill provides evidence-based sprint retrospectives for human-agent collabo
 Use the slash command directly in Claude Code:
 
 ```
-/retrospective
+/retrospective conduct
 ```
 
 Or with options:
 ```
-/retrospective --since "1 week ago" --verbose
+/retrospective conduct --since "1 week ago" --verbose
 ```
 
 ## CLI Commands
@@ -37,11 +37,11 @@ agentic-retrospective micro-retrospective
 ```
 Quick 30-second feedback survey after sessions.
 
-### Run Retrospective
+### Conduct Retrospective
 ```bash
-agentic-retrospective run --since "1 week ago"
+agentic-retrospective conduct --since "1 week ago"
 ```
-Generates analysis report from captured telemetry.
+Generates analysis report in `docs/retrospectives/YYYY-MM-DD/`.
 
 ### Log Decisions
 ```bash

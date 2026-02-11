@@ -1,6 +1,7 @@
 """Run agentic retrospective analysis."""
 
 import os
+from datetime import datetime
 from pathlib import Path
 
 from rich.console import Console
@@ -17,10 +18,21 @@ def run_retrospective(
     since: str = "2 weeks ago",
     verbose: bool = False,
     project_dir: Path | None = None,
+    output_dir: Path | None = None,
 ) -> None:
     """Run retrospective analysis using the full runner."""
     project_dir = project_dir or Path(os.environ.get("CLAUDE_PROJECT_DIR", os.getcwd()))
     project_dir = Path(project_dir)
+
+    # Default output to docs/retrospectives/, allow override
+    if output_dir is None:
+        output_dir = project_dir / "docs" / "retrospective"
+    output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    # Date-based subdirectory for this retrospective
+    date_str = datetime.now().strftime("%Y-%m-%d")
+    retro_output_dir = output_dir / date_str
 
     console.print()
     console.rule("[bold blue]Agentic Retrospective[/bold blue]")
@@ -35,7 +47,7 @@ def run_retrospective(
         to_ref="HEAD",
         agent_logs_path=str(project_dir / ".logs"),
         decisions_path=str(project_dir / ".logs" / "decisions"),
-        output_dir=str(project_dir / ".logs" / "retrospectives"),
+        output_dir=str(retro_output_dir),
         sprint_id=f"sprint-{since.replace(' ', '-')}",
     )
 

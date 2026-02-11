@@ -365,7 +365,7 @@ Based on this sprint, consider adding:
 2. All findings equal weight visually
 3. Action items not linked to specific evidence
 4. No quick wins highlighted
-5. No progress tracking between retros
+5. No progress tracking between retrospectives
 
 ### Enhanced Report Structure
 
@@ -1011,7 +1011,7 @@ feedback-skills-plugin/skills/claude-watch/
 
 1. **Bidirectional feedback is critical** - Current retro is one-way (agent → human)
 2. **Prompt quality analysis is high-value** - Root cause of many rework cycles
-3. **Post-session micro-retros are low-hanging fruit** - Immediate implementation
+3. **Post-session micro-retrospectives are low-hanging fruit** - Immediate implementation
 4. **Trending is essential for learning** - Can't improve without longitudinal view
 5. **Adaptive rubrics prevent false signals** - Context matters for scoring
 

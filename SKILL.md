@@ -42,19 +42,21 @@ agentic-retrospective micro-retrospective
 
 Quick 30-second feedback survey after sessions.
 
-### 4. Run Retrospective
+### 4. Conduct Retrospective
 
 ```bash
-agentic-retrospective run
+agentic-retrospective conduct
 ```
+
+Outputs to `docs/retrospectives/YYYY-MM-DD/`.
 
 ## CLI Commands
 
 | Command | Purpose |
 |---------|---------|
-| `agentic-retrospective setup` | Initialize .logs/ directories and hooks |
+| `agentic-retrospective setup` | Initialize .logs/ and docs/retrospectives/ directories |
 | `agentic-retrospective micro-retrospective` | Capture post-session feedback |
-| `agentic-retrospective run` | Generate retrospective report |
+| `agentic-retrospective conduct` | Generate retrospective report to docs/retrospectives/ |
 | `agentic-retrospective decision` | Log an architectural decision |
 
 ## What Gets Captured

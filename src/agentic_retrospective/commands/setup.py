@@ -39,6 +39,11 @@ def setup(project_dir: Path | None = None) -> None:
     for subdir in ["prompts", "tools", "decisions", "feedback"]:
         (project_dir / ".logs" / subdir).mkdir(parents=True, exist_ok=True)
 
+    # 2. Create retrospective output directory
+    retro_dir = project_dir / "docs" / "retrospective"
+    retro_dir.mkdir(parents=True, exist_ok=True)
+    console.print("[green][agentic-retrospective][/green] Created docs/retrospectives/")
+
     # 2. Add .logs to gitignore
     gitignore = project_dir / ".gitignore"
     if gitignore.exists():
@@ -125,7 +130,10 @@ def setup(project_dir: Path | None = None) -> None:
     console.print("  .logs/decisions/  - Decision records")
     console.print("  .logs/feedback/   - Session feedback")
     console.print()
+    console.print("Retrospective output directory:")
+    console.print("  docs/retrospectives/  - Retrospective reports by date")
+    console.print()
     console.print("Claude Code hooks configured in .claude/settings.json")
     console.print()
-    console.print("Capture feedback:  agentic-retrospective micro-retrospective")
-    console.print("Run retrospective: agentic-retrospective run")
+    console.print("Capture feedback:      agentic-retrospective micro-retrospective")
+    console.print("Conduct retrospective: agentic-retrospective conduct")

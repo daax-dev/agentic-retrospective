@@ -33,15 +33,16 @@ def micro_retrospective(session_id: str | None, project_dir: Path | None) -> Non
     do_micro_retrospective(session_id, project_dir)
 
 
-@cli.command("run")
+@cli.command("conduct")
 @click.option("--since", "-s", default="2 weeks ago", help="Analysis period (e.g., '1 week ago')")
 @click.option("--verbose", "-v", is_flag=True, help="Show detailed output")
 @click.option("--project-dir", "-p", type=click.Path(exists=True, path_type=Path), default=None)
-def run(since: str, verbose: bool, project_dir: Path | None) -> None:
-    """Run retrospective analysis."""
+@click.option("--output-dir", "-o", type=click.Path(path_type=Path), default=None, help="Output directory (default: docs/retrospectives/)")
+def conduct(since: str, verbose: bool, project_dir: Path | None, output_dir: Path | None) -> None:
+    """Conduct retrospective analysis."""
     from .commands.run_retrospective import run_retrospective
 
-    run_retrospective(since, verbose, project_dir)
+    run_retrospective(since, verbose, project_dir, output_dir)
 
 
 @cli.command()

@@ -15,7 +15,7 @@ echo ""
 
 # Try Python package first
 if command -v agentic-retrospective &> /dev/null; then
-    agentic-retrospective run --since "$SINCE" --verbose
+    agentic-retrospective conduct --since "$SINCE" --verbose
     exit 0
 fi
 
