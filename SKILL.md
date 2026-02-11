@@ -1,6 +1,6 @@
 ---
-name: agentic-retrospective
-description: Evidence-based sprint retrospectives for human-agent collaboration. Captures telemetry (prompts, tools, decisions) and generates actionable insights with scoring across 6 dimensions. Use when setting up development telemetry, running retrospectives, or analyzing human-agent collaboration patterns.
+name: retrospective
+description: Evidence-based sprint retrospectives for human-agent collaboration.
 license: Apache-2.0
 metadata:
   author: jpoley
@@ -9,103 +9,51 @@ metadata:
 
 # Agentic Retrospective
 
-Evidence-based sprint retrospectives for human-agent collaboration. Captures development telemetry and generates actionable insights.
+Evidence-based sprint retrospectives for human-agent collaboration.
 
-## Installation
+## Commands
 
-```bash
-uv pip install git+https://github.com/daax-dev/agentic-retrospective
-```
+| Command | Description |
+|---------|-------------|
+| `/retrospective` | Conduct full retrospective analysis |
+| `/retrospective setup` | Initialize telemetry capture |
+| `/retrospective status` | Check setup and data |
+| `/retrospective repair` | Fix missing dirs/config |
+| `/retrospective feedback` | Your chance to say what went well and what didn't |
 
 ## Quick Start
 
-### 1. Set Up Telemetry
+### 1. Setup
 
-```bash
-agentic-retrospective setup
 ```
-
-Creates `.logs/` directories and configures Claude Code hooks.
+/retrospective setup
+```
 
 ### 2. Work Normally
 
-Continue using your AI coding assistant. Hooks capture:
-- User prompts with complexity signals (via `UserPromptSubmit` hook)
-- Tool invocations (via `PostToolUse` hook)
-- Architectural decisions (when manually logged)
+Hooks automatically capture prompts, tool calls, and timing.
 
-### 3. Capture Session Feedback (Optional)
+### 3. Conduct Retrospective
 
-```bash
-agentic-retrospective micro-retrospective
+```
+/retrospective
 ```
 
-Quick 30-second feedback survey after sessions.
+Output: `docs/retrospectives/YYYY-MM-DD/`
 
-### 4. Conduct Retrospective
+### 4. Give Feedback
 
-```bash
-agentic-retrospective conduct
+```
+/retrospective feedback
 ```
 
-Outputs to `docs/retrospectives/YYYY-MM-DD/`.
+## Scoring Dimensions (0-5)
 
-## CLI Commands
-
-| Command | Purpose |
-|---------|---------|
-| `agentic-retrospective setup` | Initialize .logs/ and docs/retrospectives/ directories |
-| `agentic-retrospective micro-retrospective` | Capture post-session feedback |
-| `agentic-retrospective conduct` | Generate retrospective report to docs/retrospectives/ |
-| `agentic-retrospective decision` | Log an architectural decision |
-
-## What Gets Captured
-
-| Data Type | Location | Description |
-|-----------|----------|-------------|
-| Prompts | `.logs/prompts/YYYY-MM-DD.jsonl` | User prompts with complexity signals |
-| Tools | `.logs/tools/YYYY-MM-DD.jsonl` | All tool invocations |
-| Decisions | `.logs/decisions/YYYY-MM-DD.jsonl` | Architectural decisions |
-| Feedback | `.logs/feedback/YYYY-MM-DD.jsonl` | Post-session micro-retrospective |
-
-## Scoring Dimensions
-
-Reports score across 6 dimensions (0-5 scale):
-
-| Dimension | What It Measures |
-|-----------|------------------|
-| **Delivery Predictability** | Scope vs delivered |
-| **Test Loop Completeness** | Test coverage, pass rates |
-| **Quality/Maintainability** | Code churn patterns |
-| **Security Posture** | Vulnerability trends |
-| **Collaboration Efficiency** | Human-agent handoffs |
-| **Decision Hygiene** | One-way-door escalation rate |
-
-## Decision Logging
-
-Log architectural decisions during development:
-
-```bash
-agentic-retrospective decision "Use Zod for validation" \
-  --rationale "Type inference and runtime validation" \
-  --type two_way_door \
-  --actor agent
-```
-
-Decision types:
-- `one_way_door`: Hard to reverse (schema changes, public API)
-- `two_way_door`: Easy to reverse (refactoring, internal changes)
-
-## Report Contents
-
-- **TL;DR Summary** - At-a-glance sprint health
-- **Human Partner Insights** - Prompt patterns, improvement suggestions
-- **Fix-to-Feature Ratio** - Rework health indicator
-- **Action Items** - Prioritized improvements with evidence
-
-## Additional References
-
-- [Agent Watch Specification](references/agent-watch.md)
-- [Retrospective Specification](references/agentic-retrospective.md)
-- [Fixing Telemetry Gaps](references/fixing-telemetry-gaps.md)
-- [3-Agent Strategy](references/3agent-strategy.md) - Design document
+| Dimension | Measures |
+|-----------|----------|
+| Delivery Predictability | Scope vs delivered |
+| Test Loop Completeness | Coverage, pass rates |
+| Quality & Maintainability | Code churn patterns |
+| Security Posture | Vulnerability trends |
+| Collaboration Efficiency | Human-agent handoffs |
+| Decision Hygiene | One-way-door escalation |

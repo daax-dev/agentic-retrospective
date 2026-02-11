@@ -1,12 +1,12 @@
 ---
-name: conduct
+name: retrospective
 description: Conduct evidence-based sprint retrospective with scoring across 6 dimensions.
 invocation: /retrospective
 ---
 
-# Conduct Retrospective
+# Retrospective
 
-Run a full sprint retrospective analysis.
+Conduct a full sprint retrospective analysis.
 
 ## Usage
 
