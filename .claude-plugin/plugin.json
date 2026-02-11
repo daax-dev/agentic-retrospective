@@ -1,5 +1,5 @@
 {
-  "name": "retrospective",
+  "name": "daax",
   "version": "1.0.1",
   "description": "Evidence-based sprint retrospectives for human-agent collaboration. Captures telemetry (prompts, tools, decisions) and generates actionable insights with scoring across 6 dimensions.",
   "author": {
