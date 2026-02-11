@@ -10,14 +10,8 @@
     {
       "name": "daax",
       "description": "Evidence-based sprint retrospectives with telemetry capture and 6-dimension scoring.",
-      "version": "1.0.2",
-      "author": {
-        "name": "daax-dev",
-        "email": "jason@peregrinesummit.com"
-      },
-      "source": ".",
-      "category": "productivity",
-      "homepage": "https://github.com/daax-dev/agentic-retrospective"
+      "version": "1.0.3",
+      "source": "./"
     }
   ]
 }
