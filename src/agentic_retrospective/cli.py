@@ -23,14 +23,32 @@ def setup(project_dir: Path | None) -> None:
     do_setup(project_dir)
 
 
-@cli.command("micro-retrospective")
+@cli.command()
+@click.option("--project-dir", "-p", type=click.Path(exists=True, path_type=Path), default=None)
+def status(project_dir: Path | None) -> None:
+    """Check telemetry setup status."""
+    from .commands.status import print_status
+
+    print_status(project_dir, repair=False)
+
+
+@cli.command()
+@click.option("--project-dir", "-p", type=click.Path(exists=True, path_type=Path), default=None)
+def repair(project_dir: Path | None) -> None:
+    """Repair missing directories and configuration."""
+    from .commands.status import print_status
+
+    print_status(project_dir, repair=True)
+
+
+@cli.command("feedback")
 @click.option("--session-id", "-s", default=None, help="Session ID for feedback")
 @click.option("--project-dir", "-p", type=click.Path(exists=True, path_type=Path), default=None)
-def micro_retrospective(session_id: str | None, project_dir: Path | None) -> None:
+def feedback(session_id: str | None, project_dir: Path | None) -> None:
     """Capture post-session feedback (30 seconds)."""
-    from .commands.micro_retrospective import micro_retrospective as do_micro_retrospective
+    from .commands.micro_retrospective import micro_retrospective as do_feedback
 
-    do_micro_retrospective(session_id, project_dir)
+    do_feedback(session_id, project_dir)
 
 
 @cli.command("conduct")

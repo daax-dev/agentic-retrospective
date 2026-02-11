@@ -21,12 +21,30 @@ def run_retrospective(
     output_dir: Path | None = None,
 ) -> None:
     """Run retrospective analysis using the full runner."""
+    from .status import check_status
+
     project_dir = project_dir or Path(os.environ.get("CLAUDE_PROJECT_DIR", os.getcwd()))
     project_dir = Path(project_dir)
 
+    # Check status and warn if not ready
+    status = check_status(project_dir, repair=False)
+    if status["warnings"]:
+        console.print()
+        console.print("[bold yellow]WARNING: Telemetry issues detected[/bold yellow]")
+        for warning in status["warnings"]:
+            console.print(f"  [yellow]![/yellow] {warning}")
+        console.print()
+        console.print("[dim]Run 'agentic-retrospective repair' to fix, or /retrospective repair[/dim]")
+        console.print()
+
+    if not status["ready"]:
+        console.print("[bold red]Cannot conduct full retrospective - no telemetry data[/bold red]")
+        console.print("[dim]Continuing with git-only analysis...[/dim]")
+        console.print()
+
     # Default output to docs/retrospectives/, allow override
     if output_dir is None:
-        output_dir = project_dir / "docs" / "retrospective"
+        output_dir = project_dir / "docs" / "retrospectives"
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
