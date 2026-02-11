@@ -4,7 +4,7 @@
 
 Evidence-based sprint retrospectives for human-agent collaboration.
 
-![Retrospective Screenshot](assets/retrospective.png)
+![Agentic Retrospective](assets/retro-screen.png)
 
 ## Installation
 
