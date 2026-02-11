@@ -4,7 +4,7 @@
  * Produces human-readable markdown reports from analysis results
  */
 
-import type { RetroReport, Score, ActionItem, TelemetryGap } from '../types.js';
+import type { RetroReport, Score, ActionItem, TelemetryGap, GitMetrics, ToolsSummary, DecisionAnalysis } from '../types.js';
 import { HumanReportGenerator } from './human-report.js';
 
 export class ReportGenerator {
@@ -37,6 +37,21 @@ export class ReportGenerator {
     // Fix-to-Feature Ratio (Phase 1 addition)
     if (report.fix_to_feature_ratio) {
       sections.push(this.humanReportGenerator.generateFixToFeatureSection(report.fix_to_feature_ratio));
+    }
+
+    // Code Hotspots (Phase 1 - surfaced from GitAnalyzer)
+    if (report.git_metrics) {
+      sections.push(this.generateCodeHotspotsSection(report.git_metrics));
+    }
+
+    // Tool Performance (Phase 1 - surfaced from ToolsAnalyzer)
+    if (report.tools_summary) {
+      sections.push(this.generateToolPerformanceSection(report.tools_summary));
+    }
+
+    // Decisions Analysis (Phase 1 - surfaced from DecisionAnalyzer)
+    if (report.decision_analysis) {
+      sections.push(this.generateDecisionAnalysisSection(report.decision_analysis));
     }
 
     // Detailed Analysis
@@ -127,7 +142,7 @@ export class ReportGenerator {
   private generateDetailedAnalysis(report: RetroReport): string {
     const { scores } = report;
 
-    let md = `## Detailed Analysis
+    const md = `## Detailed Analysis
 
 ### Delivery & Outcome
 
@@ -166,6 +181,118 @@ ${scores.decision_hygiene.evidence.map(e => `- ${e}`).join('\n') || '- No decisi
 
 **Score**: ${this.formatScore(scores.decision_hygiene)}
 `;
+
+    return md;
+  }
+
+  private generateCodeHotspotsSection(metrics: GitMetrics): string {
+    let md = `## Code Hotspots
+
+Files changed 3+ times this sprint (high churn may indicate architectural issues):
+
+`;
+
+    if (metrics.hotspots.length === 0) {
+      md += `*No hotspots detected - files are being changed at a healthy frequency.*\n`;
+    } else {
+      md += `| File | Changes | Concern Level |
+|------|---------|---------------|
+`;
+      for (const hotspot of metrics.hotspots.slice(0, 10)) {
+        const concernEmoji = hotspot.concernLevel === 'high' ? '**High**' :
+                            hotspot.concernLevel === 'medium' ? 'Medium' : 'Low';
+        md += `| \`${hotspot.path}\` | ${hotspot.changes} | ${concernEmoji} |\n`;
+      }
+    }
+
+    md += `
+### File Distribution
+
+| Extension | Files Changed | % of Total |
+|-----------|---------------|------------|
+`;
+    for (const ext of metrics.filesByExtension.slice(0, 8)) {
+      md += `| ${ext.extension} | ${ext.count} | ${ext.percentage}% |\n`;
+    }
+
+    return md;
+  }
+
+  private generateToolPerformanceSection(summary: ToolsSummary): string {
+    let md = `## Tool Performance
+
+| Tool | Calls | % | Avg Duration | Success Rate | Top Error |
+|------|-------|---|--------------|--------------|-----------|
+`;
+
+    for (const tool of summary.byTool.slice(0, 8)) {
+      const avgDuration = tool.avgDuration !== null ? `${(tool.avgDuration / 1000).toFixed(2)}s` : '-';
+      const successPct = `${Math.round(tool.successRate * 100)}%`;
+      const topError = tool.errors.length > 0 ? tool.errors[0].slice(0, 30) : '-';
+      md += `| ${tool.tool} | ${tool.calls} | ${tool.percentage}% | ${avgDuration} | ${successPct} | ${topError} |\n`;
+    }
+
+    md += `
+**Overall**: ${summary.totalCalls} tool calls, ${Math.round((1 - summary.overallErrorRate) * 100)}% success rate, ${summary.avgCallsPerSession.toFixed(1)} avg calls/session
+`;
+
+    if (summary.overallErrorRate > 0.1) {
+      md += `\n⚠️ **High error rate** (${Math.round(summary.overallErrorRate * 100)}%) - investigate tool failures\n`;
+    }
+
+    return md;
+  }
+
+  private generateDecisionAnalysisSection(analysis: DecisionAnalysis): string {
+    let md = `## Decisions Analysis
+
+### By Category
+
+| Category | Count | % | Key Decisions |
+|----------|-------|---|---------------|
+`;
+
+    for (const cat of analysis.byCategory) {
+      const decisions = cat.decisions.join(', ').slice(0, 50);
+      md += `| ${cat.category} | ${cat.count} | ${cat.percentage}% | ${decisions}${decisions.length >= 50 ? '...' : ''} |\n`;
+    }
+
+    md += `
+### By Actor
+
+| Actor | Decisions | % | One-Way-Doors |
+|-------|-----------|---|---------------|
+`;
+
+    for (const actor of analysis.byActor) {
+      md += `| ${actor.actor} | ${actor.count} | ${actor.percentage}% | ${actor.oneWayDoors} |\n`;
+    }
+
+    md += `
+### Escalation Compliance
+`;
+
+    const statusEmoji = analysis.escalationCompliance.status === 'compliant' ? '✅' :
+                       analysis.escalationCompliance.status === 'warning' ? '⚠️' : '❌';
+
+    md += `${statusEmoji} **${Math.round(analysis.escalationCompliance.rate)}% escalation rate** - `;
+    md += `${analysis.escalationCompliance.escalated}/${analysis.escalationCompliance.total} one-way-door decisions made by humans\n`;
+
+    if (analysis.escalationCompliance.status === 'critical') {
+      md += `\n**CRITICAL**: One-way-door decisions are being made by agents without human approval. This violates decision hygiene principles.\n`;
+    }
+
+    if (analysis.riskProfile) {
+      md += `
+### Risk Profile
+
+| Risk Level | Count | Missing Reversibility Plan |
+|------------|-------|---------------------------|
+| High | ${analysis.riskProfile.high} | ${analysis.riskProfile.missingReversibilityPlan.length > 0 ? '⚠️' : '✅'} |
+| Medium | ${analysis.riskProfile.medium} | - |
+| Low | ${analysis.riskProfile.low} | - |
+`;
+    }
 
     return md;
   }

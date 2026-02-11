@@ -212,6 +212,71 @@ export interface FixToFeatureRatio {
   threshold: number;
 }
 
+// Git Metrics Types (Phase 1 - surfaced from GitAnalyzer)
+export interface GitMetrics {
+  hotspots: Array<{
+    path: string;
+    changes: number;
+    linesChurned?: number;
+    concernLevel: 'high' | 'medium' | 'low';
+  }>;
+  filesByExtension: Array<{
+    extension: string;
+    count: number;
+    percentage: number;
+  }>;
+  totalFilesChanged: number;
+}
+
+// Tools Summary Types (Phase 1 - surfaced from ToolsAnalyzer)
+export interface ToolsSummary {
+  totalCalls: number;
+  uniqueTools: number;
+  byTool: Array<{
+    tool: string;
+    calls: number;
+    percentage: number;
+    avgDuration: number | null;
+    successRate: number;
+    errors: string[];
+  }>;
+  overallErrorRate: number;
+  avgCallsPerSession: number;
+}
+
+// Decision Analysis Types (Phase 1 - surfaced from DecisionAnalyzer)
+export interface DecisionAnalysis {
+  byCategory: Array<{
+    category: string;
+    count: number;
+    percentage: number;
+    decisions: string[];
+  }>;
+  byActor: Array<{
+    actor: string;
+    count: number;
+    percentage: number;
+    oneWayDoors: number;
+  }>;
+  byType: Array<{
+    type: string;
+    count: number;
+    percentage: number;
+  }>;
+  escalationCompliance: {
+    rate: number;
+    total: number;
+    escalated: number;
+    status: 'compliant' | 'warning' | 'critical';
+  };
+  riskProfile?: {
+    high: number;
+    medium: number;
+    low: number;
+    missingReversibilityPlan: string[];
+  };
+}
+
 // Evidence Map Types
 export interface EvidenceMap {
   commits: Record<string, {
@@ -285,7 +350,10 @@ export interface RetroReport {
   risks: Risk[];
   action_items: ActionItem[];
   evidence_map: EvidenceMap;
-  // Phase 1 additions
+  // Phase 1 additions - surfaced data
+  git_metrics?: GitMetrics;
+  tools_summary?: ToolsSummary;
+  decision_analysis?: DecisionAnalysis;
   human_insights?: HumanInsights;
   fix_to_feature_ratio?: FixToFeatureRatio;
   metadata: {

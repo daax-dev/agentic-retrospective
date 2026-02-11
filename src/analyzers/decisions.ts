@@ -228,10 +228,124 @@ export class DecisionAnalyzer {
    */
   getDecisionThrash(): Array<{
     topic: string;
-    reversals: DecisionRecord[];
+    decisions: DecisionRecord[];
+    severity: 'high' | 'medium' | 'low';
   }> {
-    // TODO: Implement decision thrash detection using text similarity
-    // Would use this.analyze() results to group similar decisions
-    return [];
+    const result = this.analyze();
+    const thrashPatterns: Array<{
+      topic: string;
+      decisions: DecisionRecord[];
+      severity: 'high' | 'medium' | 'low';
+    }> = [];
+
+    // Group decisions by category
+    for (const [category, decisions] of result.byCategory) {
+      if (decisions.length < 2) continue;
+
+      // Look for similar topics within category (simple keyword matching)
+      const seen = new Map<string, DecisionRecord[]>();
+
+      for (const decision of decisions) {
+        const decisionText = (decision.decision || decision.summary || decision.title || '').toLowerCase();
+        const keywords = this.extractKeywords(decisionText);
+
+        for (const keyword of keywords) {
+          if (keyword.length < 4) continue; // Skip short words
+
+          const existing = seen.get(keyword) || [];
+          existing.push(decision);
+          seen.set(keyword, existing);
+        }
+      }
+
+      // Find keywords with multiple decisions (potential thrash)
+      for (const [keyword, relatedDecisions] of seen) {
+        if (relatedDecisions.length >= 2) {
+          // Check if decisions are within 7 days of each other
+          const sorted = [...relatedDecisions].sort((a, b) =>
+            new Date(a.ts).getTime() - new Date(b.ts).getTime()
+          );
+
+          const first = new Date(sorted[0].ts).getTime();
+          const last = new Date(sorted[sorted.length - 1].ts).getTime();
+          const daysDiff = (last - first) / (1000 * 60 * 60 * 24);
+
+          if (daysDiff <= 7) {
+            const severity = relatedDecisions.length >= 3 ? 'high' :
+                            relatedDecisions.length >= 2 ? 'medium' : 'low';
+
+            // Avoid duplicates
+            const existingPattern = thrashPatterns.find(p => p.topic === keyword);
+            if (!existingPattern) {
+              thrashPatterns.push({
+                topic: `${category}/${keyword}`,
+                decisions: relatedDecisions,
+                severity,
+              });
+            }
+          }
+        }
+      }
+    }
+
+    return thrashPatterns;
+  }
+
+  /**
+   * Extract keywords from decision text
+   */
+  private extractKeywords(text: string): string[] {
+    const stopWords = new Set([
+      'the', 'and', 'for', 'with', 'use', 'add', 'new', 'update', 'change',
+      'fix', 'implement', 'create', 'delete', 'remove', 'this', 'that', 'from',
+      'into', 'will', 'should', 'could', 'would', 'have', 'been', 'being',
+    ]);
+
+    return text
+      .split(/\s+/)
+      .map(w => w.replace(/[^a-z0-9]/gi, '').toLowerCase())
+      .filter(w => w.length >= 3 && !stopWords.has(w));
+  }
+
+  /**
+   * Analyze risk profile of decisions
+   */
+  analyzeRiskProfile(): {
+    byRiskLevel: Map<'high' | 'medium' | 'low', DecisionRecord[]>;
+    missingReversibilityPlan: DecisionRecord[];
+    missingRiskAssessment: DecisionRecord[];
+  } {
+    const result = this.analyze();
+    const byRiskLevel = new Map<'high' | 'medium' | 'low', DecisionRecord[]>([
+      ['high', []],
+      ['medium', []],
+      ['low', []],
+    ]);
+    const missingReversibilityPlan: DecisionRecord[] = [];
+    const missingRiskAssessment: DecisionRecord[] = [];
+
+    for (const record of result.records) {
+      // Group by risk level
+      const riskLevel = record.risk_level as 'high' | 'medium' | 'low' | undefined;
+      if (riskLevel && byRiskLevel.has(riskLevel)) {
+        byRiskLevel.get(riskLevel)!.push(record);
+      }
+
+      // Check for one-way-doors missing reversibility plan
+      if (record.decision_type === 'one_way_door') {
+        if (!record.reversibility_plan) {
+          missingReversibilityPlan.push(record);
+        }
+        if (!record.risk_level) {
+          missingRiskAssessment.push(record);
+        }
+      }
+    }
+
+    return {
+      byRiskLevel,
+      missingReversibilityPlan,
+      missingRiskAssessment,
+    };
   }
 }

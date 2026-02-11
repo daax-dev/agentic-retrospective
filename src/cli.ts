@@ -149,11 +149,13 @@ async function promptForFeedback(): Promise<void> {
 // Feedback command for capturing human input on retrospective quality
 program
   .command('feedback')
-  .description('Provide feedback on the retrospective and agent collaboration')
-  .option('--alignment <score>', 'How well did the agent understand your intent? (1-5)', '3')
-  .option('--rework <level>', 'How much rework was needed? (none/minor/significant)', 'minor')
+  .description('Provide micro-retro feedback on agent collaboration quality')
+  .option('--alignment <score>', 'How well did the agent understand your intent? (1-5)')
+  .option('--rework <level>', 'How much rework was needed? (none/minor/significant)')
+  .option('--cycles <number>', 'Number of revision cycles before task completion')
   .option('--worked <text>', 'What worked well?')
   .option('--improve <text>', 'What could be improved?')
+  .option('--session <id>', 'Session identifier')
   .action(async (options) => {
     const { existsSync, mkdirSync, appendFileSync } = await import('fs');
     const { join } = await import('path');
@@ -176,29 +178,74 @@ program
       });
     };
 
-    console.log(chalk.blue('\n📝 Retrospective Feedback\n'));
+    console.log(chalk.blue('\n📝 Micro-Retrospective Feedback\n'));
+    console.log(chalk.dim('Rate your collaboration session with the agent.\n'));
 
-    const alignment = options.alignment || await ask('Alignment score (1-5, how well did agent understand intent): ');
-    const rework = options.rework || await ask('Rework level (none/minor/significant): ');
-    const worked = options.worked || await ask('What worked well? ');
-    const improve = options.improve || await ask('What could be improved? ');
+    // Collect feedback interactively if not provided via options
+    const alignment = options.alignment || await ask(
+      chalk.cyan('Alignment (1-5)') + ' - How well did the agent match your intent?\n' +
+      chalk.dim('  1=Completely missed, 3=Needed guidance, 5=Exactly right: ')
+    );
+
+    const rework = options.rework || await ask(
+      chalk.cyan('\nRework needed') + ' - How much code did you have to fix?\n' +
+      chalk.dim('  (none/minor/significant): ')
+    );
+
+    const cycles = options.cycles || await ask(
+      chalk.cyan('\nRevision cycles') + ' - How many times did you need to correct the agent?\n' +
+      chalk.dim('  (enter a number): ')
+    );
+
+    const worked = options.worked || await ask(
+      chalk.cyan('\nWhat worked well?') + '\n' +
+      chalk.dim('  (e.g., "Good code structure", "Fast iteration"): ')
+    );
+
+    const improve = options.improve || await ask(
+      chalk.cyan('\nWhat could be improved?') + '\n' +
+      chalk.dim('  (e.g., "Missed edge cases", "Too verbose"): ')
+    );
 
     rl.close();
 
+    // Validate and normalize inputs
+    const alignmentScore = Math.max(1, Math.min(5, parseInt(alignment, 10) || 3));
+    const reworkLevel = ['none', 'minor', 'significant'].includes(rework?.toLowerCase())
+      ? rework.toLowerCase()
+      : 'minor';
+    const revisionCycles = Math.max(0, parseInt(cycles, 10) || 0);
+
     const feedback = {
       timestamp: new Date().toISOString(),
-      session_id: generateSprintId(),
-      alignment_score: parseInt(alignment, 10) || 3,
-      rework_level: rework,
-      what_worked: worked,
-      what_to_improve: improve,
+      session_id: options.session || `session-${Date.now()}`,
+      alignment_score: alignmentScore,
+      rework_level: reworkLevel,
+      revision_cycles: revisionCycles,
+      what_worked: worked || '',
+      what_to_improve: improve || '',
     };
 
     const feedbackFile = join(feedbackPath, `${new Date().toISOString().slice(0, 10)}.jsonl`);
     appendFileSync(feedbackFile, JSON.stringify(feedback) + '\n');
 
-    console.log(chalk.green('\n✅ Feedback saved!'));
-    console.log(`📁 ${feedbackFile}`);
+    // Print summary
+    console.log(chalk.green('\n✅ Feedback saved!\n'));
+    console.log(chalk.bold('Summary:'));
+    console.log(`  Alignment:       ${alignmentScore}/5 ${getAlignmentEmoji(alignmentScore)}`);
+    console.log(`  Rework:          ${reworkLevel}`);
+    console.log(`  Revision cycles: ${revisionCycles}`);
+    if (worked) console.log(`  Worked well:     ${worked.slice(0, 50)}${worked.length > 50 ? '...' : ''}`);
+    if (improve) console.log(`  To improve:      ${improve.slice(0, 50)}${improve.length > 50 ? '...' : ''}`);
+    console.log(`\n📁 Saved to: ${feedbackFile}`);
   });
+
+function getAlignmentEmoji(score: number): string {
+  if (score >= 5) return '🎯';
+  if (score >= 4) return '👍';
+  if (score >= 3) return '😐';
+  if (score >= 2) return '👎';
+  return '❌';
+}
 
 program.parse();

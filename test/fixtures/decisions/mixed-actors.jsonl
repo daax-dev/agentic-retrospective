@@ -1,0 +1,6 @@
+{"id":"mix-001","ts":"2026-02-01T10:00:00Z","actor":"human","category":"architecture","decision_type":"one_way_door","decision":"Adopt event sourcing for order service"}
+{"id":"mix-002","ts":"2026-02-01T11:00:00Z","actor":"human","category":"ux","decision_type":"two_way_door","decision":"Use modal for confirmation dialogs"}
+{"id":"mix-003","ts":"2026-02-02T10:00:00Z","actor":"agent","category":"deps","decision_type":"two_way_door","decision":"Add lodash for utility functions"}
+{"id":"mix-004","ts":"2026-02-02T11:00:00Z","actor":"agent","category":"process","decision_type":"one_way_door","decision":"Switch CI from Jenkins to GitHub Actions"}
+{"id":"mix-005","ts":"2026-02-03T10:00:00Z","actor":"system","category":"security","decision_type":"reversible","decision":"Enable rate limiting on API endpoints"}
+{"id":"mix-006","ts":"2026-02-03T11:00:00Z","actor":"system","category":"delivery","decision_type":"reversible","decision":"Increase deployment frequency to daily"}

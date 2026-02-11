@@ -1,0 +1,20 @@
+{"timestamp":"2026-02-01T10:00:00Z","session_id":"sess-201","tool_name":"Edit","duration_ms":25,"success":false,"error":"No match found for old_string"}
+{"timestamp":"2026-02-01T10:00:01Z","session_id":"sess-201","tool_name":"Edit","duration_ms":22,"success":false,"error":"No match found for old_string"}
+{"timestamp":"2026-02-01T10:00:02Z","session_id":"sess-201","tool_name":"Bash","duration_ms":5000,"success":false,"error":"Command timed out"}
+{"timestamp":"2026-02-01T10:00:03Z","session_id":"sess-201","tool_name":"Read","duration_ms":15,"success":true}
+{"timestamp":"2026-02-01T10:00:04Z","session_id":"sess-201","tool_name":"Edit","duration_ms":28,"success":false,"error":"File not found"}
+{"timestamp":"2026-02-01T10:00:05Z","session_id":"sess-201","tool_name":"Glob","duration_ms":45,"success":true}
+{"timestamp":"2026-02-01T10:00:06Z","session_id":"sess-201","tool_name":"Bash","duration_ms":120,"success":true}
+{"timestamp":"2026-02-01T10:00:07Z","session_id":"sess-201","tool_name":"Edit","duration_ms":30,"success":false,"error":"No match found for old_string"}
+{"timestamp":"2026-02-01T10:00:08Z","session_id":"sess-201","tool_name":"Read","duration_ms":12,"success":true}
+{"timestamp":"2026-02-01T10:00:09Z","session_id":"sess-201","tool_name":"Grep","duration_ms":35,"success":true}
+{"timestamp":"2026-02-01T10:00:10Z","session_id":"sess-202","tool_name":"Bash","duration_ms":3000,"success":false,"error":"Exit code 1: npm ERR!"}
+{"timestamp":"2026-02-01T10:00:11Z","session_id":"sess-202","tool_name":"Read","duration_ms":14,"success":true}
+{"timestamp":"2026-02-01T10:00:12Z","session_id":"sess-202","tool_name":"Edit","duration_ms":25,"success":true}
+{"timestamp":"2026-02-01T10:00:13Z","session_id":"sess-202","tool_name":"Bash","duration_ms":2500,"success":false,"error":"Exit code 1: test failed"}
+{"timestamp":"2026-02-01T10:00:14Z","session_id":"sess-202","tool_name":"Read","duration_ms":16,"success":true}
+{"timestamp":"2026-02-01T10:00:15Z","session_id":"sess-202","tool_name":"Edit","duration_ms":22,"success":true}
+{"timestamp":"2026-02-01T10:00:16Z","session_id":"sess-202","tool_name":"Bash","duration_ms":1800,"success":true}
+{"timestamp":"2026-02-01T10:00:17Z","session_id":"sess-202","tool_name":"Read","duration_ms":11,"success":true}
+{"timestamp":"2026-02-01T10:00:18Z","session_id":"sess-202","tool_name":"Grep","duration_ms":40,"success":false,"error":"Pattern not found"}
+{"timestamp":"2026-02-01T10:00:19Z","session_id":"sess-202","tool_name":"Edit","duration_ms":28,"success":false,"error":"No match found for old_string"}

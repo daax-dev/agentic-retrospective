@@ -1,0 +1,63 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Report Structure Snapshots > minimal report structure matches snapshot > section-headers 1`] = `
+"## ⚡ TL;DR (30 seconds)
+## Executive Summary
+## Detailed Analysis
+## Scoring Summary
+## Action Items"
+`;
+
+exports[`Report Structure Snapshots > report with action items matches snapshot > action-items-section 1`] = `
+"## Action Items
+
+### Must Do (This Sprint)
+
+| Action | Why | Owner | Success Metric |
+|--------|-----|-------|----------------|
+| Fix telemetry gap: missing_decisions | Cannot evaluate decision quality | TBD | Decisions logged |
+
+### Next Sprint
+
+| Action | Why | Owner | Success Metric |
+|--------|-----|-------|----------------|
+| Add security scanning | No vulnerability data | DevOps | Security score populated |
+
+"
+`;
+
+exports[`Report Structure Snapshots > report with all sections matches snapshot > code-hotspots-section 1`] = `
+"## Code Hotspots
+
+Files changed 3+ times this sprint (high churn may indicate architectural issues):
+
+| File | Changes | Concern Level |
+|------|---------|---------------|
+| \`src/runner.ts\` | 5 | **High** |
+| \`src/types.ts\` | 3 | Medium |
+
+### File Distribution
+
+| Extension | Files Changed | % of Total |
+|-----------|---------------|------------|
+| .ts | 20 | 80% |
+| .md | 5 | 20% |
+
+"
+`;
+
+exports[`Report Structure Snapshots > scoring table format matches snapshot > scoring-table 1`] = `
+"## Scoring Summary
+
+| Dimension | Score | Confidence | Key Evidence |
+|-----------|-------|------------|--------------|
+| Delivery Predictability | 5/5 | high | 50 small commits |
+| Test Loop Completeness | N/A/5 | none | - |
+| Quality/Maintainability | 4/5 | medium | 10% large commits |
+| Security Posture | 3/5 | high | 2 medium vulns |
+| Collaboration Efficiency | N/A/5 | none | - |
+| Decision Hygiene | 5/5 | high | 100% escalation |
+
+**Overall Sprint Health**: EXCELLENT
+"
+`;

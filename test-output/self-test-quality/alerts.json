@@ -1,0 +1,27 @@
+{
+  "alerts": [
+    {
+      "id": "alert-1",
+      "severity": "critical",
+      "type": "decision_gap",
+      "title": "One-way-door decision made by agent",
+      "description": "Agent made irreversible decision without human approval: Port all TypeScript to Python with full parity",
+      "evidence": [
+        "decision:unknown"
+      ],
+      "recommended_action": "Ensure one-way-door decisions are escalated to humans"
+    },
+    {
+      "id": "alert-2",
+      "severity": "critical",
+      "type": "decision_gap",
+      "title": "One-way-door decision made by agent",
+      "description": "Agent made irreversible decision without human approval: Create comprehensive test suite with 247 tests",
+      "evidence": [
+        "decision:unknown"
+      ],
+      "recommended_action": "Ensure one-way-door decisions are escalated to humans"
+    }
+  ],
+  "generated_at": "2026-02-11T17:16:16.999Z"
+}

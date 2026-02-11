@@ -1,0 +1,34 @@
+{
+  "ok": false,
+  "vulnerabilities": [
+    {
+      "id": "SNYK-JS-LODASH-1018905",
+      "title": "Prototype Pollution",
+      "severity": "high",
+      "packageName": "lodash",
+      "version": "4.17.19",
+      "fixedIn": ["4.17.21"],
+      "description": "Prototype pollution vulnerability"
+    },
+    {
+      "id": "SNYK-JS-AXIOS-1038255",
+      "title": "Server-Side Request Forgery",
+      "severity": "critical",
+      "packageName": "axios",
+      "version": "0.19.0",
+      "fixedIn": ["0.21.1"],
+      "description": "SSRF vulnerability in axios"
+    },
+    {
+      "id": "SNYK-JS-EXAMPLE-LOW",
+      "title": "Low severity issue",
+      "severity": "low",
+      "packageName": "example-pkg",
+      "version": "1.0.0",
+      "fixedIn": ["1.0.1"],
+      "description": "Minor vulnerability"
+    }
+  ],
+  "dependencyCount": 200,
+  "packageManager": "npm"
+}

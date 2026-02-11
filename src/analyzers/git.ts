@@ -210,4 +210,90 @@ export class GitAnalyzer {
     const parts = path.split('.');
     return parts.length > 1 ? `.${parts[parts.length - 1]}` : '(none)';
   }
+
+  /**
+   * Detect agent-authored commits based on various patterns
+   * Returns commits that were authored or co-authored by AI agents
+   */
+  detectAgentCommits(commits: CommitInfo[]): CommitInfo[] {
+    const agentCommits: CommitInfo[] = [];
+
+    for (const commit of commits) {
+      if (this.isAgentCommit(commit)) {
+        agentCommits.push(commit);
+      }
+    }
+
+    return agentCommits;
+  }
+
+  /**
+   * Check if a commit is agent-authored
+   */
+  private isAgentCommit(commit: CommitInfo): boolean {
+    // Check email patterns
+    const botEmailPatterns = [
+      /@bot\./i,
+      /-bot@/i,
+      /noreply@anthropic\.com/i,
+      /github-actions/i,
+      /dependabot/i,
+      /renovate/i,
+      /snyk-bot/i,
+      /\[bot\]@/i,
+    ];
+
+    for (const pattern of botEmailPatterns) {
+      if (pattern.test(commit.email)) {
+        return true;
+      }
+    }
+
+    // Check author name patterns
+    const botAuthorPatterns = [
+      /\[bot\]$/i,
+      /^Claude\b/i,
+      /^Copilot\b/i,
+      /^dependabot/i,
+      /^renovate/i,
+      /^github-actions/i,
+    ];
+
+    for (const pattern of botAuthorPatterns) {
+      if (pattern.test(commit.author)) {
+        return true;
+      }
+    }
+
+    // Check commit message/body for co-authorship
+    const fullMessage = `${commit.subject}\n${commit.body}`;
+    const coAuthorPatterns = [
+      /Co-authored-by:\s*Claude/i,
+      /Co-authored-by:\s*GitHub Copilot/i,
+      /Co-authored-by:.*@anthropic\.com/i,
+      /Co-authored-by:.*\[bot\]/i,
+    ];
+
+    for (const pattern of coAuthorPatterns) {
+      if (pattern.test(fullMessage)) {
+        return true;
+      }
+    }
+
+    // Check for agent session trailers
+    const trailerPatterns = [
+      /Agent-Session:/i,
+      /Daax-Session:/i,
+      /Claude-Session:/i,
+      /AI-Assisted:/i,
+    ];
+
+    for (const pattern of trailerPatterns) {
+      if (pattern.test(fullMessage)) {
+        return true;
+      }
+    }
+
+    return false;
+  }
 }

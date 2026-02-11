@@ -1,0 +1,4 @@
+{"ts":"2026-02-01T10:00:00Z","decision":"Valid decision 1","actor":"human"}
+{"ts":"2026-02-02T10:00:00Z","decision":"Valid decision 2","actor":"agent"}
+{not valid json at all - this line should be skipped
+{"decision":"Missing timestamp field - should be invalid","actor":"human"}

@@ -1,0 +1,46 @@
+{
+  "SchemaVersion": 2,
+  "ArtifactName": "test-app",
+  "ArtifactType": "filesystem",
+  "Metadata": {
+    "ImageConfig": {
+      "architecture": "amd64"
+    }
+  },
+  "Results": [
+    {
+      "Target": "package-lock.json",
+      "Class": "lang-pkgs",
+      "Type": "npm",
+      "Vulnerabilities": [
+        {
+          "VulnerabilityID": "CVE-2024-1234",
+          "PkgName": "lodash",
+          "InstalledVersion": "4.17.20",
+          "FixedVersion": "4.17.21",
+          "Severity": "HIGH",
+          "Title": "Prototype Pollution in lodash",
+          "Description": "Prototype pollution vulnerability in lodash before 4.17.21"
+        },
+        {
+          "VulnerabilityID": "CVE-2024-5678",
+          "PkgName": "axios",
+          "InstalledVersion": "0.21.0",
+          "FixedVersion": "0.21.2",
+          "Severity": "CRITICAL",
+          "Title": "Server-Side Request Forgery in axios",
+          "Description": "SSRF vulnerability in axios before 0.21.2"
+        },
+        {
+          "VulnerabilityID": "CVE-2024-9999",
+          "PkgName": "minimist",
+          "InstalledVersion": "1.2.5",
+          "FixedVersion": "1.2.6",
+          "Severity": "MEDIUM",
+          "Title": "Prototype Pollution in minimist",
+          "Description": "Prototype pollution in minimist before 1.2.6"
+        }
+      ]
+    }
+  ]
+}

@@ -30,6 +30,27 @@ export interface InterventionTiming {
   correctionType?: string;
 }
 
+// Phase 4.3: Prompt quality metrics
+export interface PromptQualityMetrics {
+  avgAmbiguityScore: number;      // 0-1, lower is better
+  constraintUsageRate: number;    // % of prompts with constraints
+  exampleUsageRate: number;       // % of prompts with examples
+  acceptanceCriteriaRate: number; // % of prompts with AC
+  avgFileReferences: number;      // avg files referenced per prompt
+  sampleSize: number;             // number of prompts analyzed
+}
+
+export interface PromptQualityCorrelation {
+  highQualityAvgAlignment: number;
+  lowQualityAvgAlignment: number;
+  promptsLeadingToRework: Array<{
+    sessionId: string;
+    promptSnippet: string;
+    issue: string;
+  }>;
+  effectivePromptPatterns: string[];
+}
+
 export class HumanInsightsAnalyzer {
   private promptLogs: PromptLogEntry[] = [];
   private feedbackLogs: FeedbackLogEntry[] = [];
@@ -397,6 +418,132 @@ export class HumanInsightsAnalyzer {
       isHealthy,
       threshold,
     };
+  }
+
+  /**
+   * Phase 4.3: Analyze prompt quality metrics
+   * Calculates aggregate quality metrics across all prompts
+   */
+  analyzePromptQuality(): PromptQualityMetrics {
+    const promptsWithSignals = this.promptLogs.filter(p => p.complexity_signals);
+
+    if (promptsWithSignals.length === 0) {
+      return {
+        avgAmbiguityScore: 0,
+        constraintUsageRate: 0,
+        exampleUsageRate: 0,
+        acceptanceCriteriaRate: 0,
+        avgFileReferences: 0,
+        sampleSize: 0,
+      };
+    }
+
+    const totalPrompts = promptsWithSignals.length;
+
+    // Calculate average ambiguity score
+    const ambiguityScores = promptsWithSignals
+      .map(p => p.complexity_signals!.ambiguity_score ?? 0);
+    const avgAmbiguityScore = ambiguityScores.reduce((a, b) => a + b, 0) / totalPrompts;
+
+    // Calculate constraint usage rate
+    const withConstraints = promptsWithSignals.filter(p => p.complexity_signals!.has_constraints);
+    const constraintUsageRate = (withConstraints.length / totalPrompts) * 100;
+
+    // Calculate example usage rate (prompts that include code examples)
+    const withExamples = promptsWithSignals.filter(p => p.complexity_signals!.has_examples);
+    const exampleUsageRate = (withExamples.length / totalPrompts) * 100;
+
+    // Calculate acceptance criteria usage rate
+    const withCriteria = promptsWithSignals.filter(p => p.complexity_signals!.has_acceptance_criteria);
+    const acceptanceCriteriaRate = (withCriteria.length / totalPrompts) * 100;
+
+    // Calculate average file references per prompt
+    const fileRefs = promptsWithSignals.map(p => p.complexity_signals!.file_references ?? 0);
+    const avgFileReferences = fileRefs.reduce((a, b) => a + b, 0) / totalPrompts;
+
+    return {
+      avgAmbiguityScore,
+      constraintUsageRate,
+      exampleUsageRate,
+      acceptanceCriteriaRate,
+      avgFileReferences,
+      sampleSize: totalPrompts,
+    };
+  }
+
+  /**
+   * Correlate prompt quality with outcomes
+   * Identifies which prompts led to high/low alignment and rework
+   */
+  correlateQualityWithOutcomes(): PromptQualityCorrelation {
+    const sessionFeedback = new Map<string, FeedbackLogEntry>();
+    for (const fb of this.feedbackLogs) {
+      sessionFeedback.set(fb.session_id, fb);
+    }
+
+    const promptsWithSignals = this.promptLogs.filter(p => p.complexity_signals);
+    const promptsWithFeedback = promptsWithSignals.filter(p => sessionFeedback.has(p.session_id));
+
+    if (promptsWithFeedback.length === 0) {
+      return {
+        highQualityAvgAlignment: 0,
+        lowQualityAvgAlignment: 0,
+        promptsLeadingToRework: [],
+        effectivePromptPatterns: [],
+      };
+    }
+
+    // Define "high quality" as low ambiguity + constraints + file references
+    const highQuality = promptsWithFeedback.filter(p => {
+      const signals = p.complexity_signals!;
+      return signals.ambiguity_score < 0.3 &&
+             signals.has_constraints &&
+             signals.file_references > 0;
+    });
+
+    // Define "low quality" as high ambiguity without constraints
+    const lowQuality = promptsWithFeedback.filter(p => {
+      const signals = p.complexity_signals!;
+      return signals.ambiguity_score > 0.5 && !signals.has_constraints;
+    });
+
+    const highQualityAvgAlignment = this.calculateAvgAlignment(highQuality, sessionFeedback);
+    const lowQualityAvgAlignment = this.calculateAvgAlignment(lowQuality, sessionFeedback);
+
+    // Find prompts that led to significant rework
+    const promptsLeadingToRework = promptsWithFeedback
+      .filter(p => {
+        const fb = sessionFeedback.get(p.session_id);
+        return fb && fb.rework_needed === 'significant';
+      })
+      .map(p => ({
+        sessionId: p.session_id,
+        promptSnippet: this.truncatePrompt(p.prompt, 50),
+        issue: this.identifyIssue(p),
+      }));
+
+    // Identify effective patterns
+    const effectivePromptPatterns = highQuality.length >= 2
+      ? ['file_references', 'explicit_constraints', 'low_ambiguity']
+      : [];
+
+    return {
+      highQualityAvgAlignment,
+      lowQualityAvgAlignment,
+      promptsLeadingToRework,
+      effectivePromptPatterns,
+    };
+  }
+
+  private identifyIssue(prompt: PromptLogEntry): string {
+    const signals = prompt.complexity_signals;
+    if (!signals) return 'Unknown';
+
+    if (signals.ambiguity_score > 0.6) return 'High ambiguity';
+    if (!signals.has_constraints) return 'Missing constraints';
+    if (signals.file_references === 0) return 'No file references';
+    if (!signals.has_acceptance_criteria) return 'No acceptance criteria';
+    return 'Unclear requirements';
   }
 
   /**

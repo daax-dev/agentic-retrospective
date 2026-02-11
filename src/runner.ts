@@ -21,11 +21,16 @@ import type {
   EvidenceMap,
   HumanInsights,
   FixToFeatureRatio,
+  GitMetrics,
+  ToolsSummary,
+  DecisionAnalysis,
 } from './types.js';
 import { GitAnalyzer } from './analyzers/git.js';
 import { DecisionAnalyzer } from './analyzers/decisions.js';
 import { HumanInsightsAnalyzer } from './analyzers/human-insights.js';
 import { GitHubAnalyzer } from './analyzers/github.js';
+import { SecurityAnalyzer } from './analyzers/security.js';
+import { ReworkAnalyzer } from './analyzers/rework.js';
 import { ArtifactsAnalyzer } from './analyzers/artifacts.js';
 import { ToolsAnalyzer } from './analyzers/tools.js';
 import { ReportGenerator } from './report/generator.js';
@@ -136,21 +141,184 @@ export class RetroRunner {
     const data: CollectedData = {
       git: null,
       decisions: null,
+      riskProfile: null,
+      toolsAnalysis: null,
       agentLogs: null,
       testResults: null,
       ciResults: null,
       humanInsights: null,
       fixToFeatureRatio: null,
+      securityAnalysis: null,
+      reworkAnalysis: null,
     };
 
     // Collect git data (required)
     const gitAnalyzer = new GitAnalyzer();
-    data.git = await gitAnalyzer.analyze(this.config.fromRef, this.config.toRef);
+    const gitResult = await gitAnalyzer.analyze(this.config.fromRef, this.config.toRef);
+
+    // Phase 2.1: Detect agent commits
+    const agentCommits = gitAnalyzer.detectAgentCommits(gitResult.commits);
+    const agentAuthors = new Set(agentCommits.map(c => c.author));
+
+    data.git = {
+      commits: gitResult.commits,
+      hotspots: gitResult.hotspots,
+      filesByExtension: gitResult.filesByExtension,
+      totalLinesAdded: gitResult.totalLinesAdded,
+      totalLinesRemoved: gitResult.totalLinesRemoved,
+      agentCommits: agentCommits.length,
+      agentCommitHashes: agentCommits.map(c => c.hash),
+      agentContributors: agentAuthors.size,
+    };
+
+    // Phase 4.2: Analyze rework chains
+    const reworkAnalyzer = new ReworkAnalyzer();
+    const reworkResult = reworkAnalyzer.detectReworkChains(gitResult.commits);
+
+    if (reworkResult.totalReworkCommits > 0) {
+      this.log(`  Rework: ${reworkResult.totalReworkCommits} fix commits (${Math.round(reworkResult.reworkPercentage)}%)`);
+
+      // Store rework data for report
+      data.reworkAnalysis = {
+        totalReworkCommits: reworkResult.totalReworkCommits,
+        reworkPercentage: reworkResult.reworkPercentage,
+        totalReworkLines: reworkResult.totalReworkLines,
+        avgTimeToFix: reworkResult.avgTimeToFix,
+        filesWithMostRework: reworkResult.filesWithMostRework,
+        chains: reworkResult.chains.map(c => ({
+          original: c.originalCommit.shortHash,
+          fixes: c.fixCommits.map(f => f.shortHash),
+          files: c.filesAffected,
+        })),
+      };
+
+      // Generate findings for high rework
+      if (reworkResult.reworkPercentage > 20) {
+        this.findings.push({
+          id: `rework-high-${this.findings.length}`,
+          category: 'quality',
+          severity: 'medium',
+          title: 'High rework detected',
+          summary: `${Math.round(reworkResult.reworkPercentage)}% of commits are fixes/rework. Consider more upfront planning.`,
+          evidence: reworkResult.chains.slice(0, 3).map(c => `commit:${c.originalCommit.shortHash}`),
+          recommendation: 'Review development process - high rework suggests missed requirements or insufficient testing',
+          confidence: 'high',
+        });
+      }
+
+      // Flag files with excessive rework
+      const problemFiles = reworkResult.filesWithMostRework.filter(f => f.reworkCount >= 3);
+      if (problemFiles.length > 0) {
+        this.findings.push({
+          id: `rework-files-${this.findings.length}`,
+          category: 'quality',
+          severity: 'low',
+          title: 'Files requiring frequent fixes',
+          summary: `${problemFiles.length} files needed 3+ fix commits - may indicate complexity issues`,
+          evidence: problemFiles.map(f => `file:${f.path}`),
+          recommendation: 'Consider refactoring or adding tests for these frequently-fixed files',
+          confidence: 'medium',
+        });
+      }
+    }
 
     // Collect decision logs (optional)
     if (existsSync(this.config.decisionsPath)) {
       const decisionAnalyzer = new DecisionAnalyzer(this.config.decisionsPath);
-      data.decisions = decisionAnalyzer.analyze();
+      const decisionResult = decisionAnalyzer.analyze();
+      data.decisions = {
+        records: decisionResult.records,
+        byCategory: decisionResult.byCategory,
+        byActor: decisionResult.byActor,
+        byType: decisionResult.byType,
+        escalationStats: decisionResult.escalationStats,
+      };
+
+      // Phase 1: Generate findings from orphaned decision methods
+      const missedEscalations = decisionAnalyzer.getMissedEscalations();
+      for (const decision of missedEscalations) {
+        this.findings.push({
+          id: `missed-escalation-${decision.id || this.findings.length}`,
+          category: 'decision_gap',
+          severity: 'critical',
+          title: 'One-way-door decision made by agent',
+          summary: `Agent made irreversible decision without human approval: ${(decision.decision || '').slice(0, 100)}`,
+          evidence: [`decision:${decision.id || 'unknown'}`],
+          recommendation: 'Ensure one-way-door decisions are escalated to humans',
+          confidence: 'high',
+        });
+      }
+
+      const trivialEscalations = decisionAnalyzer.getTrivialEscalations();
+      if (trivialEscalations.length > 2) {
+        this.findings.push({
+          id: `trivial-escalations-${this.findings.length}`,
+          category: 'collaboration',
+          severity: 'info',
+          title: 'Trivial decisions escalated to human',
+          summary: `${trivialEscalations.length} two-way-door decisions were made by human (could have been delegated to agent)`,
+          evidence: trivialEscalations.slice(0, 3).map(d => `decision:${d.id || 'unknown'}`),
+          recommendation: 'Consider delegating reversible decisions to agent for efficiency',
+          confidence: 'medium',
+        });
+      }
+
+      // Phase 2.2: Risk profile analysis
+      const riskProfile = decisionAnalyzer.analyzeRiskProfile();
+
+      // Store risk profile in data
+      data.riskProfile = {
+        byRiskLevel: {
+          high: riskProfile.byRiskLevel.get('high')?.length || 0,
+          medium: riskProfile.byRiskLevel.get('medium')?.length || 0,
+          low: riskProfile.byRiskLevel.get('low')?.length || 0,
+        },
+        missingReversibilityPlan: riskProfile.missingReversibilityPlan.length,
+        missingRiskAssessment: riskProfile.missingRiskAssessment.length,
+      };
+
+      // Generate findings for missing reversibility plans
+      for (const decision of riskProfile.missingReversibilityPlan) {
+        this.findings.push({
+          id: `missing-reversibility-${decision.id || this.findings.length}`,
+          category: 'decision_gap',
+          severity: 'medium',
+          title: 'One-way-door decision missing reversibility plan',
+          summary: `High-risk decision lacks rollback strategy: ${(decision.decision || '').slice(0, 100)}`,
+          evidence: [`decision:${decision.id || 'unknown'}`],
+          recommendation: 'Add reversibility_plan field to document rollback strategy',
+          confidence: 'high',
+        });
+      }
+
+      // Generate findings for missing risk assessments
+      if (riskProfile.missingRiskAssessment.length > 0) {
+        this.findings.push({
+          id: `missing-risk-assessment-${this.findings.length}`,
+          category: 'decision_gap',
+          severity: 'low',
+          title: 'One-way-door decisions missing risk level',
+          summary: `${riskProfile.missingRiskAssessment.length} irreversible decisions lack risk_level assessment`,
+          evidence: riskProfile.missingRiskAssessment.slice(0, 3).map(d => `decision:${d.id || 'unknown'}`),
+          recommendation: 'Add risk_level (high/medium/low) to one-way-door decisions',
+          confidence: 'medium',
+        });
+      }
+
+      // Phase 3.1: Decision thrash detection
+      const decisionThrash = decisionAnalyzer.getDecisionThrash();
+      for (const thrash of decisionThrash) {
+        this.findings.push({
+          id: `decision-thrash-${this.findings.length}`,
+          category: 'collaboration',
+          severity: thrash.severity === 'high' ? 'medium' : 'low',
+          title: `Decision thrash detected: ${thrash.topic}`,
+          summary: `${thrash.decisions.length} similar decisions made within 7 days - possible indecision or scope confusion`,
+          evidence: thrash.decisions.slice(0, 3).map(d => `decision:${d.id || 'unknown'}`),
+          recommendation: 'Review decision rationale and consider consolidating approach',
+          confidence: 'medium',
+        });
+      }
     } else {
       this.addTelemetryGap({
         gap_type: 'missing_decisions',
@@ -207,7 +375,17 @@ export class RetroRunner {
     const toolsAnalysis = toolsAnalyzer.analyze();
     if (toolsAnalysis.totalCalls > 0) {
       this.log(`  Tool calls: ${toolsAnalysis.totalCalls} calls, ${toolsAnalysis.uniqueTools} unique tools`);
-      // Add findings from tools analysis
+
+      // Phase 1: Store full analysis result
+      data.toolsAnalysis = {
+        totalCalls: toolsAnalysis.totalCalls,
+        uniqueTools: toolsAnalysis.uniqueTools,
+        toolStats: toolsAnalysis.toolStats,
+        errorRate: toolsAnalysis.errorRate,
+        avgCallsPerSession: toolsAnalysis.avgCallsPerSession,
+      };
+
+      // Add findings from tools analysis with evidence
       for (const finding of toolsAnalysis.findings) {
         this.findings.push({
           id: `tools-${this.findings.length}`,
@@ -215,10 +393,9 @@ export class RetroRunner {
           severity: toolsAnalysis.errorRate > 0.1 ? 'medium' : 'low',
           title: 'Tool Usage Pattern',
           summary: finding,
-          evidence: [],
-          recommendation: undefined,
+          evidence: [`inferred:tool-usage-analysis`],
+          recommendation: toolsAnalysis.errorRate > 0.1 ? 'Investigate high tool error rate' : undefined,
           confidence: 'medium',
-          impact: undefined,
         });
       }
     }
@@ -232,6 +409,54 @@ export class RetroRunner {
         if (githubAnalysis.avgReviewTime) {
           this.log(`  Avg PR review time: ${githubAnalysis.avgReviewTime.toFixed(1)} hours`);
         }
+
+        // Phase 3.3: Add bottleneck findings
+        const slowMergePRs = githubAnalysis.bottlenecks.filter(b => b.issue === 'slow_merge');
+        if (slowMergePRs.length > 0) {
+          this.findings.push({
+            id: `pr-slow-merge-${this.findings.length}`,
+            category: 'collaboration',
+            severity: 'medium',
+            title: 'PR review bottlenecks detected',
+            summary: `${slowMergePRs.length} PRs took more than 48 hours to merge`,
+            evidence: slowMergePRs.slice(0, 3).map(b => `pr:${b.pr.number}`),
+            recommendation: 'Review team capacity and PR sizes to reduce merge time',
+            confidence: 'high',
+          });
+        }
+
+        const highRevisionPRs = githubAnalysis.bottlenecks.filter(b => b.issue === 'high_revisions');
+        if (highRevisionPRs.length > 0) {
+          this.findings.push({
+            id: `pr-high-revisions-${this.findings.length}`,
+            category: 'collaboration',
+            severity: 'low',
+            title: 'PRs with multiple revision cycles',
+            summary: `${highRevisionPRs.length} PRs required more than 3 commits (potential rework)`,
+            evidence: highRevisionPRs.slice(0, 3).map(b => `pr:${b.pr.number}`),
+            recommendation: 'Consider smaller PRs or more upfront design discussion',
+            confidence: 'medium',
+          });
+        }
+
+        const stalePRs = githubAnalysis.bottlenecks.filter(b => b.issue === 'stale');
+        if (stalePRs.length > 0) {
+          this.findings.push({
+            id: `pr-stale-${this.findings.length}`,
+            category: 'collaboration',
+            severity: 'medium',
+            title: 'Stale pull requests',
+            summary: `${stalePRs.length} PRs have been open for more than 7 days`,
+            evidence: stalePRs.slice(0, 3).map(b => `pr:${b.pr.number}`),
+            recommendation: 'Close or merge stale PRs to maintain flow',
+            confidence: 'high',
+          });
+        }
+
+        // Log review stats
+        if (githubAnalysis.reviewStats.totalReviews > 0) {
+          this.log(`  Reviews: ${githubAnalysis.reviewStats.totalReviews} total, ${githubAnalysis.reviewStats.avgReviewsPerPR.toFixed(1)} per PR`);
+        }
       }
     } else {
       this.addTelemetryGap({
@@ -239,6 +464,62 @@ export class RetroRunner {
         severity: 'low',
         impact: 'Cannot analyze PR review patterns and collaboration metrics',
         recommendation: 'Install and authenticate gh CLI: gh auth login',
+      });
+    }
+
+    // Phase 3.2: Collect security scan data
+    const securityPath = join(logsBasePath, 'security');
+    const securityAnalyzer = new SecurityAnalyzer(securityPath);
+    const securityResult = securityAnalyzer.analyze();
+
+    if (securityResult.hasScans) {
+      data.securityAnalysis = {
+        hasScans: true,
+        scanTypes: securityResult.scanTypes,
+        vulnerabilities: securityResult.vulnerabilities,
+        totalVulnerabilities: securityResult.totalVulnerabilities,
+        newDepsCount: securityResult.newDepsCount,
+      };
+      this.log(`  Security: ${securityResult.scanTypes.join(', ')} scans, ${securityResult.totalVulnerabilities} vulnerabilities`);
+
+      // Generate findings for critical/high vulnerabilities
+      if (securityResult.vulnerabilities.critical > 0) {
+        this.findings.push({
+          id: `security-critical-${this.findings.length}`,
+          category: 'security',
+          severity: 'critical',
+          title: 'Critical security vulnerabilities detected',
+          summary: `${securityResult.vulnerabilities.critical} critical vulnerabilities require immediate attention`,
+          evidence: securityResult.vulnerabilityDetails
+            .filter(v => v.severity === 'critical')
+            .slice(0, 3)
+            .map(v => `vuln:${v.id}`),
+          recommendation: 'Run security scan locally and patch affected packages',
+          confidence: 'high',
+        });
+      }
+
+      if (securityResult.vulnerabilities.high > 0) {
+        this.findings.push({
+          id: `security-high-${this.findings.length}`,
+          category: 'security',
+          severity: 'medium',
+          title: 'High severity vulnerabilities detected',
+          summary: `${securityResult.vulnerabilities.high} high severity vulnerabilities should be addressed`,
+          evidence: securityResult.vulnerabilityDetails
+            .filter(v => v.severity === 'high')
+            .slice(0, 3)
+            .map(v => `vuln:${v.id}`),
+          recommendation: 'Review and update affected dependencies',
+          confidence: 'high',
+        });
+      }
+    } else {
+      this.addTelemetryGap({
+        gap_type: 'missing_security_scans',
+        severity: 'medium',
+        impact: 'Cannot assess security posture or vulnerability status',
+        recommendation: 'Add security scanning: trivy fs . --format json > .logs/security/trivy.json',
       });
     }
 
@@ -497,13 +778,45 @@ export class RetroRunner {
     };
   }
 
-  private scoreSecurity(_data: CollectedData): Score {
-    // Would need security scan results
+  private scoreSecurity(data: CollectedData): Score {
+    if (!data.securityAnalysis || !data.securityAnalysis.hasScans) {
+      return {
+        score: null,
+        confidence: 'none',
+        evidence: [],
+        details: 'No security scan data available',
+      };
+    }
+
+    const { vulnerabilities, totalVulnerabilities, scanTypes } = data.securityAnalysis;
+    const evidence: string[] = [`Scans: ${scanTypes.join(', ')}`];
+
+    // Start at 5, reduce based on vulnerabilities
+    let score = 5;
+
+    if (vulnerabilities.critical > 0) {
+      score = Math.max(1, score - 2);
+      evidence.push(`${vulnerabilities.critical} critical vulnerabilities`);
+    }
+
+    if (vulnerabilities.high > 0) {
+      score = Math.max(1, score - 1);
+      evidence.push(`${vulnerabilities.high} high vulnerabilities`);
+    }
+
+    if (vulnerabilities.medium > 2) {
+      score = Math.max(2, score - 1);
+      evidence.push(`${vulnerabilities.medium} medium vulnerabilities`);
+    }
+
+    if (totalVulnerabilities === 0) {
+      evidence.push('No vulnerabilities found');
+    }
+
     return {
-      score: null,
-      confidence: 'none',
-      evidence: [],
-      details: 'No security scan data available',
+      score,
+      confidence: 'high',
+      evidence,
     };
   }
 
@@ -568,6 +881,67 @@ export class RetroRunner {
   ): RetroReport {
     const completeness = this.calculateCompleteness(data);
 
+    // Build git metrics from collected data
+    const gitMetrics: GitMetrics | undefined = data.git ? {
+      hotspots: data.git.hotspots.map(h => ({
+        path: h.path,
+        changes: h.changes,
+        concernLevel: h.changes >= 5 ? 'high' : h.changes >= 3 ? 'medium' : 'low',
+      })),
+      filesByExtension: Array.from(data.git.filesByExtension.entries())
+        .map(([ext, count]) => ({
+          extension: ext,
+          count,
+          percentage: Math.round((count / Array.from(data.git!.filesByExtension.values()).reduce((a, b) => a + b, 0)) * 100),
+        }))
+        .sort((a, b) => b.count - a.count),
+      totalFilesChanged: Array.from(data.git.filesByExtension.values()).reduce((a, b) => a + b, 0),
+    } : undefined;
+
+    // Build tools summary from collected data
+    const toolsSummary: ToolsSummary | undefined = data.toolsAnalysis ? {
+      totalCalls: data.toolsAnalysis.totalCalls,
+      uniqueTools: data.toolsAnalysis.uniqueTools,
+      byTool: data.toolsAnalysis.toolStats.map(t => ({
+        tool: t.toolName,
+        calls: t.count,
+        percentage: Math.round((t.count / data.toolsAnalysis!.totalCalls) * 100),
+        avgDuration: t.avgDuration,
+        successRate: t.successRate,
+        errors: t.errors,
+      })),
+      overallErrorRate: data.toolsAnalysis.errorRate,
+      avgCallsPerSession: data.toolsAnalysis.avgCallsPerSession,
+    } : undefined;
+
+    // Build decision analysis from collected data
+    const decisionAnalysis: DecisionAnalysis | undefined = data.decisions ? {
+      byCategory: Array.from(data.decisions.byCategory.entries()).map(([cat, decisions]) => ({
+        category: cat,
+        count: decisions.length,
+        percentage: Math.round((decisions.length / data.decisions!.records.length) * 100),
+        decisions: decisions.slice(0, 3).map((d: any) => d.decision || d.summary || 'Untitled').slice(0, 50),
+      })),
+      byActor: Array.from(data.decisions.byActor.entries()).map(([actor, decisions]) => ({
+        actor,
+        count: decisions.length,
+        percentage: Math.round((decisions.length / data.decisions!.records.length) * 100),
+        oneWayDoors: decisions.filter((d: any) => d.decision_type === 'one_way_door').length,
+      })),
+      byType: Array.from(data.decisions.byType.entries()).map(([type, decisions]) => ({
+        type,
+        count: decisions.length,
+        percentage: Math.round((decisions.length / data.decisions!.records.length) * 100),
+      })),
+      escalationCompliance: {
+        rate: data.decisions.escalationStats.rate,
+        total: data.decisions.escalationStats.total,
+        escalated: data.decisions.escalationStats.escalated,
+        status: data.decisions.escalationStats.rate === 100 ? 'compliant' :
+                data.decisions.escalationStats.rate >= 80 ? 'warning' : 'critical',
+      },
+    } : undefined;
+
     return {
       sprint_id: this.config.sprintId,
       period: {
@@ -579,13 +953,15 @@ export class RetroRunner {
       summary: {
         commits: data.git?.commits?.length || 0,
         contributors: new Set(data.git?.commits?.map(c => c.author) || []).size,
-        human_contributors: new Set(data.git?.commits?.map(c => c.author) || []).size,
-        agent_contributors: 0, // Would need to identify agent commits
-        lines_added: data.git?.commits?.reduce((s, c) => s + c.linesAdded, 0) || 0,
-        lines_removed: data.git?.commits?.reduce((s, c) => s + c.linesRemoved, 0) || 0,
+        human_contributors: new Set(data.git?.commits?.map(c => c.author) || []).size - (data.git?.agentContributors || 0),
+        agent_contributors: data.git?.agentContributors || 0,
+        lines_added: data.git?.totalLinesAdded || 0,
+        lines_removed: data.git?.totalLinesRemoved || 0,
         decisions_logged: data.decisions?.records?.length || 0,
-        agent_commits: 0,
-        agent_commit_percentage: 0,
+        agent_commits: data.git?.agentCommits || 0,
+        agent_commit_percentage: data.git?.commits?.length
+          ? Math.round((data.git.agentCommits / data.git.commits.length) * 100)
+          : 0,
       },
       scores,
       findings: this.findings,
@@ -593,7 +969,10 @@ export class RetroRunner {
       risks: [],
       action_items: this.generateActionItems(),
       evidence_map: evidenceMap,
-      // Phase 1 additions
+      // Phase 1 additions - surfaced data
+      git_metrics: gitMetrics,
+      tools_summary: toolsSummary,
+      decision_analysis: decisionAnalysis,
       human_insights: data.humanInsights || undefined,
       fix_to_feature_ratio: data.fixToFeatureRatio || undefined,
       metadata: {
@@ -601,10 +980,10 @@ export class RetroRunner {
         // and may intentionally differ from the npm/package.json version (currently 0.1.0).
         // It is bumped when the retrospective behavior or report format changes (e.g. "Phase 1"),
         // regardless of whether a new package version has been published yet.
-        tool_version: '0.2.0',
+        tool_version: '0.3.0', // Bumped for Phase 1 data surfacing
         // `schema_version` tracks the JSON schema for RetroReport and is versioned independently
         // from both the package version and `tool_version`.
-        schema_version: '1.1',
+        schema_version: '1.2', // Bumped for new fields
         generated_by: 'agentic-retrospective',
       },
     };
@@ -722,6 +1101,15 @@ interface CollectedData {
       linesAdded: number;
       linesRemoved: number;
     }>;
+    // Phase 1: Surfaced from GitAnalyzer
+    hotspots: Array<{ path: string; changes: number }>;
+    filesByExtension: Map<string, number>;
+    totalLinesAdded: number;
+    totalLinesRemoved: number;
+    // Phase 2.1: Agent commit detection
+    agentCommits: number;
+    agentCommitHashes: string[];
+    agentContributors: number;
   } | null;
   decisions: {
     records: Array<{
@@ -730,7 +1118,35 @@ interface CollectedData {
       actor?: string;
       category?: string;
       evidence_refs?: string[];
+      risk_level?: string;
+      reversibility_plan?: string;
+      decision?: string;
     }>;
+    // Phase 1: Surfaced from DecisionAnalyzer
+    byCategory: Map<string, unknown[]>;
+    byActor: Map<string, unknown[]>;
+    byType: Map<string, unknown[]>;
+    escalationStats: { total: number; escalated: number; rate: number };
+  } | null;
+  // Phase 2.2: Risk profile from DecisionAnalyzer
+  riskProfile: {
+    byRiskLevel: { high: number; medium: number; low: number };
+    missingReversibilityPlan: number;
+    missingRiskAssessment: number;
+  } | null;
+  // Phase 1: Surfaced from ToolsAnalyzer
+  toolsAnalysis: {
+    totalCalls: number;
+    uniqueTools: number;
+    toolStats: Array<{
+      toolName: string;
+      count: number;
+      avgDuration: number | null;
+      successRate: number;
+      errors: string[];
+    }>;
+    errorRate: number;
+    avgCallsPerSession: number;
   } | null;
   agentLogs: unknown[] | null;
   testResults: unknown | null;
@@ -738,4 +1154,21 @@ interface CollectedData {
   // Phase 1 additions
   humanInsights: HumanInsights | null;
   fixToFeatureRatio: FixToFeatureRatio | null;
+  // Phase 3.2: Security analysis
+  securityAnalysis: {
+    hasScans: boolean;
+    scanTypes: string[];
+    vulnerabilities: { critical: number; high: number; medium: number; low: number };
+    totalVulnerabilities: number;
+    newDepsCount: number;
+  } | null;
+  // Phase 4.2: Rework analysis
+  reworkAnalysis: {
+    totalReworkCommits: number;
+    reworkPercentage: number;
+    totalReworkLines: number;
+    avgTimeToFix: number | null;
+    filesWithMostRework: Array<{ path: string; reworkCount: number }>;
+    chains: Array<{ original: string; fixes: string[]; files: string[] }>;
+  } | null;
 }

@@ -1,0 +1,21 @@
+{"id":"0.1","phase":0,"task":"Create vitest.config.ts","status":"completed","started_at":"2026-02-11T14:42:37Z","completed_at":"2026-02-11T14:43:45Z"}
+{"id":"0.2","phase":0,"task":"Create test fixtures structure","status":"completed","started_at":"2026-02-11T14:43:45Z","completed_at":"2026-02-11T14:46:00Z"}
+{"id":"0.3","phase":0,"task":"Create unit tests for existing analyzers","status":"completed","started_at":"2026-02-11T14:46:00Z","completed_at":"2026-02-11T14:51:45Z"}
+{"id":"1.1","phase":1,"task":"Surface git hotspots and file distribution","status":"completed","started_at":"2026-02-11T14:51:45Z","completed_at":"2026-02-11T14:54:00Z"}
+{"id":"1.2","phase":1,"task":"Surface decision maps","status":"completed","started_at":"2026-02-11T14:51:45Z","completed_at":"2026-02-11T14:54:00Z"}
+{"id":"1.3","phase":1,"task":"Wire orphaned decision methods","status":"completed","started_at":"2026-02-11T14:51:45Z","completed_at":"2026-02-11T14:54:00Z"}
+{"id":"1.4","phase":1,"task":"Surface tool performance metrics","status":"completed","started_at":"2026-02-11T14:51:45Z","completed_at":"2026-02-11T14:54:00Z"}
+{"id":"2.1","phase":2,"task":"Implement agent commit detection","status":"completed","started_at":"2026-02-11T14:54:00Z","completed_at":"2026-02-11T14:57:10Z"}
+{"id":"2.2","phase":2,"task":"Analyze risk fields in decisions","status":"completed","started_at":"2026-02-11T14:57:10Z","completed_at":"2026-02-11T18:05:00Z"}
+{"id":"3.1","phase":3,"task":"Implement decision thrash detection","status":"completed","started_at":"2026-02-11T18:00:00Z","completed_at":"2026-02-11T18:05:00Z"}
+{"id":"3.2","phase":3,"task":"Implement security scan parsing","status":"completed","started_at":"2026-02-11T18:05:00Z","completed_at":"2026-02-11T18:11:00Z"}
+{"id":"3.3","phase":3,"task":"Implement PR review metrics","status":"completed","started_at":"2026-02-11T18:11:00Z","completed_at":"2026-02-11T18:21:00Z"}
+{"id":"4.1","phase":4,"task":"Implement feedback command","status":"completed","started_at":"2026-02-11T18:21:00Z","completed_at":"2026-02-11T18:25:00Z"}
+{"id":"4.2","phase":4,"task":"Implement rework chain detection","status":"completed","started_at":"2026-02-11T18:25:00Z","completed_at":"2026-02-11T18:30:00Z"}
+{"id":"4.3","phase":4,"task":"Implement prompt quality analysis","status":"completed","started_at":"2026-02-11T18:30:00Z","completed_at":"2026-02-11T18:35:00Z"}
+{"id":"5.1","phase":5,"task":"Create integration tests","status":"pending","started_at":null,"completed_at":null}
+{"id":"5.2","phase":5,"task":"Create snapshot tests","status":"pending","started_at":null,"completed_at":null}
+{"id":"5.3","phase":5,"task":"Self-validation test","status":"pending","started_at":null,"completed_at":null}
+{"id":"5.1","phase":5,"task":"Create integration tests","status":"completed","started_at":"2026-02-11T19:10:00Z","completed_at":"2026-02-11T19:24:00Z"}
+{"id":"5.2","phase":5,"task":"Create snapshot tests","status":"completed","started_at":"2026-02-11T19:24:00Z","completed_at":"2026-02-11T19:25:00Z"}
+{"id":"5.3","phase":5,"task":"Self-validation test","status":"completed","started_at":"2026-02-11T19:25:00Z","completed_at":"2026-02-11T19:26:00Z"}

@@ -1,0 +1,5 @@
+{"timestamp":"2026-02-01T10:00:00Z","session_id":"sess-101","alignment":1,"rework_needed":"significant","revision_cycles":4,"worked_well":"","improvement_suggestion":"Completely missed the requirements"}
+{"timestamp":"2026-02-01T14:00:00Z","session_id":"sess-102","alignment":2,"rework_needed":"significant","revision_cycles":3,"worked_well":"Some parts were ok","improvement_suggestion":"Need to read existing code before changing"}
+{"timestamp":"2026-02-02T09:00:00Z","session_id":"sess-103","alignment":2,"rework_needed":"significant","revision_cycles":5,"worked_well":"","improvement_suggestion":"Over-engineered the solution"}
+{"timestamp":"2026-02-02T15:00:00Z","session_id":"sess-104","alignment":1,"rework_needed":"significant","revision_cycles":6,"worked_well":"","improvement_suggestion":"Did not follow instructions at all"}
+{"timestamp":"2026-02-03T11:00:00Z","session_id":"sess-105","alignment":2,"rework_needed":"significant","revision_cycles":3,"worked_well":"Good intentions","improvement_suggestion":"Ask clarifying questions instead of assuming"}

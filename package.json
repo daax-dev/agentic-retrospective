@@ -21,22 +21,33 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
-    "lint": "eslint src",
+    "lint": "eslint --ext .ts src",
     "typecheck": "tsc --noEmit",
-    "test": "vitest",
-    "prepublishOnly": "npm run build"
+    "test": "vitest run",
+    "test:unit": "vitest run test/unit",
+    "test:integration": "vitest run test/integration",
+    "test:snapshot": "vitest run test/snapshot",
+    "test:e2e": "vitest run test/e2e",
+    "test:coverage": "vitest run --coverage",
+    "test:watch": "vitest watch",
+    "validate": "pnpm run lint && pnpm run typecheck && pnpm run test",
+    "validate:quick": "pnpm run typecheck && pnpm run test:unit",
+    "prepublishOnly": "pnpm run build"
   },
   "dependencies": {
-    "simple-git": "^3.22.0",
-    "commander": "^12.0.0",
     "chalk": "^5.3.0",
-    "date-fns": "^3.3.0"
+    "commander": "^12.0.0",
+    "date-fns": "^3.3.0",
+    "simple-git": "^3.22.0"
   },
   "devDependencies": {
     "@types/node": "^20.11.0",
+    "@typescript-eslint/eslint-plugin": "^8.55.0",
+    "@typescript-eslint/parser": "^8.55.0",
+    "@vitest/coverage-v8": "^1.2.0",
+    "eslint": "^8.56.0",
     "typescript": "^5.3.0",
-    "vitest": "^1.2.0",
-    "eslint": "^8.56.0"
+    "vitest": "^1.2.0"
   },
   "engines": {
     "node": ">=18.0.0"

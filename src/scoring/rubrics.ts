@@ -186,7 +186,7 @@ export function scoreSecurityPosture(data: {
   securityDecisionsLogged?: number;
   vulnerabilitiesFound?: number;
 }): Score {
-  const { hasSecurityScans, newDepsCount: _newDepsCount, securityDecisionsLogged, vulnerabilitiesFound } = data;
+  const { hasSecurityScans, securityDecisionsLogged, vulnerabilitiesFound } = data;
 
   if (!hasSecurityScans) {
     return calculateScore(null, 'none', [], 'No security scan data available');
@@ -230,7 +230,7 @@ export function scoreCollaborationEfficiency(data: {
   scopeDriftIncidents?: number;
   trivialEscalations?: number;
 }): Score {
-  const { hasAgentLogs, agentCommitCount, humanInterrupts, scopeDriftIncidents, trivialEscalations: _trivialEscalations } = data;
+  const { hasAgentLogs, agentCommitCount, humanInterrupts, scopeDriftIncidents } = data;
 
   if (!hasAgentLogs) {
     return calculateScore(null, 'none', [], 'No agent logs available');
