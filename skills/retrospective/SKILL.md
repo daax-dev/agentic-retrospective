@@ -32,15 +32,6 @@ Run: `agentic-retrospective status`
 Fix missing directories and configuration.
 Run: `agentic-retrospective repair`
 
-### /retrospective audit
-Audit CLAUDE.md and config against best practices.
-Run: `agentic-retrospective audit`
-
-Checks:
-- CLAUDE.md size (warn if > 500 lines)
-- Section structure
-- Stale or contradictory instructions
-
 ### /retrospective feedback
 Your chance to say what went well and what didn't.
 Run: `agentic-retrospective feedback`

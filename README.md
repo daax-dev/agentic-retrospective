@@ -15,8 +15,8 @@ Evidence-based sprint retrospectives for human-agent collaboration.
 | `/retrospective conduct` | Conduct full retrospective analysis |
 | `/retrospective status` | Check telemetry setup and data |
 | `/retrospective repair` | Fix missing directories/config |
-| `/retrospective audit` | Audit CLAUDE.md and config against best practices |
 | `/retrospective feedback` | Your chance to say what went well and what didn't |
+| `/claude-best-practices` | Audit CLAUDE.md and config against Anthropic best practices |
 
 ## Installation
 
@@ -97,10 +97,10 @@ Reports score across 6 dimensions (0-5 scale):
 agentic-retrospective setup                    # Initialize project
 agentic-retrospective status                   # Check setup and data
 agentic-retrospective repair                   # Fix missing dirs/config
-agentic-retrospective audit                    # Audit config against best practices
 agentic-retrospective conduct --since "1 week" # Conduct retrospective
 agentic-retrospective feedback                 # Session feedback
 agentic-retrospective decision "what" -r "why" # Log decision
+agentic-retrospective audit                    # Audit config (used by /claude-best-practices)
 ```
 
 ## License
