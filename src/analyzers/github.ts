@@ -5,6 +5,7 @@
  */
 
 import { execSync } from 'child_process';
+import type { CIFailureMetrics, PRScopeAnalysis } from '../types.js';
 
 export interface PRInfo {
   number: number;
@@ -81,6 +82,9 @@ export interface GitHubAnalysisResult {
   };
   testCoverage?: PRTestCoverageResult;
   negativeReviews?: PRNegativeReviewResult;
+  // P3 additions
+  ciFailureMetrics?: CIFailureMetrics;
+  scopeAnalysis?: PRScopeAnalysis;
 }
 
 export class GitHubAnalyzer {
@@ -166,6 +170,10 @@ export class GitHubAnalyzer {
     const testCoverage = this.analyzeTestCoverage(allPRs);
     const negativeReviews = this.analyzeNegativeReviews(allPRs);
 
+    // P3: CI failure rate and PR scope analysis
+    const ciFailureMetrics = this.analyzeCIFailureRate();
+    const scopeAnalysis = this.analyzePRScope(allPRs);
+
     return {
       available: true,
       prs: allPRs,
@@ -179,6 +187,8 @@ export class GitHubAnalyzer {
       supersessionAnalysis,
       testCoverage,
       negativeReviews,
+      ciFailureMetrics,
+      scopeAnalysis,
     };
   }
 
@@ -453,6 +463,153 @@ export class GitHubAnalyzer {
       totalReviewedPRs,
       negativeReviewRate,
       prsRequestingChanges: prsRequestingChanges.sort((a, b) => b.reviewCount - a.reviewCount),
+    };
+  }
+
+  /**
+   * Analyze CI/workflow failure rate (P3)
+   * Uses gh run list to get recent workflow runs
+   */
+  analyzeCIFailureRate(): CIFailureMetrics | undefined {
+    try {
+      const output = execSync(
+        'gh run list --limit 100 --json status,conclusion,name,createdAt,databaseId,headBranch',
+        { encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'] }
+      );
+
+      const runs = JSON.parse(output);
+
+      if (!runs || runs.length === 0) {
+        return undefined;
+      }
+
+      let successfulRuns = 0;
+      let failedRuns = 0;
+      let cancelledRuns = 0;
+      const workflowStats = new Map<string, { runs: number; failures: number }>();
+      const recentFailures: CIFailureMetrics['recentFailures'] = [];
+
+      for (const run of runs) {
+        const workflow = run.name || 'unknown';
+        const stats = workflowStats.get(workflow) || { runs: 0, failures: 0 };
+        stats.runs++;
+
+        if (run.conclusion === 'success') {
+          successfulRuns++;
+        } else if (run.conclusion === 'failure') {
+          failedRuns++;
+          stats.failures++;
+          if (recentFailures.length < 5) {
+            recentFailures.push({
+              workflow,
+              branch: run.headBranch || 'unknown',
+              conclusion: run.conclusion,
+              createdAt: run.createdAt,
+            });
+          }
+        } else if (run.conclusion === 'cancelled') {
+          cancelledRuns++;
+        }
+
+        workflowStats.set(workflow, stats);
+      }
+
+      const totalRuns = runs.length;
+      const failureRate = totalRuns > 0 ? Math.round((failedRuns / totalRuns) * 100) : 0;
+      const successRate = totalRuns > 0 ? Math.round((successfulRuns / totalRuns) * 100) : 0;
+
+      const byWorkflow = Array.from(workflowStats.entries())
+        .map(([workflow, stats]) => ({
+          workflow,
+          runs: stats.runs,
+          failures: stats.failures,
+          failureRate: stats.runs > 0 ? Math.round((stats.failures / stats.runs) * 100) : 0,
+        }))
+        .sort((a, b) => b.failureRate - a.failureRate);
+
+      return {
+        totalRuns,
+        successfulRuns,
+        failedRuns,
+        cancelledRuns,
+        failureRate,
+        successRate,
+        avgDurationSeconds: null, // gh run list doesn't provide duration
+        byWorkflow,
+        recentFailures,
+      };
+    } catch {
+      // gh run list may not be available or may fail
+      return undefined;
+    }
+  }
+
+  /**
+   * Analyze PR scope/size for scope creep detection (P3)
+   */
+  analyzePRScope(prs: PRInfo[]): PRScopeAnalysis | undefined {
+    if (prs.length === 0) {
+      return undefined;
+    }
+
+    // Calculate lines changed for each PR
+    const prSizes = prs.map(pr => ({
+      pr,
+      linesChanged: pr.additions + pr.deletions,
+      filesChanged: pr.changedFiles,
+    }));
+
+    const linesChangedValues = prSizes.map(p => p.linesChanged).sort((a, b) => a - b);
+    const filesChangedValues = prSizes.map(p => p.filesChanged).sort((a, b) => a - b);
+
+    // Calculate statistics
+    const totalLines = linesChangedValues.reduce((a, b) => a + b, 0);
+    const avgLines = totalLines / linesChangedValues.length;
+    const medianLines = linesChangedValues[Math.floor(linesChangedValues.length / 2)];
+    const maxLines = linesChangedValues[linesChangedValues.length - 1];
+    const minLines = linesChangedValues[0];
+
+    const totalFiles = filesChangedValues.reduce((a, b) => a + b, 0);
+    const avgFiles = totalFiles / filesChangedValues.length;
+
+    // Calculate 90th percentile as "large PR" threshold
+    const percentile90Index = Math.floor(linesChangedValues.length * 0.9);
+    const largePRThreshold = Math.max(500, linesChangedValues[percentile90Index] || 500);
+
+    // Identify large PRs
+    const largePRs: PRScopeAnalysis['largePRs'] = prSizes
+      .filter(p => p.linesChanged >= largePRThreshold)
+      .map(p => {
+        let concernLevel: 'critical' | 'high' | 'medium' = 'medium';
+        if (p.linesChanged >= largePRThreshold * 2) {
+          concernLevel = 'critical';
+        } else if (p.linesChanged >= largePRThreshold * 1.5) {
+          concernLevel = 'high';
+        }
+        return {
+          prNumber: p.pr.number,
+          title: p.pr.title,
+          linesChanged: p.linesChanged,
+          filesChanged: p.filesChanged,
+          concernLevel,
+        };
+      })
+      .sort((a, b) => b.linesChanged - a.linesChanged)
+      .slice(0, 10); // Top 10 largest
+
+    const scopeCreepRate = prs.length > 0
+      ? Math.round((largePRs.length / prs.length) * 100)
+      : 0;
+
+    return {
+      averageLinesChanged: Math.round(avgLines),
+      medianLinesChanged: medianLines,
+      maxLinesChanged: maxLines,
+      minLinesChanged: minLines,
+      averageFilesChanged: Math.round(avgFiles * 10) / 10,
+      largePRThreshold,
+      largePRs,
+      scopeCreepRate,
     };
   }
 

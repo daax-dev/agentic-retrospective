@@ -4,7 +4,7 @@
     "from": "HEAD~20",
     "to": "HEAD"
   },
-  "generated_at": "2026-02-11T19:53:43.634Z",
+  "generated_at": "2026-02-11T21:39:56.707Z",
   "data_completeness": {
     "percentage": 40,
     "sources": {
@@ -40,11 +40,11 @@
     "contributors": 1,
     "human_contributors": 0,
     "agent_contributors": 1,
-    "lines_added": 41034,
-    "lines_removed": 18524,
+    "lines_added": 41997,
+    "lines_removed": 19357,
     "decisions_logged": 13,
-    "agent_commits": 3,
-    "agent_commit_percentage": 15
+    "agent_commits": 4,
+    "agent_commit_percentage": 20
   },
   "scores": {
     "delivery_predictability": {
@@ -52,7 +52,7 @@
       "confidence": "high",
       "evidence": [
         "20 commits",
-        "Average 2978 lines per commit"
+        "Average 3068 lines per commit"
       ]
     },
     "test_loop_completeness": {
@@ -65,7 +65,7 @@
       "score": 1,
       "confidence": "medium",
       "evidence": [
-        "11 large commits (55%)"
+        "12 large commits (60%)"
       ]
     },
     "security_posture": {
@@ -393,6 +393,10 @@
   ],
   "evidence_map": {
     "commits": {
+      "cec7474ed8b5a5a1bd3f618188fc22980a2b6aa0": {
+        "decisions": [],
+        "findings": []
+      },
       "bb18928f2bc04d72d004c40ef03971dc05b3bfb4": {
         "decisions": [],
         "findings": []
@@ -468,14 +472,10 @@
       "9c3dbe27fae12a3436e0aabfa4f9fc57f48ab49f": {
         "decisions": [],
         "findings": []
-      },
-      "2b146f1d44528555ea44e85a3bb2b81fb7607f0a": {
-        "decisions": [],
-        "findings": []
       }
     },
     "decisions": {
-      "dec-1770839623633": {
+      "dec-1770845996707": {
         "commits": [],
         "type": "two_way_door",
         "escalated": false,
@@ -484,6 +484,7 @@
     },
     "orphans": {
       "commits_without_context": [
+        "cec7474ed8b5a5a1bd3f618188fc22980a2b6aa0",
         "bb18928f2bc04d72d004c40ef03971dc05b3bfb4",
         "3e545be910bea838cf9afb2b4f1b753f9c651655",
         "96c71c05567917e929d9b49461ea6fa85f5f9649",
@@ -502,11 +503,10 @@
         "d1f1da8ae299e1f29d27b0d96914bdc05210e6d0",
         "a8534003b21348a5b0521fbc55329031ac12e189",
         "b5cd750b0a381e2fd79fdb32afdc82da8988e478",
-        "9c3dbe27fae12a3436e0aabfa4f9fc57f48ab49f",
-        "2b146f1d44528555ea44e85a3bb2b81fb7607f0a"
+        "9c3dbe27fae12a3436e0aabfa4f9fc57f48ab49f"
       ],
       "decisions_without_implementation": [
-        "dec-1770839623633"
+        "dec-1770845996707"
       ]
     }
   },
@@ -553,41 +553,41 @@
         "concernLevel": "medium"
       },
       {
-        "path": "src/agentic_retrospective/cli.py",
+        "path": "skills/conduct/SKILL.md",
         "changes": 4,
         "concernLevel": "medium"
       },
       {
-        "path": "skills/conduct/SKILL.md",
-        "changes": 4,
+        "path": "test-output/self-test-evidence/alerts.json",
+        "changes": 3,
         "concernLevel": "medium"
       }
     ],
     "filesByExtension": [
       {
         "extension": ".md",
-        "count": 135,
-        "percentage": 35
+        "count": 141,
+        "percentage": 34
       },
       {
         "extension": ".json",
-        "count": 97,
-        "percentage": 25
+        "count": 124,
+        "percentage": 30
       },
       {
         "extension": ".ts",
         "count": 56,
-        "percentage": 15
+        "percentage": 14
       },
       {
         "extension": ".py",
-        "count": 39,
-        "percentage": 10
+        "count": 36,
+        "percentage": 9
       },
       {
         "extension": ".sh",
-        "count": 36,
-        "percentage": 9
+        "count": 34,
+        "percentage": 8
       },
       {
         "extension": ".jsonl",
@@ -597,7 +597,7 @@
       {
         "extension": ".snap",
         "count": 2,
-        "percentage": 1
+        "percentage": 0
       },
       {
         "extension": ".yaml",
@@ -625,7 +625,7 @@
         "percentage": 0
       }
     ],
-    "totalFilesChanged": 382
+    "totalFilesChanged": 410
   },
   "tools_summary": {
     "totalCalls": 358,

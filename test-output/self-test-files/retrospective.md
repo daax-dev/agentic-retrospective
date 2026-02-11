@@ -1,7 +1,7 @@
 # Sprint Retrospective: self-test-files
 
 **Period**: HEAD~10 to HEAD
-**Generated**: 2026-02-11T19:54:01.607Z
+**Generated**: 2026-02-11T21:40:14.469Z
 **Data Completeness**: 40% (2/5 sources)
 
 ---
@@ -28,9 +28,9 @@
 |--------|-------|
 | Commits | 10 |
 | Contributors | 1 (0 human, 1 agent) |
-| Lines Changed | +39,029 / -16,797 |
+| Lines Changed | +30,418 / -6,195 |
 | Decisions Logged | 13 |
-| Agent Commits | 2 (20%) |
+| Agent Commits | 3 (30%) |
 
 ### Quality Signals
 - Delivery Predictability: 1/5 (high confidence)
@@ -94,24 +94,23 @@ Files changed 3+ times this sprint (high churn may indicate architectural issues
 | `.claude-plugin/marketplace.json` | 4 | Medium |
 | `.claude-plugin/plugin.json` | 4 | Medium |
 | `README.md` | 3 | Medium |
-| `src/analyzers/decisions.ts` | 3 | Medium |
-| `src/analyzers/git.ts` | 3 | Medium |
-| `src/analyzers/github.ts` | 3 | Medium |
-| `src/cli.ts` | 3 | Medium |
-| `src/report/generator.ts` | 3 | Medium |
-| `src/types.ts` | 3 | Medium |
 | `skills/retrospective/SKILL.md` | 3 | Medium |
+| `test-output/self-test-evidence/alerts.json` | 3 | Medium |
+| `test-output/self-test-evidence/evidence_map.json` | 3 | Medium |
+| `test-output/self-test-evidence/retrospective.json` | 3 | Medium |
+| `test-output/self-test-evidence/retrospective.md` | 3 | Medium |
+| `test-output/self-test-files/alerts.json` | 3 | Medium |
+| `test-output/self-test-files/evidence_map.json` | 3 | Medium |
 
 ### File Distribution
 
 | Extension | Files Changed | % of Total |
 |-----------|---------------|------------|
-| .json | 85 | 33% |
-| .ts | 56 | 21% |
-| .md | 53 | 20% |
-| .py | 31 | 12% |
-| .sh | 17 | 7% |
-| .jsonl | 12 | 5% |
+| .json | 104 | 44% |
+| .md | 57 | 24% |
+| .ts | 43 | 18% |
+| .sh | 16 | 7% |
+| .jsonl | 11 | 5% |
 | .snap | 2 | 1% |
 | .yaml | 1 | 0% |
 
@@ -172,7 +171,7 @@ Files changed 3+ times this sprint (high churn may indicate architectural issues
 ### Delivery & Outcome
 
 - 10 commits
-- Average 5583 lines per commit
+- Average 3661 lines per commit
 
 **Score**: 1/5 (high confidence)
 

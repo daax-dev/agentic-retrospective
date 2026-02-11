@@ -317,6 +317,61 @@ export interface DecisionAnalysis {
   testingDiscipline?: TestingDisciplineMetrics;
 }
 
+// Commit Cadence Types (P3)
+export interface CommitCadenceMetrics {
+  averageTimeBetweenCommits: number; // hours
+  medianTimeBetweenCommits: number;  // hours
+  maxGapDays: number;
+  minGapHours: number;
+  commitsPerDay: number;
+  commitsPerWeek: number;
+  irregularityScore: number; // 0-1, higher = more irregular
+  trend: 'increasing' | 'stable' | 'decreasing';
+  busiestDay: string; // e.g., "Monday"
+  busiestHour: number; // 0-23
+}
+
+// CI Failure Rate Types (P3)
+export interface CIFailureMetrics {
+  totalRuns: number;
+  successfulRuns: number;
+  failedRuns: number;
+  cancelledRuns: number;
+  failureRate: number; // 0-100
+  successRate: number; // 0-100
+  avgDurationSeconds: number | null;
+  byWorkflow: Array<{
+    workflow: string;
+    runs: number;
+    failures: number;
+    failureRate: number;
+  }>;
+  recentFailures: Array<{
+    workflow: string;
+    branch: string;
+    conclusion: string;
+    createdAt: string;
+  }>;
+}
+
+// PR Scope Analysis Types (P3)
+export interface PRScopeAnalysis {
+  averageLinesChanged: number;
+  medianLinesChanged: number;
+  maxLinesChanged: number;
+  minLinesChanged: number;
+  averageFilesChanged: number;
+  largePRThreshold: number; // calculated 90th percentile
+  largePRs: Array<{
+    prNumber: number;
+    title: string;
+    linesChanged: number;
+    filesChanged: number;
+    concernLevel: 'critical' | 'high' | 'medium';
+  }>;
+  scopeCreepRate: number; // % of PRs above threshold
+}
+
 // PR Analysis Types (GAP-05, GAP-06, GAP-07)
 export interface PRSupersessionAnalysis {
   supersededPRs: Array<{
@@ -429,6 +484,10 @@ export interface RetroReport {
   pr_supersession?: PRSupersessionAnalysis;
   pr_test_coverage?: PRTestCoverage;
   pr_review_analysis?: PRReviewAnalysis;
+  // P3 additions
+  commit_cadence?: CommitCadenceMetrics;
+  ci_failure_metrics?: CIFailureMetrics;
+  pr_scope_analysis?: PRScopeAnalysis;
   metadata: {
     tool_version: string;
     schema_version: string;

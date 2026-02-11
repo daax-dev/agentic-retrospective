@@ -1,5 +1,9 @@
 {
   "commits": {
+    "cec7474ed8b5a5a1bd3f618188fc22980a2b6aa0": {
+      "decisions": [],
+      "findings": []
+    },
     "bb18928f2bc04d72d004c40ef03971dc05b3bfb4": {
       "decisions": [],
       "findings": []
@@ -35,14 +39,10 @@
     "5b795247a61865fcf57fa36b52f0b59de1220f96": {
       "decisions": [],
       "findings": []
-    },
-    "c6e08269342d8aa14b0b2f2bc156b6466da90a32": {
-      "decisions": [],
-      "findings": []
     }
   },
   "decisions": {
-    "dec-1770839644186": {
+    "dec-1770846017084": {
       "commits": [],
       "type": "two_way_door",
       "escalated": false,
@@ -51,6 +51,7 @@
   },
   "orphans": {
     "commits_without_context": [
+      "cec7474ed8b5a5a1bd3f618188fc22980a2b6aa0",
       "bb18928f2bc04d72d004c40ef03971dc05b3bfb4",
       "3e545be910bea838cf9afb2b4f1b753f9c651655",
       "96c71c05567917e929d9b49461ea6fa85f5f9649",
@@ -59,11 +60,10 @@
       "adebb8242b4ce0f075fb858318cce892562139d3",
       "6da3b6035dfa7209463d2da8c65c63440e45820b",
       "14264ba8bf35a19bf528d22792753ddd2173bb79",
-      "5b795247a61865fcf57fa36b52f0b59de1220f96",
-      "c6e08269342d8aa14b0b2f2bc156b6466da90a32"
+      "5b795247a61865fcf57fa36b52f0b59de1220f96"
     ],
     "decisions_without_implementation": [
-      "dec-1770839644186"
+      "dec-1770846017084"
     ]
   }
 }

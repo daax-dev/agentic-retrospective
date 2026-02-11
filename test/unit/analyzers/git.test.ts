@@ -425,4 +425,143 @@ describe('GitAnalyzer', () => {
       expect(result.ratio).toBe(0);
     });
   });
+
+  // P3: Commit Cadence Analysis
+  describe('calculateCommitCadence', () => {
+    test('returns default metrics for single commit', () => {
+      const analyzer = new GitAnalyzer();
+      const commits = [createMockCommit({ hash: 'single', date: '2026-01-15T10:00:00Z' })];
+
+      const result = analyzer.calculateCommitCadence(commits);
+
+      expect(result.averageTimeBetweenCommits).toBe(0);
+      expect(result.trend).toBe('stable');
+    });
+
+    test('returns default metrics for empty commits', () => {
+      const analyzer = new GitAnalyzer();
+      const result = analyzer.calculateCommitCadence([]);
+
+      expect(result.averageTimeBetweenCommits).toBe(0);
+      expect(result.commitsPerDay).toBe(0);
+    });
+
+    test('calculates average time between commits correctly', () => {
+      const analyzer = new GitAnalyzer();
+      const commits = [
+        createMockCommit({ hash: 'c1', date: '2026-01-15T10:00:00Z' }),
+        createMockCommit({ hash: 'c2', date: '2026-01-15T14:00:00Z' }), // 4 hours later
+        createMockCommit({ hash: 'c3', date: '2026-01-15T16:00:00Z' }), // 2 hours later
+      ];
+
+      const result = analyzer.calculateCommitCadence(commits);
+
+      // Average gap: (4 + 2) / 2 = 3 hours
+      expect(result.averageTimeBetweenCommits).toBe(3);
+    });
+
+    test('calculates commits per day correctly', () => {
+      const analyzer = new GitAnalyzer();
+      const commits = [
+        createMockCommit({ hash: 'c1', date: '2026-01-15T10:00:00Z' }),
+        createMockCommit({ hash: 'c2', date: '2026-01-16T10:00:00Z' }),
+        createMockCommit({ hash: 'c3', date: '2026-01-17T10:00:00Z' }),
+      ];
+
+      const result = analyzer.calculateCommitCadence(commits);
+
+      // 3 commits over 2 days = 1.5 commits per day
+      expect(result.commitsPerDay).toBe(1.5);
+    });
+
+    test('detects increasing commit frequency (trend)', () => {
+      const analyzer = new GitAnalyzer();
+      // Commits get closer together over time
+      const commits = [
+        createMockCommit({ hash: 'c1', date: '2026-01-10T10:00:00Z' }),
+        createMockCommit({ hash: 'c2', date: '2026-01-15T10:00:00Z' }), // 5 days gap
+        createMockCommit({ hash: 'c3', date: '2026-01-16T10:00:00Z' }), // 1 day gap
+        createMockCommit({ hash: 'c4', date: '2026-01-16T14:00:00Z' }), // 4 hours gap
+      ];
+
+      const result = analyzer.calculateCommitCadence(commits);
+
+      expect(result.trend).toBe('increasing');
+    });
+
+    test('detects decreasing commit frequency (trend)', () => {
+      const analyzer = new GitAnalyzer();
+      // Commits get further apart over time
+      const commits = [
+        createMockCommit({ hash: 'c1', date: '2026-01-10T10:00:00Z' }),
+        createMockCommit({ hash: 'c2', date: '2026-01-10T14:00:00Z' }), // 4 hours gap
+        createMockCommit({ hash: 'c3', date: '2026-01-11T10:00:00Z' }), // 20 hours gap
+        createMockCommit({ hash: 'c4', date: '2026-01-16T10:00:00Z' }), // 5 days gap
+      ];
+
+      const result = analyzer.calculateCommitCadence(commits);
+
+      expect(result.trend).toBe('decreasing');
+    });
+
+    test('calculates max gap in days correctly', () => {
+      const analyzer = new GitAnalyzer();
+      const commits = [
+        createMockCommit({ hash: 'c1', date: '2026-01-10T10:00:00Z' }),
+        createMockCommit({ hash: 'c2', date: '2026-01-11T10:00:00Z' }), // 1 day
+        createMockCommit({ hash: 'c3', date: '2026-01-18T10:00:00Z' }), // 7 days (max)
+      ];
+
+      const result = analyzer.calculateCommitCadence(commits);
+
+      expect(result.maxGapDays).toBe(7);
+    });
+
+    test('identifies busiest day correctly', () => {
+      const analyzer = new GitAnalyzer();
+      // More commits on Tuesday (2026-01-13 is Tuesday)
+      const commits = [
+        createMockCommit({ hash: 'c1', date: '2026-01-13T10:00:00Z' }), // Tuesday
+        createMockCommit({ hash: 'c2', date: '2026-01-13T12:00:00Z' }), // Tuesday
+        createMockCommit({ hash: 'c3', date: '2026-01-13T14:00:00Z' }), // Tuesday
+        createMockCommit({ hash: 'c4', date: '2026-01-14T10:00:00Z' }), // Wednesday
+      ];
+
+      const result = analyzer.calculateCommitCadence(commits);
+
+      expect(result.busiestDay).toBe('Tuesday');
+    });
+
+    test('calculates irregularity score', () => {
+      const analyzer = new GitAnalyzer();
+      // Very irregular - some gaps are small, some are large
+      const commits = [
+        createMockCommit({ hash: 'c1', date: '2026-01-10T10:00:00Z' }),
+        createMockCommit({ hash: 'c2', date: '2026-01-10T11:00:00Z' }), // 1 hour
+        createMockCommit({ hash: 'c3', date: '2026-01-15T10:00:00Z' }), // 5 days
+        createMockCommit({ hash: 'c4', date: '2026-01-15T12:00:00Z' }), // 2 hours
+      ];
+
+      const result = analyzer.calculateCommitCadence(commits);
+
+      // High irregularity expected due to varying gaps
+      expect(result.irregularityScore).toBeGreaterThan(0.5);
+    });
+
+    test('calculates regular pattern with low irregularity', () => {
+      const analyzer = new GitAnalyzer();
+      // Regular - consistent 24 hour gaps
+      const commits = [
+        createMockCommit({ hash: 'c1', date: '2026-01-10T10:00:00Z' }),
+        createMockCommit({ hash: 'c2', date: '2026-01-11T10:00:00Z' }),
+        createMockCommit({ hash: 'c3', date: '2026-01-12T10:00:00Z' }),
+        createMockCommit({ hash: 'c4', date: '2026-01-13T10:00:00Z' }),
+      ];
+
+      const result = analyzer.calculateCommitCadence(commits);
+
+      // Low irregularity expected due to consistent gaps
+      expect(result.irregularityScore).toBe(0);
+    });
+  });
 });

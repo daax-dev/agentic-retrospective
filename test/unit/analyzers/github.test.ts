@@ -508,4 +508,201 @@ describe('GitHubAnalyzer', () => {
       expect(result.prsRequestingChanges[0].reviewCount).toBe(2);
     });
   });
+
+  // P3: CI Failure Rate Analysis
+  describe('analyzeCIFailureRate', () => {
+    test('calculates failure rate correctly', () => {
+      const mockRuns = [
+        { status: 'completed', conclusion: 'success', name: 'CI', createdAt: '2026-02-01T10:00:00Z', headBranch: 'main' },
+        { status: 'completed', conclusion: 'success', name: 'CI', createdAt: '2026-02-01T11:00:00Z', headBranch: 'main' },
+        { status: 'completed', conclusion: 'failure', name: 'CI', createdAt: '2026-02-01T12:00:00Z', headBranch: 'feature' },
+        { status: 'completed', conclusion: 'success', name: 'CI', createdAt: '2026-02-01T13:00:00Z', headBranch: 'main' },
+      ];
+
+      mockExecSync.mockImplementation((cmd: string) => {
+        if (cmd.includes('gh run list')) return JSON.stringify(mockRuns);
+        return '';
+      });
+
+      const analyzer = new GitHubAnalyzer();
+      const result = analyzer.analyzeCIFailureRate();
+
+      expect(result).toBeDefined();
+      expect(result!.totalRuns).toBe(4);
+      expect(result!.successfulRuns).toBe(3);
+      expect(result!.failedRuns).toBe(1);
+      expect(result!.failureRate).toBe(25); // 1/4 = 25%
+      expect(result!.successRate).toBe(75);
+    });
+
+    test('groups failures by workflow', () => {
+      const mockRuns = [
+        { status: 'completed', conclusion: 'success', name: 'Build', createdAt: '2026-02-01T10:00:00Z', headBranch: 'main' },
+        { status: 'completed', conclusion: 'failure', name: 'Test', createdAt: '2026-02-01T11:00:00Z', headBranch: 'main' },
+        { status: 'completed', conclusion: 'failure', name: 'Test', createdAt: '2026-02-01T12:00:00Z', headBranch: 'main' },
+        { status: 'completed', conclusion: 'success', name: 'Deploy', createdAt: '2026-02-01T13:00:00Z', headBranch: 'main' },
+      ];
+
+      mockExecSync.mockImplementation((cmd: string) => {
+        if (cmd.includes('gh run list')) return JSON.stringify(mockRuns);
+        return '';
+      });
+
+      const analyzer = new GitHubAnalyzer();
+      const result = analyzer.analyzeCIFailureRate();
+
+      expect(result).toBeDefined();
+      const testWorkflow = result!.byWorkflow.find(w => w.workflow === 'Test');
+      expect(testWorkflow).toBeDefined();
+      expect(testWorkflow!.runs).toBe(2);
+      expect(testWorkflow!.failures).toBe(2);
+      expect(testWorkflow!.failureRate).toBe(100);
+    });
+
+    test('tracks recent failures', () => {
+      const mockRuns = [
+        { status: 'completed', conclusion: 'failure', name: 'CI', createdAt: '2026-02-01T10:00:00Z', headBranch: 'feature-1' },
+        { status: 'completed', conclusion: 'failure', name: 'CI', createdAt: '2026-02-01T11:00:00Z', headBranch: 'feature-2' },
+      ];
+
+      mockExecSync.mockImplementation((cmd: string) => {
+        if (cmd.includes('gh run list')) return JSON.stringify(mockRuns);
+        return '';
+      });
+
+      const analyzer = new GitHubAnalyzer();
+      const result = analyzer.analyzeCIFailureRate();
+
+      expect(result).toBeDefined();
+      expect(result!.recentFailures).toHaveLength(2);
+      expect(result!.recentFailures[0].branch).toBe('feature-1');
+    });
+
+    test('handles cancelled runs', () => {
+      const mockRuns = [
+        { status: 'completed', conclusion: 'success', name: 'CI', createdAt: '2026-02-01T10:00:00Z', headBranch: 'main' },
+        { status: 'completed', conclusion: 'cancelled', name: 'CI', createdAt: '2026-02-01T11:00:00Z', headBranch: 'main' },
+      ];
+
+      mockExecSync.mockImplementation((cmd: string) => {
+        if (cmd.includes('gh run list')) return JSON.stringify(mockRuns);
+        return '';
+      });
+
+      const analyzer = new GitHubAnalyzer();
+      const result = analyzer.analyzeCIFailureRate();
+
+      expect(result).toBeDefined();
+      expect(result!.cancelledRuns).toBe(1);
+    });
+
+    test('returns undefined when gh run list fails', () => {
+      mockExecSync.mockImplementation(() => {
+        throw new Error('gh run list failed');
+      });
+
+      const analyzer = new GitHubAnalyzer();
+      const result = analyzer.analyzeCIFailureRate();
+
+      expect(result).toBeUndefined();
+    });
+
+    test('returns undefined for empty runs', () => {
+      mockExecSync.mockImplementation((cmd: string) => {
+        if (cmd.includes('gh run list')) return JSON.stringify([]);
+        return '';
+      });
+
+      const analyzer = new GitHubAnalyzer();
+      const result = analyzer.analyzeCIFailureRate();
+
+      expect(result).toBeUndefined();
+    });
+  });
+
+  // P3: PR Scope Analysis
+  describe('analyzePRScope', () => {
+    test('calculates average and median lines changed', () => {
+      const prs: PRInfo[] = [
+        { number: 1, title: 'Small PR', author: 'user', state: 'MERGED', createdAt: '2026-02-01T10:00:00Z', mergedAt: '2026-02-01T12:00:00Z', additions: 50, deletions: 10, reviewCount: 0, commentCount: 0, commits: 1, changedFiles: 2, labels: [] },
+        { number: 2, title: 'Medium PR', author: 'user', state: 'MERGED', createdAt: '2026-02-02T10:00:00Z', mergedAt: '2026-02-02T12:00:00Z', additions: 150, deletions: 50, reviewCount: 0, commentCount: 0, commits: 1, changedFiles: 5, labels: [] },
+        { number: 3, title: 'Large PR', author: 'user', state: 'MERGED', createdAt: '2026-02-03T10:00:00Z', mergedAt: '2026-02-03T12:00:00Z', additions: 400, deletions: 100, reviewCount: 0, commentCount: 0, commits: 1, changedFiles: 15, labels: [] },
+      ];
+
+      const analyzer = new GitHubAnalyzer();
+      const result = analyzer.analyzePRScope(prs);
+
+      expect(result).toBeDefined();
+      // Lines changed: 60, 200, 500 -> avg = 253, median = 200
+      expect(result!.averageLinesChanged).toBe(253);
+      expect(result!.medianLinesChanged).toBe(200);
+      expect(result!.maxLinesChanged).toBe(500);
+      expect(result!.minLinesChanged).toBe(60);
+    });
+
+    test('identifies large PRs above threshold', () => {
+      const prs: PRInfo[] = [
+        { number: 1, title: 'Normal PR', author: 'user', state: 'MERGED', createdAt: '2026-02-01T10:00:00Z', mergedAt: '2026-02-01T12:00:00Z', additions: 100, deletions: 50, reviewCount: 0, commentCount: 0, commits: 1, changedFiles: 5, labels: [] },
+        { number: 2, title: 'Massive PR', author: 'user', state: 'MERGED', createdAt: '2026-02-02T10:00:00Z', mergedAt: '2026-02-02T12:00:00Z', additions: 1500, deletions: 500, reviewCount: 0, commentCount: 0, commits: 1, changedFiles: 50, labels: [] },
+      ];
+
+      const analyzer = new GitHubAnalyzer();
+      const result = analyzer.analyzePRScope(prs);
+
+      expect(result).toBeDefined();
+      expect(result!.largePRs.length).toBeGreaterThan(0);
+      expect(result!.largePRs[0].prNumber).toBe(2);
+      expect(result!.largePRs[0].linesChanged).toBe(2000);
+    });
+
+    test('calculates scope creep rate', () => {
+      const prs: PRInfo[] = [
+        { number: 1, title: 'PR 1', author: 'user', state: 'MERGED', createdAt: '2026-02-01T10:00:00Z', mergedAt: '2026-02-01T12:00:00Z', additions: 100, deletions: 50, reviewCount: 0, commentCount: 0, commits: 1, changedFiles: 5, labels: [] },
+        { number: 2, title: 'PR 2', author: 'user', state: 'MERGED', createdAt: '2026-02-02T10:00:00Z', mergedAt: '2026-02-02T12:00:00Z', additions: 200, deletions: 100, reviewCount: 0, commentCount: 0, commits: 1, changedFiles: 8, labels: [] },
+        { number: 3, title: 'Large PR', author: 'user', state: 'MERGED', createdAt: '2026-02-03T10:00:00Z', mergedAt: '2026-02-03T12:00:00Z', additions: 1000, deletions: 200, reviewCount: 0, commentCount: 0, commits: 1, changedFiles: 30, labels: [] },
+      ];
+
+      const analyzer = new GitHubAnalyzer();
+      const result = analyzer.analyzePRScope(prs);
+
+      expect(result).toBeDefined();
+      expect(result!.scopeCreepRate).toBeGreaterThanOrEqual(0);
+    });
+
+    test('assigns concern levels based on size', () => {
+      const prs: PRInfo[] = [
+        { number: 1, title: 'Medium large', author: 'user', state: 'MERGED', createdAt: '2026-02-01T10:00:00Z', mergedAt: '2026-02-01T12:00:00Z', additions: 600, deletions: 100, reviewCount: 0, commentCount: 0, commits: 1, changedFiles: 15, labels: [] },
+        { number: 2, title: 'Very large', author: 'user', state: 'MERGED', createdAt: '2026-02-02T10:00:00Z', mergedAt: '2026-02-02T12:00:00Z', additions: 1200, deletions: 300, reviewCount: 0, commentCount: 0, commits: 1, changedFiles: 30, labels: [] },
+        { number: 3, title: 'Massive', author: 'user', state: 'MERGED', createdAt: '2026-02-03T10:00:00Z', mergedAt: '2026-02-03T12:00:00Z', additions: 2000, deletions: 500, reviewCount: 0, commentCount: 0, commits: 1, changedFiles: 50, labels: [] },
+      ];
+
+      const analyzer = new GitHubAnalyzer();
+      const result = analyzer.analyzePRScope(prs);
+
+      expect(result).toBeDefined();
+      // With minimum threshold of 500, all should be flagged
+      const concerns = result!.largePRs.map(p => p.concernLevel);
+      expect(concerns).toContain('medium');
+    });
+
+    test('returns undefined for empty PRs', () => {
+      const analyzer = new GitHubAnalyzer();
+      const result = analyzer.analyzePRScope([]);
+
+      expect(result).toBeUndefined();
+    });
+
+    test('calculates average files changed', () => {
+      const prs: PRInfo[] = [
+        { number: 1, title: 'PR 1', author: 'user', state: 'MERGED', createdAt: '2026-02-01T10:00:00Z', mergedAt: '2026-02-01T12:00:00Z', additions: 100, deletions: 50, reviewCount: 0, commentCount: 0, commits: 1, changedFiles: 5, labels: [] },
+        { number: 2, title: 'PR 2', author: 'user', state: 'MERGED', createdAt: '2026-02-02T10:00:00Z', mergedAt: '2026-02-02T12:00:00Z', additions: 100, deletions: 50, reviewCount: 0, commentCount: 0, commits: 1, changedFiles: 15, labels: [] },
+      ];
+
+      const analyzer = new GitHubAnalyzer();
+      const result = analyzer.analyzePRScope(prs);
+
+      expect(result).toBeDefined();
+      expect(result!.averageFilesChanged).toBe(10); // (5 + 15) / 2
+    });
+  });
 });

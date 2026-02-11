@@ -1,7 +1,7 @@
 # Sprint Retrospective: self-test-git
 
 **Period**: HEAD~20 to HEAD
-**Generated**: 2026-02-11T19:53:43.634Z
+**Generated**: 2026-02-11T21:39:56.707Z
 **Data Completeness**: 40% (2/5 sources)
 
 ---
@@ -28,9 +28,9 @@
 |--------|-------|
 | Commits | 20 |
 | Contributors | 1 (0 human, 1 agent) |
-| Lines Changed | +41,034 / -18,524 |
+| Lines Changed | +41,997 / -19,357 |
 | Decisions Logged | 13 |
-| Agent Commits | 3 (15%) |
+| Agent Commits | 4 (20%) |
 
 ### Quality Signals
 - Delivery Predictability: 1/5 (high confidence)
@@ -99,20 +99,20 @@ Files changed 3+ times this sprint (high churn may indicate architectural issues
 | `skills/claude-best-practices/SKILL.md` | 6 | **High** |
 | `plugins/retrospective/skills/claude-best-practices/SKILL.md` | 5 | **High** |
 | `plugins/retrospective/.claude-plugin/plugin.json` | 4 | Medium |
-| `src/agentic_retrospective/cli.py` | 4 | Medium |
 | `skills/conduct/SKILL.md` | 4 | Medium |
+| `test-output/self-test-evidence/alerts.json` | 3 | Medium |
 
 ### File Distribution
 
 | Extension | Files Changed | % of Total |
 |-----------|---------------|------------|
-| .md | 135 | 35% |
-| .json | 97 | 25% |
-| .ts | 56 | 15% |
-| .py | 39 | 10% |
-| .sh | 36 | 9% |
+| .md | 141 | 34% |
+| .json | 124 | 30% |
+| .ts | 56 | 14% |
+| .py | 36 | 9% |
+| .sh | 34 | 8% |
 | .jsonl | 12 | 3% |
-| .snap | 2 | 1% |
+| .snap | 2 | 0% |
 | .yaml | 1 | 0% |
 
 
@@ -172,13 +172,13 @@ Files changed 3+ times this sprint (high churn may indicate architectural issues
 ### Delivery & Outcome
 
 - 20 commits
-- Average 2978 lines per commit
+- Average 3068 lines per commit
 
 **Score**: 1/5 (high confidence)
 
 ### Code Quality & Maintainability
 
-- 11 large commits (55%)
+- 12 large commits (60%)
 
 **Score**: 1/5 (medium confidence)
 
@@ -258,7 +258,7 @@ For detailed instructions, see `docs/fixing-telemetry-gaps.md`
 |-----------|-------|------------|--------------|
 | Delivery Predictability | 1/5 | high | 20 commits |
 | Test Loop Completeness | N/A/5 | none | - |
-| Quality/Maintainability | 1/5 | medium | 11 large commits (55%) |
+| Quality/Maintainability | 1/5 | medium | 12 large commits (60%) |
 | Security Posture | N/A/5 | none | - |
 | Collaboration Efficiency | N/A/5 | none | - |
 | Decision Hygiene | 2/5 | high | 13 decisions logged |

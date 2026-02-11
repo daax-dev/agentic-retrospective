@@ -3,7 +3,7 @@
  */
 
 import { execSync } from 'child_process';
-import type { CommitInfo, FileChange, CommitType, CommitTypeBreakdown, WorkClassification } from '../types.js';
+import type { CommitInfo, FileChange, CommitType, CommitTypeBreakdown, WorkClassification, CommitCadenceMetrics } from '../types.js';
 
 export interface GitAnalysisResult {
   commits: CommitInfo[];
@@ -15,6 +15,8 @@ export interface GitAnalysisResult {
   commitTypeBreakdown: CommitTypeBreakdown;
   checkpointCommits: number;
   workClassification: WorkClassification;
+  // P3: Commit cadence
+  commitCadence: CommitCadenceMetrics;
 }
 
 export class GitAnalyzer {
@@ -71,6 +73,9 @@ export class GitAnalyzer {
     const checkpointCommits = this.countCheckpointCommits(commits);
     const workClassification = this.calculateWorkClassification(commitTypeBreakdown);
 
+    // P3: Commit cadence analysis
+    const commitCadence = this.calculateCommitCadence(commits);
+
     return {
       commits,
       totalLinesAdded,
@@ -80,6 +85,7 @@ export class GitAnalyzer {
       commitTypeBreakdown,
       checkpointCommits,
       workClassification,
+      commitCadence,
     };
   }
 
@@ -358,6 +364,111 @@ export class GitAnalyzer {
    */
   countCheckpointCommits(commits: CommitInfo[]): number {
     return commits.filter(c => this.isCheckpointCommit(c.subject)).length;
+  }
+
+  /**
+   * Calculate commit cadence metrics (P3)
+   * Analyzes timing patterns and frequency of commits
+   */
+  calculateCommitCadence(commits: CommitInfo[]): CommitCadenceMetrics {
+    const defaultMetrics: CommitCadenceMetrics = {
+      averageTimeBetweenCommits: 0,
+      medianTimeBetweenCommits: 0,
+      maxGapDays: 0,
+      minGapHours: 0,
+      commitsPerDay: 0,
+      commitsPerWeek: 0,
+      irregularityScore: 0,
+      trend: 'stable',
+      busiestDay: 'Monday',
+      busiestHour: 9,
+    };
+
+    if (commits.length < 2) {
+      return defaultMetrics;
+    }
+
+    // Sort commits by date (oldest first)
+    const sortedCommits = [...commits].sort(
+      (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+    );
+
+    // Calculate time gaps between consecutive commits
+    const gaps: number[] = [];
+    for (let i = 1; i < sortedCommits.length; i++) {
+      const prevTime = new Date(sortedCommits[i - 1].date).getTime();
+      const currTime = new Date(sortedCommits[i].date).getTime();
+      const gapHours = (currTime - prevTime) / (1000 * 60 * 60);
+      gaps.push(gapHours);
+    }
+
+    // Calculate average and median gap
+    const avgGap = gaps.reduce((a, b) => a + b, 0) / gaps.length;
+    const sortedGaps = [...gaps].sort((a, b) => a - b);
+    const medianGap = sortedGaps[Math.floor(sortedGaps.length / 2)];
+    const maxGap = Math.max(...gaps);
+    const minGap = Math.min(...gaps);
+
+    // Calculate total time span
+    const firstCommitTime = new Date(sortedCommits[0].date).getTime();
+    const lastCommitTime = new Date(sortedCommits[sortedCommits.length - 1].date).getTime();
+    const totalDays = Math.max(1, (lastCommitTime - firstCommitTime) / (1000 * 60 * 60 * 24));
+
+    // Calculate commits per day/week
+    const commitsPerDay = commits.length / totalDays;
+    const commitsPerWeek = commitsPerDay * 7;
+
+    // Calculate irregularity score (coefficient of variation)
+    const mean = avgGap;
+    const variance = gaps.reduce((sum, gap) => sum + Math.pow(gap - mean, 2), 0) / gaps.length;
+    const stdDev = Math.sqrt(variance);
+    const irregularityScore = mean > 0 ? Math.min(1, stdDev / mean) : 0;
+
+    // Determine trend (compare first half vs second half)
+    const halfIndex = Math.floor(gaps.length / 2);
+    const firstHalfAvg = gaps.slice(0, halfIndex).reduce((a, b) => a + b, 0) / halfIndex || 0;
+    const secondHalfAvg = gaps.slice(halfIndex).reduce((a, b) => a + b, 0) / (gaps.length - halfIndex) || 0;
+
+    let trend: 'increasing' | 'stable' | 'decreasing' = 'stable';
+    if (secondHalfAvg < firstHalfAvg * 0.7) {
+      trend = 'increasing'; // Gaps getting smaller = more commits
+    } else if (secondHalfAvg > firstHalfAvg * 1.3) {
+      trend = 'decreasing'; // Gaps getting larger = fewer commits
+    }
+
+    // Find busiest day and hour
+    const dayCount: Record<string, number> = {
+      Sunday: 0, Monday: 0, Tuesday: 0, Wednesday: 0,
+      Thursday: 0, Friday: 0, Saturday: 0,
+    };
+    const hourCount: number[] = new Array(24).fill(0);
+    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+    for (const commit of commits) {
+      const date = new Date(commit.date);
+      dayCount[dayNames[date.getDay()]]++;
+      hourCount[date.getHours()]++;
+    }
+
+    const busiestDay = Object.entries(dayCount).reduce(
+      (max, [day, count]) => count > max.count ? { day, count } : max,
+      { day: 'Monday', count: 0 }
+    ).day;
+
+    const busiestHour = hourCount.indexOf(Math.max(...hourCount));
+
+    return {
+      averageTimeBetweenCommits: Math.round(avgGap * 100) / 100,
+      medianTimeBetweenCommits: Math.round(medianGap * 100) / 100,
+      maxGapDays: Math.round((maxGap / 24) * 100) / 100,
+      minGapHours: Math.round(minGap * 100) / 100,
+      commitsPerDay: Math.round(commitsPerDay * 100) / 100,
+      commitsPerWeek: Math.round(commitsPerWeek * 100) / 100,
+      irregularityScore: Math.round(irregularityScore * 100) / 100,
+      trend,
+      busiestDay,
+      busiestHour,
+    };
   }
 
   private isAgentCommit(commit: CommitInfo): boolean {
