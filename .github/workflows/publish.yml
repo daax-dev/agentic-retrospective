@@ -34,11 +34,11 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Run validation
-        run: pnpm run validate
-
       - name: Build
         run: pnpm run build
+
+      - name: Run validation
+        run: pnpm run validate
 
       - name: Check if version changed
         id: version
