@@ -1,0 +1,22 @@
+# Source and config
+src/
+tsconfig.json
+vitest.config.ts
+eslint.config.mjs
+
+# Development
+.progress/
+test/
+coverage/
+*.tgz
+
+# Docs (keep only README)
+docs/building/
+docs/completed/
+CLAUDE.md
+AGENTSKILLS.md
+plugin.json
+
+# Git
+.git/
+.gitignore
