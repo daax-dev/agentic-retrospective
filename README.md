@@ -6,6 +6,8 @@ Evidence-based sprint retrospectives for human-agent collaboration. **No AI slop
 
 ## What Makes This Different
 
+![Agentic Retrospective Screenshot](assets/retrospective-screen.png)
+
 Most retrospective tools produce vague observations like "58 tool invocations across 7 tools". That's useless.
 
 This tool produces **objective, evidence-based metrics**:
