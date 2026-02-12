@@ -1,5 +1,5 @@
 {
-  "name": "@agentic/retrospective",
+  "name": "@daax-dev/retrospective",
   "version": "0.1.0",
   "description": "Agentic Retrospective - Evidence-based sprint retrospectives for human-agent collaboration",
   "author": "JP Workspace",
@@ -10,14 +10,25 @@
   "bin": {
     "agentic-retrospective": "dist/cli.js"
   },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
   "files": [
     "dist",
     "commands",
     "schemas",
-    "docs",
+    "docs/TESTING.md",
+    "docs/fixing-telemetry-gaps.md",
     "examples",
     "README.md"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
@@ -66,7 +77,6 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/jpoley/agentic-retrospective.git",
-    "directory": "tools/retrospective"
+    "url": "https://github.com/daax-dev/agentic-retrospective.git"
   }
 }

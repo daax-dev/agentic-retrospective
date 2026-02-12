@@ -1,5 +1,7 @@
 # Agentic Retrospective
 
+[![npm version](https://img.shields.io/npm/v/@daax-dev/retrospective.svg)](https://www.npmjs.com/package/@daax-dev/retrospective)
+[![npm downloads](https://img.shields.io/npm/dm/@daax-dev/retrospective.svg)](https://www.npmjs.com/package/@daax-dev/retrospective)
 [![AgentSkills](https://img.shields.io/badge/AgentSkills-compatible-blue)](https://agentskills.io)
 
 Evidence-based sprint retrospectives for human-agent collaboration. **No AI slop** - every finding links to specific commits, PRs, or decisions.
@@ -50,22 +52,24 @@ Top Tools: Bash (39), Glob (6), Read (4)
 
 ## Installation
 
-### npx (no install)
+### Quick run (no install)
 
 ```bash
-npx agentic-retrospective
+npx @daax-dev/retrospective
 ```
 
-### npm global
+### Global install
 
 ```bash
-npm install -g agentic-retrospective
+npm install -g @daax-dev/retrospective
+# Then run:
+agentic-retrospective
 ```
 
-### Claude Code Plugin
+### As Claude Code Plugin
 
 ```bash
-claude /plugin add daax-dev/agentic-retrospective
+claude mcp install github.com/daax-dev/agentic-retrospective
 ```
 
 ## Usage
@@ -74,20 +78,20 @@ claude /plugin add daax-dev/agentic-retrospective
 
 ```bash
 # Analyze last 2 weeks (default)
-npx agentic-retrospective
+npx @daax-dev/retrospective
 
 # Analyze from specific ref
-npx agentic-retrospective --from HEAD~50
-npx agentic-retrospective --from "2 weeks ago"
+npx @daax-dev/retrospective --from HEAD~50
+npx @daax-dev/retrospective --from "2 weeks ago"
 
 # Output JSON only
-npx agentic-retrospective --json
+npx @daax-dev/retrospective --json
 ```
 
 ### Session Feedback
 
 ```bash
-npx agentic-retrospective feedback
+npx @daax-dev/retrospective feedback
 ```
 
 30-second survey to capture alignment, rework needed, and session quality.

@@ -1,0 +1,40 @@
+# Source and config
+src/
+tsconfig.json
+vitest.config.ts
+.eslintrc.json
+
+# Lock files
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+
+# Development
+.progress/
+test/
+test-output/
+coverage/
+*.tgz
+
+# Development directories
+.github/
+.claude/
+.claude-plugin/
+hooks/
+memory/
+references/
+scripts/
+skills/
+assets/
+
+# Docs - only specific files in package.json files field are included
+# No need to exclude here since we're explicit in files field
+
+# Config and metadata
+CLAUDE.md
+AGENTSKILLS.md
+plugin.json
+
+# Git
+.git/
+.gitignore
