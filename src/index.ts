@@ -1,5 +1,5 @@
 /**
- * @agentic/retrospective - Agentic Retrospective
+ * @daax-dev/retrospective - Agentic Retrospective
  *
  * A structured, evidence-based retrospective tool for analyzing
  * human-agent collaboration in software development sprints.
