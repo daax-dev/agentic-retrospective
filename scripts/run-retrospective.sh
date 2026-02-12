@@ -34,7 +34,7 @@ fi
 echo "Error: agentic-retrospective not found"
 echo ""
 echo "Install via:"
-echo "  npm install -g @agentic/retrospective"
+echo "  npm install -g @daax-dev/retrospective"
 echo ""
 echo "Or build locally:"
 echo "  npm install && npm run build && npm link"
