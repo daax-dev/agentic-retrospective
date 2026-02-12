@@ -1,6 +1,6 @@
 {
   "name": "@daax-dev/retrospective",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Agentic Retrospective - Evidence-based sprint retrospectives for human-agent collaboration",
   "author": "JP Workspace",
   "license": "Apache-2.0",
