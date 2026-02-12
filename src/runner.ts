@@ -24,6 +24,7 @@ import type {
   GitMetrics,
   ToolsSummary,
   DecisionAnalysis,
+  DecisionRecord,
 } from './types.js';
 import { GitAnalyzer } from './analyzers/git.js';
 import { DecisionAnalyzer } from './analyzers/decisions.js';
@@ -920,13 +921,13 @@ export class RetroRunner {
         category: cat,
         count: decisions.length,
         percentage: Math.round((decisions.length / data.decisions!.records.length) * 100),
-        decisions: decisions.slice(0, 3).map((d: any) => d.decision || d.summary || 'Untitled').slice(0, 50),
+        decisions: (decisions as DecisionRecord[]).slice(0, 3).map((d) => d.decision || d.summary || 'Untitled').slice(0, 50),
       })),
       byActor: Array.from(data.decisions.byActor.entries()).map(([actor, decisions]) => ({
         actor,
         count: decisions.length,
         percentage: Math.round((decisions.length / data.decisions!.records.length) * 100),
-        oneWayDoors: decisions.filter((d: any) => d.decision_type === 'one_way_door').length,
+        oneWayDoors: (decisions as DecisionRecord[]).filter((d) => d.decision_type === 'one_way_door').length,
       })),
       byType: Array.from(data.decisions.byType.entries()).map(([type, decisions]) => ({
         type,
