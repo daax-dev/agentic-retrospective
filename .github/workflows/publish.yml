@@ -37,8 +37,8 @@ jobs:
       - name: Build
         run: pnpm run build
 
-      - name: Run validation
-        run: pnpm run validate
+      - name: Run lint and tests
+        run: pnpm run lint && pnpm test
 
       - name: Check if version changed
         id: version
