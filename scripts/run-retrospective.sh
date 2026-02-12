@@ -16,9 +16,9 @@ if command -v agentic-retrospective &> /dev/null; then
     exit 0
 fi
 
-# Try npx
+# Try npx with scoped package
 if command -v npx &> /dev/null; then
-    npx agentic-retrospective  "$@"
+    npx @daax-dev/retrospective "$@"
     exit 0
 fi
 
@@ -34,7 +34,7 @@ fi
 echo "Error: agentic-retrospective not found"
 echo ""
 echo "Install via:"
-echo "  npm install -g @agentic/retrospective"
+echo "  npm install -g @daax-dev/retrospective"
 echo ""
 echo "Or build locally:"
 echo "  npm install && npm run build && npm link"

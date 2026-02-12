@@ -5,11 +5,12 @@
  *
  * Usage:
  *   agentic-retrospective [options]
- *   npx @agentic/retrospective [options]
+ *   npx @daax-dev/retrospective [options]
  */
 
 import { Command } from 'commander';
 import chalk from 'chalk';
+import pkg from '../package.json' with { type: 'json' };
 import { runRetro } from './runner.js';
 import type { RetroConfig } from './types.js';
 
@@ -18,7 +19,7 @@ const program = new Command();
 program
   .name('agentic-retrospective')
   .description('Generate evidence-based sprint retrospective analyzing human-agent collaboration')
-  .version('0.1.0')
+  .version(pkg.version)
   .option('--from <ref>', 'Git ref for sprint start (commit hash, tag, branch, or relative ref)', '')
   .option('--to <ref>', 'Git ref for sprint end (commit hash, tag, branch, or relative ref)', 'HEAD')
   .option('--sprint <id>', 'Sprint identifier for report naming')

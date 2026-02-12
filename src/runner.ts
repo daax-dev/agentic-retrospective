@@ -977,7 +977,7 @@ export class RetroRunner {
       fix_to_feature_ratio: data.fixToFeatureRatio || undefined,
       metadata: {
         // NOTE: `tool_version` represents the Agentic Retrospective/report tooling version
-        // and may intentionally differ from the npm/package.json version (currently 0.1.0).
+        // and may intentionally differ from the npm/package.json version.
         // It is bumped when the retrospective behavior or report format changes (e.g. "Phase 1"),
         // regardless of whether a new package version has been published yet.
         tool_version: '0.3.0', // Bumped for Phase 1 data surfacing
