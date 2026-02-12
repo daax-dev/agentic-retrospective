@@ -24,6 +24,7 @@ import type {
   GitMetrics,
   ToolsSummary,
   DecisionAnalysis,
+  DecisionRecord,
 } from './types.js';
 import { GitAnalyzer } from './analyzers/git.js';
 import { DecisionAnalyzer } from './analyzers/decisions.js';
@@ -920,13 +921,13 @@ export class RetroRunner {
         category: cat,
         count: decisions.length,
         percentage: Math.round((decisions.length / data.decisions!.records.length) * 100),
-        decisions: decisions.slice(0, 3).map((d: any) => d.decision || d.summary || 'Untitled').slice(0, 50),
+        decisions: decisions.slice(0, 3).map((d) => (d.decision || d.summary || 'Untitled').slice(0, 50)),
       })),
       byActor: Array.from(data.decisions.byActor.entries()).map(([actor, decisions]) => ({
         actor,
         count: decisions.length,
         percentage: Math.round((decisions.length / data.decisions!.records.length) * 100),
-        oneWayDoors: decisions.filter((d: any) => d.decision_type === 'one_way_door').length,
+        oneWayDoors: decisions.filter((d) => d.decision_type === 'one_way_door').length,
       })),
       byType: Array.from(data.decisions.byType.entries()).map(([type, decisions]) => ({
         type,
@@ -1123,9 +1124,9 @@ interface CollectedData {
       decision?: string;
     }>;
     // Phase 1: Surfaced from DecisionAnalyzer
-    byCategory: Map<string, unknown[]>;
-    byActor: Map<string, unknown[]>;
-    byType: Map<string, unknown[]>;
+    byCategory: Map<string, DecisionRecord[]>;
+    byActor: Map<string, DecisionRecord[]>;
+    byType: Map<string, DecisionRecord[]>;
     escalationStats: { total: number; escalated: number; rate: number };
   } | null;
   // Phase 2.2: Risk profile from DecisionAnalyzer
