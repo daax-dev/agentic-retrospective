@@ -134,9 +134,136 @@ Banks and legacy orgs are exactly the target market for this kind of tooling. If
 
 ---
 
+---
+
+## Ideas from Sniffly ([chiphuyen/sniffly](https://github.com/chiphuyen/sniffly))
+
+*Sniffly is a Claude Code analytics dashboard by Chip Huyen. It reads raw session logs from `~/.claude/projects/` and shows usage patterns, error breakdowns, and message history in a local web UI.*
+
+**Key distinction:** Sniffly looks *inside* agent sessions (what the agent did, what failed, token usage). Agentic-retrospective looks at *outputs* (what was committed, merged, decided). They're complementary — together they close the full loop.
+
+---
+
+### Idea 4: Session Log Integration (Tool Error Pattern Analysis)
+
+**Origin:** Sniffly's "Error Breakdown" — where Claude Code makes mistakes.
+
+### Problem
+Agentic-retrospective can tell you the rework rate is 75% but can't tell you *what kind of agent behavior* caused it. Were sessions chaotic and error-prone? Did the agent retry the same tool call 10 times? That context is sitting in `~/.claude/projects/` logs already — we just don't read it.
+
+### Idea
+Add optional session log analysis via `--with-sessions` flag. Parse Claude Code JSONL logs to extract:
+
+| Signal | What It Tells You |
+|--------|------------------|
+| Tool error rate | How often agent hits failures per session |
+| Retry chains | Same tool called repeatedly — agent stuck in a loop |
+| Session length | Long sessions → complex tasks or confused agent? |
+| Session-to-commit ratio | How many commits came out of each session |
+| Error-to-fix correlation | Sessions with high errors → more fix commits? |
+
+### Plan
+1. Gate behind `--with-sessions` flag — off by default
+2. Auto-detect `~/.claude/projects/` (same as Sniffly does)
+3. Correlate sessions to commits by timestamp — session ends at T, commits within the next hour are attributed to it
+4. New report section: `### Agent Session Quality` — error rates, retry patterns, avg commits per session
+5. Key insight: "Sessions with >10 tool errors produce 2.3x more fix commits" — this closes the loop between session behavior and output quality
+6. No web UI — keep it markdown report output, consistent with current design
+
+### Scope Guard
+We don't replicate Sniffly's dashboard. We extract *correlations* between session behavior and git output. Sniffly shows you what happened in a session; we show you what that session produced and whether it was good.
+
+---
+
+### Idea 5: Sprint Trend Analysis (Historical Comparison)
+
+**Origin:** Sniffly has date range filtering. Agentic-retrospective is currently one-shot.
+
+### Problem
+A single retrospective tells you where you are. It doesn't tell you if you're getting better or worse. A team that just did a transformation sprint wants to see the trajectory, not just the snapshot.
+
+### Idea
+Add a `--compare` mode that runs analysis across multiple date ranges and shows trend lines.
+
+```bash
+# Compare last 4 sprints (2 weeks each)
+agentic-retrospective --compare --periods 4 --period-length 2w
+
+# Compare specific refs
+agentic-retrospective --compare --from v1.0 --to v1.4
+```
+
+**Output:**
+```
+### Sprint Trend (Last 4 Sprints)
+
+| Metric              | Sprint 1 | Sprint 2 | Sprint 3 | Sprint 4 | Trend |
+|---------------------|----------|----------|----------|----------|-------|
+| Rework Rate         | 75%      | 68%      | 61%      | 54%      | ↓ ✅  |
+| Testing Discipline  | 2%       | 5%       | 8%       | 14%      | ↑ ✅  |
+| Upkeep Ratio        | 18%      | 22%      | 31%      | 38%      | ↑ ⚠️  |
+| Decision Quality    | 78%      | 80%      | 79%      | 83%      | ↑ ✅  |
+```
+
+### Plan
+1. Each retrospective already outputs `retrospective.json` with structured metrics
+2. `--compare` mode reads past JSON reports from `docs/retrospectives/` directory
+3. Computes trend direction (improving/degrading/stable) per metric
+4. Threshold: flag if a metric degrades 2+ consecutive sprints
+5. No new data collection needed — just aggregation of existing outputs
+
+### Effort
+Medium — 1–2 days. All the data already exists in the JSON outputs.
+
+---
+
+### Idea 6: Shareable Report Output
+
+**Origin:** Sniffly's "Share" button — generates a link to share stats with coworkers.
+
+### Problem
+Retrospective reports are currently local markdown files. Useful for individuals; harder to share with a team or stakeholder who isn't in the repo.
+
+### Idea
+Add `agentic-retrospective share` subcommand that generates a self-contained static HTML report — no server needed, no external upload, no data leaves the machine.
+
+```bash
+agentic-retrospective share
+# → Generated: docs/retrospectives/retrospective-2026-02-23/report.html
+# → Drop this file anywhere to share it
+```
+
+Or optionally: `--gist` flag to post anonymized JSON to a GitHub Gist (opt-in, explicit).
+
+### Plan
+1. Add HTML template (single file, inline CSS) that renders the same tables/sections as the markdown report
+2. `share` subcommand: takes most recent (or specified) retrospective JSON, renders to HTML
+3. Default: local file only — zero network calls
+4. Optional `--gist` flag: posts the JSON to a GitHub Gist via `gh` CLI (requires gh auth)
+5. No analytics dashboard, no hosted service — stays consistent with the tool's local-first philosophy
+
+### Scope Guard
+We are not building a Sniffly-style web dashboard. One-shot HTML export only. The core tool stays CLI.
+
+---
+
+### Key Differentiator vs Sniffly
+
+| Dimension | Sniffly | Agentic Retrospective |
+|-----------|---------|----------------------|
+| Data source | Claude Code session logs | Git, PRs, decision logs |
+| Lens | Inside the session (behavior) | Outside the session (output quality) |
+| Output | Web dashboard (persistent) | Point-in-time report (markdown + JSON) |
+| Audience | Individual developer | Team / engineering lead |
+| Sharing | Hosted dashboard links | Local HTML or Gist |
+| Cadence | Ongoing / continuous | Per sprint |
+
+**The play:** These two tools are better together. A future integration idea (post-MVP) — Sniffly exports a session quality JSON, agentic-retrospective ingests it. You get the full picture: "bad session behavior → bad output quality → here's the causal chain."
+
+---
+
 ## Notes
 
-- **Sniffy feedback** — *[to be added — share that session context and I'll fold it in]*
-- All three ideas above follow the guiding principle: optional depth, nothing forced on the default run
-- Ideas 1 and 3B are new features; Idea 2 and 3A are docs + fixes
-- Suggested priority: **2 (quick fix) → 3A (docs) → 3B (check command) → 1 (requires more scoping)**
+- All ideas follow the guiding principle: optional depth, nothing forced on the default run
+- Ideas 2 and 3A are quick fixes/docs; others are real feature work
+- Suggested priority: **2 (quick fix) → 3A (docs) → 3B (check command) → 5 (trend, data already exists) → 6 (share HTML) → 4 (session logs) → 1 (requires most scoping)**
