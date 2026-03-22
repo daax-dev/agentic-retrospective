@@ -57,8 +57,10 @@ program
           console.log(chalk.yellow(`\n⚠️  ${result.alerts.length} alerts require attention`));
         }
 
-        // Prompt for feedback
-        await promptForFeedback();
+        // Prompt for feedback (skip in quiet/headless mode)
+        if (!options.quiet) {
+          await promptForFeedback();
+        }
       } else {
         console.log(chalk.red('\n❌ Retrospective failed'));
         console.log(result.error);
