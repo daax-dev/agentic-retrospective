@@ -517,7 +517,7 @@ The unified executive summary aggregates scores (weighted by commit count), find
 
 **Action-item cap fix**: The constitution mandates max 5 action items (`memory/constitution.md:48`), but the current runner caps at 7 (`src/runner.ts:1031` uses `items.slice(0, 7)`). As part of this multi-repo work, reduce that cap from 7 to 5 so both single-repo and aggregate multi-repo outputs comply with the constitution. Update acceptance criteria for #19 accordingly.
 
-**Constitution compliance**: Multi-repo support itself does not violate any constitutional constraint. The tool remains a pure analytics layer; it reads from multiple repos but still does not capture telemetry, install hooks, or write to `.logs/` (`memory/constitution.md:11–14`). The blameless and evidence-driven principles apply equally to per-repo and aggregate sections.
+**Constitution compliance**: Multi-repo support itself does not violate any constitutional constraint. The tool remains a pure analytics layer; the retrospective run reads from multiple repos but does not capture telemetry or install hooks (`memory/constitution.md:11–14`). (The one pre-existing exception is the `feedback` subcommand, which writes user-provided session feedback to `.logs/feedback/` at `src/cli.ts:104,167`; this is out of scope for #19 and preserved unchanged.) The blameless and evidence-driven principles apply equally to per-repo and aggregate sections.
 
 ---
 
@@ -539,16 +539,29 @@ program
 // In .action():
 const toml = findRetroConfig();
 
-// Apply config file defaults, then override with CLI flags
-if (toml?.repos?.length) {
-  config.repos = toml.repos;
+// Apply config-file defaults (lowest precedence — CLI flags win)
+if (toml?.retrospective?.sprint_id && !options.sprint) {
+  options.sprint = toml.retrospective.sprint_id;
 }
+if (toml?.retrospective?.output_dir && options.output === 'docs/retrospectives') {
+  options.output = toml.retrospective.output_dir;
+}
+
+// Repos: CLI --repo flags override config
+let repos: RepoConfig[] | undefined;
 if (options.repo?.length > 0) {
-  config.repos = options.repo.map((p: string, i: number) => ({
+  repos = options.repo.map((p: string, i: number) => ({
     path: p,
     label: `repo-${i + 1}`,
   }));
+} else if (toml?.repos?.length) {
+  repos = toml.repos;
 }
+
+const config: RetroConfig = {
+  // ...existing fields
+  repos,
+};
 ```
 
 ---
@@ -627,16 +640,16 @@ Effort key: XS < 1h, S < 4h, M < 1d, L < 3d.
 ## Decision Log
 
 ```jsonl
-{"ts":"2026-04-10T00:00:00Z","decision":"Scope #18 into three discrete fixes (18-A trend, 18-B validation, 18-C docs)","rationale":"Each fix is independently releasable and testable; avoids a single large PR blocking user value","actor":"agent","category":"architecture","decision_type":"two_way_door","evidence_refs":["commit:HEAD"]}
-{"ts":"2026-04-10T00:00:01Z","decision":"Use appendFileSync for history file writes rather than read-parse-write","rationale":"JSONL is append-only by design; avoids loading and re-serializing the entire history on every run","actor":"agent","category":"architecture","decision_type":"two_way_door","evidence_refs":["commit:HEAD"]}
-{"ts":"2026-04-10T00:00:02Z","decision":"Emit evidence_refs warnings to stderr, not stdout","rationale":"The --json flag routes stdout to consumers; interleaving warnings would corrupt machine-readable output","actor":"agent","category":"architecture","decision_type":"two_way_door","evidence_refs":["commit:HEAD"]}
-{"ts":"2026-04-10T00:00:03Z","decision":"Use @iarna/toml for TOML parsing rather than hand-rolling","rationale":"Correctness and TOML 1.0 spec compliance; @iarna/toml has zero transitive dependencies and is 19KB","actor":"agent","category":"deps","decision_type":"two_way_door","evidence_refs":["commit:HEAD"]}
-{"ts":"2026-04-10T00:00:04Z","decision":"Default GitAnalyzer and GitHubAnalyzer cwd to process.cwd()","rationale":"Preserves full backward compatibility; all existing call sites pass no argument and continue working","actor":"agent","category":"architecture","decision_type":"two_way_door","evidence_refs":["commit:HEAD"]}
-{"ts":"2026-04-10T00:00:05Z","decision":"Place .retro-history.jsonl inside outputDir","rationale":"writeOutputs() writes per-sprint output to join(outputDir, sprintId), so outputDir itself is the parent of per-sprint directories and the natural home for a cross-sprint history file — avoiding parent-directory path traversal","actor":"agent","category":"architecture","decision_type":"two_way_door","evidence_refs":["commit:HEAD"]}
-{"ts":"2026-04-10T00:00:06Z","decision":"Add CI workflow as a separate file from publish.yml rather than extending publish.yml","rationale":"Publish and CI have different triggers and permissions; combining them creates unnecessary coupling","actor":"agent","category":"architecture","decision_type":"two_way_door","evidence_refs":["commit:HEAD"]}
-{"ts":"2026-04-10T00:00:07Z","decision":"Extend fixing-telemetry-gaps.md for adapter docs rather than creating a new file","rationale":"Users are already directed to that doc for telemetry issues; co-location reduces discovery friction","actor":"agent","category":"process","decision_type":"two_way_door","evidence_refs":["commit:HEAD"]}
-{"ts":"2026-04-10T00:00:08Z","decision":"Reject .retro.json in favor of .retro.toml for config file format","rationale":"Issue #19 explicitly proposes TOML to match org-wide daax-cli.toml precedent; JSON would deviate from stated design intent","actor":"agent","category":"architecture","decision_type":"two_way_door","evidence_refs":["commit:HEAD"]}
-{"ts":"2026-04-10T00:00:09Z","decision":"Aggregate multi-repo scores weighted by commit count, not simple average","rationale":"A repo with 300 commits should carry more weight in the unified score than a repo with 10; simple averaging is misleading","actor":"agent","category":"architecture","decision_type":"two_way_door","evidence_refs":["commit:HEAD"]}
+{"ts":"2026-04-10T00:00:00Z","decision":"Scope #18 into three discrete fixes (18-A trend, 18-B validation, 18-C docs)","rationale":"Each fix is independently releasable and testable; avoids a single large PR blocking user value","actor":"agent","category":"architecture","decision_type":"two_way_door","evidence_refs":["inferred:documented-plan-example"]}
+{"ts":"2026-04-10T00:00:01Z","decision":"Use appendFileSync for history file writes rather than read-parse-write","rationale":"JSONL is append-only by design; avoids loading and re-serializing the entire history on every run","actor":"agent","category":"architecture","decision_type":"two_way_door","evidence_refs":["inferred:documented-plan-example"]}
+{"ts":"2026-04-10T00:00:02Z","decision":"Emit evidence_refs warnings to stderr, not stdout","rationale":"The --json flag routes stdout to consumers; interleaving warnings would corrupt machine-readable output","actor":"agent","category":"architecture","decision_type":"two_way_door","evidence_refs":["inferred:documented-plan-example"]}
+{"ts":"2026-04-10T00:00:03Z","decision":"Use @iarna/toml for TOML parsing rather than hand-rolling","rationale":"Correctness and TOML 1.0 spec compliance; @iarna/toml has zero transitive dependencies and is 19KB","actor":"agent","category":"deps","decision_type":"two_way_door","evidence_refs":["inferred:documented-plan-example"]}
+{"ts":"2026-04-10T00:00:04Z","decision":"Default GitAnalyzer and GitHubAnalyzer cwd to process.cwd()","rationale":"Preserves full backward compatibility; all existing call sites pass no argument and continue working","actor":"agent","category":"architecture","decision_type":"two_way_door","evidence_refs":["inferred:documented-plan-example"]}
+{"ts":"2026-04-10T00:00:05Z","decision":"Place .retro-history.jsonl inside outputDir","rationale":"writeOutputs() writes per-sprint output to join(outputDir, sprintId), so outputDir itself is the parent of per-sprint directories and the natural home for a cross-sprint history file — avoiding parent-directory path traversal","actor":"agent","category":"architecture","decision_type":"two_way_door","evidence_refs":["inferred:documented-plan-example"]}
+{"ts":"2026-04-10T00:00:06Z","decision":"Add CI workflow as a separate file from publish.yml rather than extending publish.yml","rationale":"Publish and CI have different triggers and permissions; combining them creates unnecessary coupling","actor":"agent","category":"architecture","decision_type":"two_way_door","evidence_refs":["inferred:documented-plan-example"]}
+{"ts":"2026-04-10T00:00:07Z","decision":"Extend fixing-telemetry-gaps.md for adapter docs rather than creating a new file","rationale":"Users are already directed to that doc for telemetry issues; co-location reduces discovery friction","actor":"agent","category":"process","decision_type":"two_way_door","evidence_refs":["inferred:documented-plan-example"]}
+{"ts":"2026-04-10T00:00:08Z","decision":"Reject .retro.json in favor of .retro.toml for config file format","rationale":"Issue #19 explicitly proposes TOML to match org-wide daax-cli.toml precedent; JSON would deviate from stated design intent","actor":"agent","category":"architecture","decision_type":"two_way_door","evidence_refs":["inferred:documented-plan-example"]}
+{"ts":"2026-04-10T00:00:09Z","decision":"Aggregate multi-repo scores weighted by commit count, not simple average","rationale":"A repo with 300 commits should carry more weight in the unified score than a repo with 10; simple averaging is misleading","actor":"agent","category":"architecture","decision_type":"two_way_door","evidence_refs":["inferred:documented-plan-example"]}
 ```
 
 ---
@@ -647,7 +660,7 @@ The following behaviors are explicitly preserved in every fix above, in complian
 
 | Constitutional Principle | How This Plan Honors It |
 |--------------------------|-------------------------|
-| Pure analytics layer — reads data, does not capture it | No fix writes to `.logs/`; history file is an output artifact, not telemetry |
+| Pure analytics layer — reads data, does not capture it | No fix in this plan writes to `.logs/`. The pre-existing `feedback` subcommand (`src/cli.ts:104,167`) is unchanged and remains the sole `.logs/` writer. The history file is an output artifact under `outputDir`, not telemetry. |
 | Git history is the only hard requirement | Multi-repo mode still requires git at each repo path; graceful degradation is unchanged |
 | Maximum 5 action items per report | The aggregate multi-repo report enforces this cap across all repos |
 | Every claim links to evidence or is marked "inferred" | Evidence map format is unchanged; per-repo sections use the same traceability model |

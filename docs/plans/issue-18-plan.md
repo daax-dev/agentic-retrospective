@@ -70,7 +70,7 @@ Call site: inside `writeOutputs()` immediately after the markdown write, before 
 - [ ] `--quiet` mode still writes history.
 - [ ] Existing single-run tests still pass unchanged.
 
-### Tests (`test/history.test.ts` — new file)
+### Tests (`test/integration/history.test.ts` — new file)
 
 ```
 describe('sprint history', () => {
@@ -167,7 +167,7 @@ Warnings go to **stderr** because `--json` routes stdout to consumers; interleav
 - [ ] A decision with `evidence_refs: ["commit:<full-40>"]` continues to work (no regression).
 - [ ] `--json` stdout remains valid JSON — no warning bleed onto stdout.
 
-### Tests (`test/evidence-map.test.ts` — extend or new)
+### Tests (`test/integration/evidence-map.test.ts` — extend or new)
 
 ```
 describe('buildEvidenceMap evidence_refs validation', () => {

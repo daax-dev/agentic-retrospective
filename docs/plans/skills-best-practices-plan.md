@@ -108,7 +108,7 @@ Run: `bash skills/claude-best-practices/scripts/audit.sh`
 - Periodically, to catch drift
 ```
 
-### Change 3 — Upgrade `scripts/audit.sh` to enforce best-practices
+### Change 3 — Upgrade `skills/claude-best-practices/scripts/audit.sh` to enforce best-practices
 
 Add checks that actually match the claims in the SKILL.md body:
 
@@ -143,7 +143,7 @@ Anthropic's schema for SKILL.md defines only `name` and `description`. `invocati
 
 Not currently a problem (both are under 100 lines) but document the pattern so future contributors know when to split.
 
-Add to the audit script a line-count check on each SKILL.md body.
+Add to `skills/claude-best-practices/scripts/audit.sh` a line-count check on each SKILL.md body.
 
 ### Change 7 — Evaluation harness (stretch)
 
@@ -163,12 +163,12 @@ These are documentation only until an evaluation runner exists; they make skill 
 
 - [ ] `skills/retrospective/SKILL.md` description rewritten to include when-to-use trigger; passes third-person check.
 - [ ] `skills/claude-best-practices/SKILL.md` rewritten to third person, fixed execution command, includes when-to-use.
-- [ ] `scripts/audit.sh` parses every `skills/*/SKILL.md` frontmatter and reports:
+- [ ] `skills/claude-best-practices/scripts/audit.sh` parses every `skills/*/SKILL.md` frontmatter and reports:
   - missing/invalid `name`
   - missing `description`
   - first/second-person pronouns in `description`
   - body line count > 500
-- [ ] `scripts/audit.sh` exits 0 for current repo after Changes 1–2 land.
+- [ ] `skills/claude-best-practices/scripts/audit.sh` exits 0 for current repo after Changes 1–2 land.
 - [ ] `AGENTSKILLS.md` decision is made and applied (delete or regenerate).
 - [ ] `invocation:` frontmatter is verified and either kept or removed consistently across skills.
 - [ ] Three evaluation stubs added under `skills/retrospective/evaluations/` (or documented why skipped).

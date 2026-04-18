@@ -68,8 +68,6 @@ export interface RetroToml {
   retrospective?: {
     sprint_id?: string;
     output_dir?: string;
-    from?: string;
-    to?: string;
   };
   repos?: Array<{ path: string; label: string }>;
 }
@@ -109,7 +107,7 @@ Add to `package.json` `dependencies`:
 - [ ] Returns parsed object when `.retro.toml` is in `cwd`.
 - [ ] Returns parsed object when `.retro.toml` is in a parent dir.
 - [ ] Malformed TOML throws a user-readable error (don't swallow the parse exception).
-- [ ] Unit tests use tmp dirs.
+- [ ] Unit tests live at `test/unit/config.test.ts` and use tmp dirs (no reliance on the real filesystem).
 
 ---
 
@@ -283,7 +281,7 @@ const config: RetroConfig = {
 
 ## Integration Testing
 
-### `test/multi-repo.test.ts` (new)
+### `test/integration/multi-repo.test.ts` (new)
 
 ```
 describe('multi-repo mode', () => {
