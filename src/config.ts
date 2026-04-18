@@ -27,7 +27,8 @@ export interface RetroToml {
  */
 export function findRetroConfig(startDir: string = process.cwd()): RetroToml | null {
   let dir = resolve(startDir);
-  while (true) {
+  // Walk upward until we hit the filesystem root (where dirname(dir) === dir).
+  for (;;) {
     const candidate = join(dir, '.retro.toml');
     if (existsSync(candidate)) {
       try {
@@ -39,8 +40,7 @@ export function findRetroConfig(startDir: string = process.cwd()): RetroToml | n
       }
     }
     const parent = dirname(dir);
-    if (parent === dir) break; // filesystem root
+    if (parent === dir) return null; // filesystem root
     dir = parent;
   }
-  return null;
 }
