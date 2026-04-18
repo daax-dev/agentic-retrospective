@@ -188,7 +188,7 @@ private async runMultiRepo(): Promise<RunResult> {
 |-----------|------|
 | Scores | Weighted by commit count per repo |
 | Findings | Union, deduplicated by `(category, title)` |
-| Action items | Capped at 5 across all repos (constitution `memory/constitution.md:48`) |
+| Action items | Capped at 5 across all repos per `memory/constitution.md:48` — requires reducing `items.slice(0, 7)` at `src/runner.ts:1031` to `slice(0, 5)` as part of this phase |
 | `data_completeness` | Averaged |
 | `generated_at` | Single timestamp (run start) |
 
@@ -198,6 +198,7 @@ private async runMultiRepo(): Promise<RunResult> {
 - [ ] `config.repos` absent → `runSingleRepo()` path; no behaviour change.
 - [ ] Two-repo run produces two per-repo sections + one summary.
 - [ ] Score aggregation is commit-count-weighted (verify via numeric fixture).
+- [ ] `src/runner.ts:1031` cap reduced from 7 to 5 so single-repo output also complies with `memory/constitution.md:48`.
 - [ ] Action items never exceed 5 even if each repo would produce 5.
 
 ---

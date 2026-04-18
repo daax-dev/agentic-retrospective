@@ -11,7 +11,7 @@
 | Path | Current state |
 |------|---------------|
 | `skills/retrospective/SKILL.md` | 65 lines. Shows sub-commands, metrics, output sections. |
-| `skills/claude-best-practices/SKILL.md` | 34 lines. Delegates to `scripts/audit.sh`. |
+| `skills/claude-best-practices/SKILL.md` | 34 lines. Instructs `Run: agentic-retrospective audit`; does not reference `scripts/audit.sh`, so the skill doc and script are currently out of sync (the CLI has no `audit` subcommand). |
 | `skills/claude-best-practices/scripts/audit.sh` | 57-line bash script; checks for CLAUDE.md, `.claude/`, hooks.json, settings.json. |
 | `AGENTSKILLS.md` (repo root) | 60-line doc. **Duplicates** retrospective SKILL.md with a different `description` and extra sub-commands. |
 

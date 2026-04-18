@@ -27,7 +27,6 @@ All three can ship in a single PR since they share the same contributor request,
 |------|--------|
 | `src/types.ts` (after line 507, `RetroConfig`) | Add `SprintHistoryEntry` interface |
 | `src/runner.ts` line 8 | Add `appendFileSync` to fs destructure |
-| `src/runner.ts` line 9 | Add `resolve` to path destructure |
 | `src/runner.ts` inside `writeOutputs()` (near line 1086) | Add private `appendToHistory(report)` and invoke it |
 
 ### New type (`src/types.ts`)
@@ -45,7 +44,7 @@ export interface SprintHistoryEntry {
 
 ```typescript
 private appendToHistory(report: RetroReport): void {
-  const historyPath = resolve(this.config.outputDir, '../.retro-history.jsonl');
+  const historyPath = join(this.config.outputDir, '.retro-history.jsonl');
   const entry: SprintHistoryEntry = {
     sprint_id: report.sprint_id,
     date: report.generated_at,
@@ -60,12 +59,12 @@ Call site: inside `writeOutputs()` immediately after the markdown write, before 
 
 ### Location rationale
 
-`resolve(outputDir, '../.retro-history.jsonl')` sits one level **above** the per-sprint output dirs, so a single history file spans all sprints. `resolve()` (not `join`) is required because `outputDir` defaults to a relative path (`docs/retrospectives`) — `join('../..')` on relative paths depends on `process.cwd()`.
+`writeOutputs()` writes per-sprint output to `join(this.config.outputDir, this.config.sprintId)` (see `src/runner.ts:1056`). `outputDir` itself is therefore the parent of every sprint-specific directory, and is the natural location for a cross-sprint history file: `<outputDir>/.retro-history.jsonl`. No need for `..` path traversal.
 
 ### Acceptance criteria
 
 - [ ] `SprintHistoryEntry` exported from `src/types.ts`.
-- [ ] First run creates `<outputDir>/../.retro-history.jsonl` with exactly one JSONL line.
+- [ ] First run creates `<outputDir>/.retro-history.jsonl` with exactly one JSONL line.
 - [ ] Second run with a different `sprint_id` appends a second line; file still valid JSONL.
 - [ ] `--json` mode still writes history (silent).
 - [ ] `--quiet` mode still writes history.
@@ -249,7 +248,7 @@ pnpm run validate   # lint + typecheck + test (per package.json)
 pnpm run build      # confirms tsc passes
 # Smoke test: run against this repo itself
 node dist/cli.js --from HEAD~10 --output /tmp/retro-test
-cat /tmp/.retro-history.jsonl   # should show one line
+cat /tmp/retro-test/.retro-history.jsonl   # should show one line
 ```
 
 ## Out of Scope

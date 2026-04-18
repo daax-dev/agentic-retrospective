@@ -180,10 +180,10 @@ export interface SprintHistoryEntry {
 ```typescript
 // appendFileSync: already in the runner.ts:8 fs destructure: { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync }
 // → add appendFileSync to that destructure
-// resolve: already imported via 'path' at runner.ts:9 (join is imported; add resolve)
+// join: already imported at runner.ts:9
 
 private appendToHistory(report: RetroReport): void {
-  const historyPath = resolve(this.config.outputDir, '../.retro-history.jsonl');
+  const historyPath = join(this.config.outputDir, '.retro-history.jsonl');
   const entry: SprintHistoryEntry = {
     sprint_id: report.sprint_id,
     date: report.generated_at,
@@ -196,7 +196,7 @@ private appendToHistory(report: RetroReport): void {
 
 Call site in `writeOutputs()` (`src/runner.ts:1086`): add `this.appendToHistory(report);` after the markdown write, before `return outputPath`.
 
-**History file location**: `resolve(outputDir, '../.retro-history.jsonl')` — one level above the sprint-specific output dirs, spanning all sprints. Using `resolve()` is necessary because `outputDir` may be a relative path (default: `docs/retrospectives`); `join('../..')` on a relative path produces an incorrect result if the process changes directory.
+**History file location**: `join(outputDir, '.retro-history.jsonl')`. `writeOutputs()` writes per-sprint output to `join(this.config.outputDir, this.config.sprintId)` (`src/runner.ts:1056`), so `outputDir` itself is the parent of per-sprint directories — the correct home for a cross-sprint history file. No `..` path traversal into the caller's working directory.
 
 **Compatibility**: Fully additive. No existing behavior changes. History file is created on first run.
 
@@ -214,15 +214,15 @@ Call site in `writeOutputs()` (`src/runner.ts:1086`): add `this.appendToHistory(
 
 Non-matching refs produce no diagnostic output in either case.
 
-**Known valid prefixes** (from existing `runner.ts` usage):
+**Valid prefixes** (this plan introduces the full set; current `runner.ts:657–665` only resolves `commit:` — the others are recognised by the validator below but resolution handlers for `pr:`, `decision:`, `file:`, and `inferred:` are a planned follow-up and not part of Fix 18-B):
 
-| Prefix | Links to |
-|--------|----------|
-| `commit:<hash>` | Git commit |
-| `pr:<number>` | GitHub pull request |
-| `decision:<id>` | Another decision record |
-| `file:<path>` | Source file |
-| `inferred:<reason>` | No artifact — marks inferred evidence |
+| Prefix | Links to | Resolved today? |
+|--------|----------|-----------------|
+| `commit:<hash>` | Git commit | ✅ (existing) |
+| `pr:<number>` | GitHub pull request | ❌ (planned) |
+| `decision:<id>` | Another decision record | ❌ (planned) |
+| `file:<path>` | Source file | ❌ (planned) |
+| `inferred:<reason>` | No artifact — marks inferred evidence | ✅ (accepted as valid, no resolution needed) |
 
 **Implementation** (`src/runner.ts`, at the top of `buildEvidenceMap()`):
 
@@ -262,7 +262,7 @@ private buildEvidenceMap(data: CollectedData): EvidenceMap {
       process.stderr.write(`  - ${r}\n`)
     );
     process.stderr.write(
-      '  Valid formats: commit:<hash>, pr:<number>, decision:<id>, file:<path>\n'
+      '  Valid formats: commit:<hash>, pr:<number>, decision:<id>, file:<path>, inferred:<reason>\n'
     );
     this.addTelemetryGap({
       gap_type: 'unrecognized_evidence_refs',
@@ -468,7 +468,9 @@ Refactor `run()` to dispatch based on whether `repos` is populated:
 
 ```typescript
 async run(): Promise<RunResult> {
-  if (this.config.repos && this.config.repos.length > 1) {
+  if (this.config.repos && this.config.repos.length > 0) {
+    // Any explicit repos list activates multi-repo mode — even a single entry,
+    // which yields a labeled single-repo report (e.g., --repo ../other).
     return this.runMultiRepo();
   }
   return this.runSingleRepo();
@@ -511,9 +513,11 @@ generateMultiRepoMarkdown(perRepo: PerRepoReportData[], summary: AggregatedSumma
 }
 ```
 
-The unified executive summary aggregates scores (weighted by commit count), findings (deduplicated), and action items (max 5 across all repos — enforced by the constitution, `memory/constitution.md:48`).
+The unified executive summary aggregates scores (weighted by commit count), findings (deduplicated), and action items.
 
-**Constitution compliance**: Multi-repo support does not violate any constitutional constraint. The tool remains a pure analytics layer; it reads from multiple repos but still does not capture telemetry, install hooks, or write to `.logs/` (`memory/constitution.md:11–14`). The blameless and evidence-driven principles apply equally to per-repo and aggregate sections.
+**Action-item cap fix**: The constitution mandates max 5 action items (`memory/constitution.md:48`), but the current runner caps at 7 (`src/runner.ts:1031` uses `items.slice(0, 7)`). As part of this multi-repo work, reduce that cap from 7 to 5 so both single-repo and aggregate multi-repo outputs comply with the constitution. Update acceptance criteria for #19 accordingly.
+
+**Constitution compliance**: Multi-repo support itself does not violate any constitutional constraint. The tool remains a pure analytics layer; it reads from multiple repos but still does not capture telemetry, install hooks, or write to `.logs/` (`memory/constitution.md:11–14`). The blameless and evidence-driven principles apply equally to per-repo and aggregate sections.
 
 ---
 
@@ -628,7 +632,7 @@ Effort key: XS < 1h, S < 4h, M < 1d, L < 3d.
 {"ts":"2026-04-10T00:00:02Z","decision":"Emit evidence_refs warnings to stderr, not stdout","rationale":"The --json flag routes stdout to consumers; interleaving warnings would corrupt machine-readable output","actor":"agent","category":"architecture","decision_type":"two_way_door","evidence_refs":["commit:HEAD"]}
 {"ts":"2026-04-10T00:00:03Z","decision":"Use @iarna/toml for TOML parsing rather than hand-rolling","rationale":"Correctness and TOML 1.0 spec compliance; @iarna/toml has zero transitive dependencies and is 19KB","actor":"agent","category":"deps","decision_type":"two_way_door","evidence_refs":["commit:HEAD"]}
 {"ts":"2026-04-10T00:00:04Z","decision":"Default GitAnalyzer and GitHubAnalyzer cwd to process.cwd()","rationale":"Preserves full backward compatibility; all existing call sites pass no argument and continue working","actor":"agent","category":"architecture","decision_type":"two_way_door","evidence_refs":["commit:HEAD"]}
-{"ts":"2026-04-10T00:00:05Z","decision":"Place .retro-history.jsonl one level above outputDir","rationale":"outputDir contains sprint-specific subdirectories; history spans all sprints and must sit outside any single sprint dir","actor":"agent","category":"architecture","decision_type":"two_way_door","evidence_refs":["commit:HEAD"]}
+{"ts":"2026-04-10T00:00:05Z","decision":"Place .retro-history.jsonl inside outputDir","rationale":"writeOutputs() writes per-sprint output to join(outputDir, sprintId), so outputDir itself is the parent of per-sprint directories and the natural home for a cross-sprint history file — avoiding parent-directory path traversal","actor":"agent","category":"architecture","decision_type":"two_way_door","evidence_refs":["commit:HEAD"]}
 {"ts":"2026-04-10T00:00:06Z","decision":"Add CI workflow as a separate file from publish.yml rather than extending publish.yml","rationale":"Publish and CI have different triggers and permissions; combining them creates unnecessary coupling","actor":"agent","category":"architecture","decision_type":"two_way_door","evidence_refs":["commit:HEAD"]}
 {"ts":"2026-04-10T00:00:07Z","decision":"Extend fixing-telemetry-gaps.md for adapter docs rather than creating a new file","rationale":"Users are already directed to that doc for telemetry issues; co-location reduces discovery friction","actor":"agent","category":"process","decision_type":"two_way_door","evidence_refs":["commit:HEAD"]}
 {"ts":"2026-04-10T00:00:08Z","decision":"Reject .retro.json in favor of .retro.toml for config file format","rationale":"Issue #19 explicitly proposes TOML to match org-wide daax-cli.toml precedent; JSON would deviate from stated design intent","actor":"agent","category":"architecture","decision_type":"two_way_door","evidence_refs":["commit:HEAD"]}
@@ -674,4 +678,4 @@ The following behaviors are explicitly preserved in every fix above, in complian
 18. TOML specification v1.0.0 — https://toml.io/en/v1.0.0
 19. SLSA provenance specification — https://slsa.dev/provenance/v1
 20. `src/runner.ts:8` — fs destructure (`existsSync`, `mkdirSync`, `readdirSync`, `readFileSync`, `writeFileSync`); `appendFileSync` must be added for Fix 18-A
-21. `src/runner.ts:9` — `join` imported from `'path'`; `resolve` must be added for Fix 18-A
+21. `src/runner.ts:9` — `join` imported from `'path'`; no additional path imports required for Fix 18-A
