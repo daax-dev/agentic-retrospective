@@ -5,8 +5,15 @@
  * with graceful degradation when data sources are missing.
  */
 
-import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'fs';
-import { join } from 'path';
+import {
+  appendFileSync,
+  existsSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  writeFileSync,
+} from 'fs';
+import { join, resolve } from 'path';
 import type {
   RetroConfig,
   RetroReport,
@@ -25,6 +32,7 @@ import type {
   ToolsSummary,
   DecisionAnalysis,
   DecisionRecord,
+  SprintHistoryEntry,
 } from './types.js';
 import { GitAnalyzer } from './analyzers/git.js';
 import { DecisionAnalyzer } from './analyzers/decisions.js';
@@ -623,6 +631,7 @@ export class RetroRunner {
   }
 
   private buildEvidenceMap(data: CollectedData): EvidenceMap {
+    const VALID_PREFIXES = ['commit:', 'pr:', 'decision:', 'file:', 'inferred:'];
     const map: EvidenceMap = {
       commits: {},
       decisions: {},
@@ -642,6 +651,23 @@ export class RetroRunner {
       }
     }
 
+    // Build a short-hash -> full-hash index so `commit:a1b2c3d` (7-12
+    // char short hashes) resolves to the full 40-char hash indexed above.
+    const shortHashIndex = new Map<string, string>();
+    if (data.git?.commits) {
+      for (const c of data.git.commits) {
+        for (let len = 7; len <= Math.min(12, c.hash.length); len++) {
+          shortHashIndex.set(c.hash.slice(0, len), c.hash);
+        }
+      }
+    }
+
+    // Collect evidence_refs with unrecognized prefixes so silent
+    // orphaning (the bug reported in #18) surfaces as a stderr warning
+    // and a TelemetryGap. stderr (not stdout) is required so --json
+    // output stays machine-parseable.
+    const unrecognizedRefs: Array<{ decisionId: string; ref: string }> = [];
+
     // Index decisions and link to commits
     if (data.decisions?.records) {
       for (const decision of data.decisions.records) {
@@ -656,14 +682,43 @@ export class RetroRunner {
         // Link by evidence_refs
         if (decision.evidence_refs) {
           for (const ref of decision.evidence_refs) {
-            const match = ref.match(/commit:(\w+)/);
-            if (match && map.commits[match[1]]) {
-              map.commits[match[1]].decisions.push(id);
-              map.decisions[id].commits.push(match[1]);
+            if (!VALID_PREFIXES.some(p => ref.startsWith(p))) {
+              unrecognizedRefs.push({ decisionId: id, ref });
+              continue;
+            }
+            const match = ref.match(/^commit:([0-9a-fA-F]+)/);
+            if (match) {
+              const resolvedHash = shortHashIndex.get(match[1]) ?? match[1];
+              if (map.commits[resolvedHash]) {
+                map.commits[resolvedHash].decisions.push(id);
+                map.decisions[id].commits.push(resolvedHash);
+              }
             }
           }
         }
       }
+    }
+
+    if (unrecognizedRefs.length > 0) {
+      process.stderr.write(
+        `[WARN] ${unrecognizedRefs.length} evidence_ref(s) have unrecognized format and will be orphaned:\n`
+      );
+      for (const { decisionId, ref } of unrecognizedRefs.slice(0, 5)) {
+        process.stderr.write(`  - decision ${decisionId}: "${ref}"\n`);
+      }
+      if (unrecognizedRefs.length > 5) {
+        process.stderr.write(`  ... and ${unrecognizedRefs.length - 5} more\n`);
+      }
+      process.stderr.write(
+        '  Valid formats: commit:<hash>, pr:<number>, decision:<id>, file:<path>, inferred:<reason>\n'
+      );
+      this.addTelemetryGap({
+        gap_type: 'unrecognized_evidence_refs',
+        severity: 'medium',
+        impact: `${unrecognizedRefs.length} evidence_refs have unrecognized format and will not link to any artifact`,
+        recommendation:
+          'Use prefixed formats: commit:<hash>, pr:<number>, decision:<id>, file:<path>. See docs/fixing-telemetry-gaps.md.',
+      });
     }
 
     // Find orphans
@@ -1085,7 +1140,36 @@ export class RetroRunner {
       writeFileSync(join(outputPath, 'retrospective.md'), markdown);
     }
 
+    // Append score snapshot to sprint history (one level above outputDir
+    // so a single file spans all sprints).
+    this.appendToHistory(report);
+
     return outputPath;
+  }
+
+  private appendToHistory(report: RetroReport): void {
+    const historyPath = resolve(this.config.outputDir, '../.retro-history.jsonl');
+    const entry: SprintHistoryEntry = {
+      sprint_id: report.sprint_id,
+      date: report.generated_at,
+      scores: report.scores,
+      data_completeness: report.data_completeness.percentage,
+    };
+    try {
+      // Ensure parent dir exists (outputDir is created in writeOutputs,
+      // but the history file sits one level up which may not yet exist
+      // when outputDir itself is a fresh nested path).
+      const historyDir = resolve(historyPath, '..');
+      mkdirSync(historyDir, { recursive: true });
+      appendFileSync(historyPath, JSON.stringify(entry) + '\n', 'utf8');
+    } catch (err) {
+      // Non-fatal: history is additive; failures should not break the run.
+      process.stderr.write(
+        `[WARN] Failed to append sprint history to ${historyPath}: ${
+          err instanceof Error ? err.message : String(err)
+        }\n`
+      );
+    }
   }
 
   private addTelemetryGap(gap: TelemetryGap): void {
