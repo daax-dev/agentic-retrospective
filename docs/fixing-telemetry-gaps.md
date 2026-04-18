@@ -370,6 +370,67 @@ Expected improvements:
 
 ---
 
+## Linking Issue Tracker Records to Git Commits (evidence_refs)
+
+The `evidence_refs` field on a decision record links the decision to the
+concrete artifacts that implement or justify it. Every ref must use one
+of the recognized prefixes below — otherwise the ref is silently
+orphaned and the retrospective will emit a `unrecognized_evidence_refs`
+telemetry gap.
+
+| Prefix      | Format                          | Links to                          |
+|-------------|---------------------------------|-----------------------------------|
+| `commit:`   | `commit:<full-or-short-hash>`   | A git commit (7-12 char or 40)    |
+| `pr:`       | `pr:<number>`                   | A GitHub pull request             |
+| `decision:` | `decision:<id>`                 | Another decision record           |
+| `file:`     | `file:<relative-path>`          | A source file                     |
+| `inferred:` | `inferred:<reason>`             | Evidence inferred (no artifact)   |
+
+### Correlating an Issue Tracker Record
+
+To link a decision to the commit that resolves a Linear/Jira/GitHub
+issue, first resolve the issue to its git commit, then reference the
+commit hash (not the issue ID) in `evidence_refs`:
+
+```bash
+# Find the commit that mentions the issue in its message
+git log --oneline --grep="ISSUE-123"
+# → a1b2c3d feat: adopt optimistic locking (ISSUE-123)
+```
+
+```json
+{
+  "ts": "2026-03-15T10:30:00Z",
+  "decision": "Adopted optimistic locking for inventory updates",
+  "rationale": "Reduces contention under concurrent write load",
+  "actor": "human",
+  "decision_type": "two_way_door",
+  "evidence_refs": ["commit:a1b2c3d", "pr:47"]
+}
+```
+
+**Common mistake**: Using raw issue IDs like `"ISSUE-123"` or
+`"claw-abc"` directly in `evidence_refs`. These have no recognized
+prefix and are silently orphaned. Always resolve to a `commit:` or
+`pr:` reference before logging.
+
+### What happens when refs are unrecognized
+
+Starting in v0.1.4, the runner emits a stderr warning like:
+
+```
+[WARN] 2 evidence_ref(s) have unrecognized format and will be orphaned:
+  - decision dec-2026-03-15: "ISSUE-123"
+  - decision dec-2026-03-15: "claw-abc"
+  Valid formats: commit:<hash>, pr:<number>, decision:<id>, file:<path>, inferred:<reason>
+```
+
+and adds a `unrecognized_evidence_refs` entry to the report's
+`data_completeness.gaps`. The warning goes to stderr so `--json` stdout
+remains machine-parseable.
+
+---
+
 ## Getting Help
 
 If you encounter issues setting up telemetry:
