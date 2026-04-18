@@ -1,0 +1,20 @@
+{
+  "name": "custom-range",
+  "description": "User specifies a non-default git range for the retrospective.",
+  "user_prompt": "Give me a retrospective from HEAD~50 to HEAD.",
+  "expected_behavior": {
+    "skill_invoked": "retrospective",
+    "commands_run": [
+      "npx agentic-retrospective --from HEAD~50"
+    ],
+    "must_include_in_output": [
+      "executive summary",
+      "recommendations"
+    ]
+  },
+  "success_criteria": [
+    "Uses --from flag to honor user-specified range",
+    "Does not silently fall back to default 2-week window",
+    "Reports commit count matching the specified range"
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "name": "basic-run",
+  "description": "User asks for a retrospective over the last 2 weeks in a repo with git history but no decision logs.",
+  "user_prompt": "Run a retrospective on this repo covering the last two weeks.",
+  "expected_behavior": {
+    "skill_invoked": "retrospective",
+    "commands_run": [
+      "npx agentic-retrospective",
+      "agentic-retrospective"
+    ],
+    "must_include_in_output": [
+      "commit type breakdown",
+      "agent commit"
+    ],
+    "must_degrade_gracefully_when": [
+      "no decision logs present",
+      "no gh CLI / GitHub access"
+    ]
+  },
+  "success_criteria": [
+    "Skill invocation chosen over generic text response",
+    "CLI executed with default time range (last 2 weeks)",
+    "Output references specific commits/PRs, not vague observations"
+  ]
+}
