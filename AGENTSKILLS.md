@@ -1,11 +1,18 @@
 ---
 name: retrospective
-description: Evidence-based sprint retrospectives for human-agent collaboration.
+description: Generates evidence-based sprint retrospectives by mining git history, GitHub PRs, and decision logs into objective metrics. Use when the user asks for a sprint retrospective, wants to analyze team or agent collaboration over a period, needs rework/testing discipline metrics, or runs the `agentic-retrospective` CLI.
 license: Apache-2.0
 metadata:
   author: jpoley
   version: "1.0.0"
 ---
+
+<!--
+NOTE: This file exists for AgentSkills.io cross-tool spec compatibility
+(see https://agentskills.io). The source of truth for Claude Code is
+`skills/retrospective/SKILL.md`. Keep `name` and `description` above in
+sync with that file; anything else here is AgentSkills-specific metadata.
+-->
 
 # Agentic Retrospective
 
