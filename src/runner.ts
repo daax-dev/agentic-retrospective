@@ -5,8 +5,15 @@
  * with graceful degradation when data sources are missing.
  */
 
-import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'fs';
-import { join } from 'path';
+import {
+  appendFileSync,
+  existsSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  writeFileSync,
+} from 'fs';
+import { join, resolve } from 'path';
 import type {
   RetroConfig,
   RetroReport,
@@ -25,6 +32,7 @@ import type {
   ToolsSummary,
   DecisionAnalysis,
   DecisionRecord,
+  SprintHistoryEntry,
 } from './types.js';
 import { GitAnalyzer } from './analyzers/git.js';
 import { DecisionAnalyzer } from './analyzers/decisions.js';
@@ -1085,7 +1093,36 @@ export class RetroRunner {
       writeFileSync(join(outputPath, 'retrospective.md'), markdown);
     }
 
+    // Append score snapshot to sprint history (one level above outputDir
+    // so a single file spans all sprints).
+    this.appendToHistory(report);
+
     return outputPath;
+  }
+
+  private appendToHistory(report: RetroReport): void {
+    const historyPath = resolve(this.config.outputDir, '../.retro-history.jsonl');
+    const entry: SprintHistoryEntry = {
+      sprint_id: report.sprint_id,
+      date: report.generated_at,
+      scores: report.scores,
+      data_completeness: report.data_completeness.percentage,
+    };
+    try {
+      // Ensure parent dir exists (outputDir is created in writeOutputs,
+      // but the history file sits one level up which may not yet exist
+      // when outputDir itself is a fresh nested path).
+      const historyDir = resolve(historyPath, '..');
+      mkdirSync(historyDir, { recursive: true });
+      appendFileSync(historyPath, JSON.stringify(entry) + '\n', 'utf8');
+    } catch (err) {
+      // Non-fatal: history is additive; failures should not break the run.
+      process.stderr.write(
+        `[WARN] Failed to append sprint history to ${historyPath}: ${
+          err instanceof Error ? err.message : String(err)
+        }\n`
+      );
+    }
   }
 
   private addTelemetryGap(gap: TelemetryGap): void {
