@@ -15,6 +15,50 @@ export class ReportGenerator {
   }
 
   /**
+   * Generate a multi-repo markdown report: one aggregate executive summary
+   * followed by per-repo sections (full per-repo markdown rendered under a
+   * "## Repository: <label>" header).
+   */
+  generateMultiRepoMarkdown(
+    aggregated: RetroReport,
+    perRepo: Array<{ label: string; path: string; report: RetroReport }>
+  ): string {
+    const sections: string[] = [];
+
+    sections.push(
+      `# Multi-Repo Sprint Retrospective: ${aggregated.sprint_id}
+
+**Period**: ${aggregated.period.from} to ${aggregated.period.to}
+**Generated**: ${aggregated.generated_at}
+**Repos**: ${perRepo.length} (${perRepo.map(r => r.label).join(', ')})
+**Data Completeness (avg)**: ${aggregated.data_completeness.percentage}%`
+    );
+
+    // Aggregate executive summary
+    sections.push(this.generateExecutiveSummary(aggregated));
+
+    // Quick per-repo commit table
+    let repoTable = `## Per-Repo Breakdown\n\n| Repo | Commits | Lines +/- | Decisions | Agent commits |\n|------|---------|-----------|-----------|----------------|\n`;
+    for (const r of perRepo) {
+      const s = r.report.summary;
+      repoTable += `| ${r.label} | ${s.commits} | +${s.lines_added}/-${s.lines_removed} | ${s.decisions_logged} | ${s.agent_commits} (${s.agent_commit_percentage}%) |\n`;
+    }
+    sections.push(repoTable);
+
+    // Aggregate findings + action items (already capped at 5)
+    sections.push(this.generateActionItems(aggregated.action_items));
+
+    // Per-repo sections (full reports inline)
+    for (const r of perRepo) {
+      sections.push(
+        `---\n\n## Repository: ${r.label} (\`${r.path}\`)\n\n${this.generateMarkdown(r.report)}`
+      );
+    }
+
+    return sections.join('\n\n---\n\n');
+  }
+
+  /**
    * Generate markdown report from RetroReport
    */
   generateMarkdown(report: RetroReport): string {

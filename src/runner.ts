@@ -6,7 +6,7 @@
  */
 
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'fs';
-import { join } from 'path';
+import { join, resolve, isAbsolute } from 'path';
 import type {
   RetroConfig,
   RetroReport,
@@ -25,6 +25,7 @@ import type {
   ToolsSummary,
   DecisionAnalysis,
   DecisionRecord,
+  RepoConfig,
 } from './types.js';
 import { GitAnalyzer } from './analyzers/git.js';
 import { DecisionAnalyzer } from './analyzers/decisions.js';
@@ -48,6 +49,13 @@ export interface RunResult {
   report?: RetroReport;
   alerts?: Alert[];
   error?: string;
+  perRepo?: PerRepoResult[];
+}
+
+export interface PerRepoResult {
+  label: string;
+  path: string;
+  report: RetroReport;
 }
 
 export async function runRetro(
@@ -70,6 +78,13 @@ export class RetroRunner {
   }
 
   async run(): Promise<RunResult> {
+    if (this.config.repos && this.config.repos.length > 0) {
+      return this.runMultiRepo();
+    }
+    return this.runSingleRepo();
+  }
+
+  private async runSingleRepo(): Promise<RunResult> {
     try {
       // Phase 0: Validate environment
       this.log('Phase 0: Validating environment...');
@@ -112,16 +127,108 @@ export class RetroRunner {
     }
   }
 
+  /**
+   * Multi-repo orchestration: iterate each configured repo, run a
+   * per-repo pipeline, then aggregate into a combined report.
+   */
+  private async runMultiRepo(): Promise<RunResult> {
+    try {
+      const repos = this.config.repos ?? [];
+      const perRepo: PerRepoResult[] = [];
+      const perRepoEvidence: Array<{ label: string; path: string; evidence: EvidenceMap }> = [];
+
+      for (const repo of repos) {
+        const repoCwd = isAbsolute(repo.path) ? repo.path : resolve(process.cwd(), repo.path);
+        this.log(`\n=== Repo: ${repo.label} (${repoCwd}) ===`);
+        const { report, evidenceMap } = await this.runPipelineForRepo(repoCwd, repo);
+        perRepo.push({ label: repo.label, path: repoCwd, report });
+        perRepoEvidence.push({ label: repo.label, path: repoCwd, evidence: evidenceMap });
+      }
+
+      // Aggregate
+      const aggregated = this.aggregateMultiRepo(perRepo);
+
+      // Write outputs: aggregate markdown + JSON
+      this.log('Phase 5: Writing multi-repo outputs...');
+      const outputPath = await this.writeMultiRepoOutputs(perRepo, aggregated, perRepoEvidence);
+
+      return {
+        success: true,
+        outputPath,
+        report: aggregated,
+        alerts: this.generateAlerts(aggregated),
+        perRepo,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : String(error),
+      };
+    }
+  }
+
+  /**
+   * Run the full collection + analysis pipeline against a single repo
+   * at an arbitrary cwd. Returns the per-repo report + evidence map
+   * without writing any files.
+   */
+  private async runPipelineForRepo(
+    repoCwd: string,
+    repo: RepoConfig
+  ): Promise<{ report: RetroReport; evidenceMap: EvidenceMap }> {
+    // Use a fresh findings/gaps buffer per repo so findings are attributed.
+    const savedFindings = this.findings;
+    const savedGaps = this.gaps;
+    this.findings = [];
+    this.gaps = [];
+
+    try {
+      // Validate git at the repo path
+      const gitAnalyzer = new GitAnalyzer(repoCwd);
+      const isGit = await gitAnalyzer.isGitRepository();
+      if (!isGit) {
+        throw new Error(`Not a git repository: ${repoCwd}`);
+      }
+
+      // Per-repo paths default to <repoCwd>/.logs/... unless the config paths
+      // were given as absolute paths (in which case they are shared across repos).
+      const decisionsPath = isAbsolute(this.config.decisionsPath)
+        ? this.config.decisionsPath
+        : join(repoCwd, this.config.decisionsPath);
+      const agentLogsPath = isAbsolute(this.config.agentLogsPath)
+        ? this.config.agentLogsPath
+        : join(repoCwd, this.config.agentLogsPath);
+
+      const data = await this.collectDataAt(repoCwd, decisionsPath, agentLogsPath);
+      const evidenceMap = this.buildEvidenceMap(data);
+      const scores = await this.analyzeSprit(data);
+      const report = this.generateReport(data, scores, evidenceMap);
+
+      // Tag report with repo label for multi-repo rendering
+      report.sprint_id = `${this.config.sprintId}/${repo.label}`;
+
+      return { report, evidenceMap };
+    } finally {
+      // Merge per-repo findings/gaps back so the overall runner state
+      // reflects all work done (useful for debugging), but restore the
+      // buffers so the caller sees only its own state.
+      const repoFindings = this.findings;
+      const repoGaps = this.gaps;
+      this.findings = savedFindings.concat(repoFindings);
+      this.gaps = savedGaps.concat(repoGaps);
+    }
+  }
+
   private log(message: string): void {
     if (this.options.verbose) {
       console.log(message);
     }
   }
 
-  private async validateEnvironment(): Promise<{ valid: boolean; error?: string }> {
+  private async validateEnvironment(cwd: string = process.cwd()): Promise<{ valid: boolean; error?: string }> {
     // Check if we're in a git repository
     try {
-      const gitAnalyzer = new GitAnalyzer();
+      const gitAnalyzer = new GitAnalyzer(cwd);
       const isGit = await gitAnalyzer.isGitRepository();
       if (!isGit) {
         return {
@@ -139,6 +246,14 @@ export class RetroRunner {
   }
 
   private async collectData(): Promise<CollectedData> {
+    return this.collectDataAt(process.cwd(), this.config.decisionsPath, this.config.agentLogsPath);
+  }
+
+  private async collectDataAt(
+    repoCwd: string,
+    decisionsPath: string,
+    agentLogsPath: string
+  ): Promise<CollectedData> {
     const data: CollectedData = {
       git: null,
       decisions: null,
@@ -154,7 +269,7 @@ export class RetroRunner {
     };
 
     // Collect git data (required)
-    const gitAnalyzer = new GitAnalyzer();
+    const gitAnalyzer = new GitAnalyzer(repoCwd);
     const gitResult = await gitAnalyzer.analyze(this.config.fromRef, this.config.toRef);
 
     // Phase 2.1: Detect agent commits
@@ -224,8 +339,8 @@ export class RetroRunner {
     }
 
     // Collect decision logs (optional)
-    if (existsSync(this.config.decisionsPath)) {
-      const decisionAnalyzer = new DecisionAnalyzer(this.config.decisionsPath);
+    if (existsSync(decisionsPath)) {
+      const decisionAnalyzer = new DecisionAnalyzer(decisionsPath);
       const decisionResult = decisionAnalyzer.analyze();
       data.decisions = {
         records: decisionResult.records,
@@ -325,19 +440,19 @@ export class RetroRunner {
         gap_type: 'missing_decisions',
         severity: 'high',
         impact: 'Cannot evaluate decision quality or boundary discipline',
-        recommendation: `Create decision log directory: mkdir -p ${this.config.decisionsPath}\nSee docs/fixing-telemetry-gaps.md`,
+        recommendation: `Create decision log directory: mkdir -p ${decisionsPath}\nSee docs/fixing-telemetry-gaps.md`,
       });
     }
 
     // Collect agent logs (optional)
-    if (existsSync(this.config.agentLogsPath)) {
-      data.agentLogs = this.loadAgentLogs();
+    if (existsSync(agentLogsPath)) {
+      data.agentLogs = this.loadAgentLogs(agentLogsPath);
     } else {
       this.addTelemetryGap({
         gap_type: 'missing_agent_logs',
         severity: 'medium',
         impact: 'Cannot analyze agent collaboration patterns or inner loop health',
-        recommendation: `Agent logs not found at ${this.config.agentLogsPath}\nSee docs/fixing-telemetry-gaps.md`,
+        recommendation: `Agent logs not found at ${agentLogsPath}\nSee docs/fixing-telemetry-gaps.md`,
       });
     }
 
@@ -352,8 +467,9 @@ export class RetroRunner {
       });
     }
 
-    // Phase 1: Collect human insights from prompt and feedback logs
-    const logsBasePath = join(process.cwd(), '.logs');
+    // Phase 1: Collect human insights from prompt and feedback logs.
+    // Rooted at repoCwd so multi-repo mode uses each repo's own .logs.
+    const logsBasePath = join(repoCwd, '.logs');
     const humanInsightsAnalyzer = new HumanInsightsAnalyzer(logsBasePath);
     // Load logs first so hasData() can check, analyze() will skip re-loading
     humanInsightsAnalyzer.loadLogs();
@@ -402,7 +518,7 @@ export class RetroRunner {
     }
 
     // Collect GitHub PR data
-    const githubAnalyzer = new GitHubAnalyzer();
+    const githubAnalyzer = new GitHubAnalyzer(repoCwd);
     if (githubAnalyzer.isAvailable()) {
       const githubAnalysis = await githubAnalyzer.analyze();
       if (githubAnalysis.totalPRs > 0) {
@@ -564,14 +680,14 @@ export class RetroRunner {
     return data;
   }
 
-  private loadAgentLogs(): unknown[] | null {
+  private loadAgentLogs(agentLogsPath: string = this.config.agentLogsPath): unknown[] | null {
     try {
-      const files = readdirSync(this.config.agentLogsPath);
+      const files = readdirSync(agentLogsPath);
       const logs: unknown[] = [];
 
       for (const file of files) {
         if (file.endsWith('.jsonl') || file.endsWith('.json')) {
-          const content = readFileSync(join(this.config.agentLogsPath, file), 'utf-8');
+          const content = readFileSync(join(agentLogsPath, file), 'utf-8');
           if (file.endsWith('.jsonl')) {
             content.split('\n').filter(Boolean).forEach(line => {
               try {
@@ -1050,6 +1166,205 @@ export class RetroRunner {
     }
 
     return alerts;
+  }
+
+  /**
+   * Aggregate per-repo reports into a single RetroReport. Used for the
+   * executive summary of a multi-repo retrospective.
+   *
+   * Aggregation rules (plan §Phase 19-D):
+   * - Scores: commit-count-weighted average across repos
+   * - Findings: union, deduplicated by (category, title)
+   * - Action items: capped at 5 total (constitution)
+   * - data_completeness: averaged
+   * - generated_at: single timestamp (run start)
+   */
+  private aggregateMultiRepo(perRepo: PerRepoResult[]): RetroReport {
+    const now = new Date().toISOString();
+
+    // Sum base summary fields
+    const summary = {
+      commits: 0,
+      contributors: 0,
+      human_contributors: 0,
+      agent_contributors: 0,
+      lines_added: 0,
+      lines_removed: 0,
+      decisions_logged: 0,
+      agent_commits: 0,
+      agent_commit_percentage: 0,
+    };
+    for (const r of perRepo) {
+      summary.commits += r.report.summary.commits;
+      summary.contributors += r.report.summary.contributors;
+      summary.human_contributors += r.report.summary.human_contributors;
+      summary.agent_contributors += r.report.summary.agent_contributors;
+      summary.lines_added += r.report.summary.lines_added;
+      summary.lines_removed += r.report.summary.lines_removed;
+      summary.decisions_logged += r.report.summary.decisions_logged;
+      summary.agent_commits += r.report.summary.agent_commits;
+    }
+    summary.agent_commit_percentage = summary.commits > 0
+      ? Math.round((summary.agent_commits / summary.commits) * 100)
+      : 0;
+
+    // Weighted score aggregation: weight by per-repo commit count.
+    const scoreKeys: Array<keyof Scores> = [
+      'delivery_predictability',
+      'test_loop_completeness',
+      'quality_maintainability',
+      'security_posture',
+      'collaboration_efficiency',
+      'decision_hygiene',
+    ];
+    const aggregatedScores = {} as Scores;
+    for (const key of scoreKeys) {
+      let weightedSum = 0;
+      let totalWeight = 0;
+      const evidence: string[] = [];
+      let confidence: Score['confidence'] = 'none';
+      for (const r of perRepo) {
+        const s = r.report.scores[key];
+        const weight = r.report.summary.commits;
+        if (s.score !== null && weight > 0) {
+          weightedSum += s.score * weight;
+          totalWeight += weight;
+          evidence.push(`[${r.label}] ${s.evidence.join('; ')}`);
+          // Confidence: take the highest seen
+          if (confidence === 'none') confidence = s.confidence;
+          else if (s.confidence === 'high') confidence = 'high';
+          else if (s.confidence === 'medium' && confidence !== 'high') confidence = 'medium';
+        }
+      }
+      aggregatedScores[key] = totalWeight > 0
+        ? {
+            score: Math.round((weightedSum / totalWeight) * 10) / 10,
+            confidence,
+            evidence,
+          }
+        : { score: null, confidence: 'none', evidence: [] };
+    }
+
+    // Dedupe findings by (category, title)
+    const seen = new Set<string>();
+    const findings: Finding[] = [];
+    for (const r of perRepo) {
+      for (const f of r.report.findings) {
+        const key = `${f.category}|${f.title}`;
+        if (!seen.has(key)) {
+          seen.add(key);
+          findings.push({ ...f, evidence: [...f.evidence, `repo:${r.label}`] });
+        }
+      }
+    }
+
+    // Collect + cap action items at 5 (constitution)
+    const allActions: ActionItem[] = [];
+    for (const r of perRepo) allActions.push(...r.report.action_items);
+    // Stable de-dupe by (action text)
+    const seenActions = new Set<string>();
+    const actionItems: ActionItem[] = [];
+    for (const a of allActions) {
+      if (!seenActions.has(a.action)) {
+        seenActions.add(a.action);
+        actionItems.push(a);
+      }
+    }
+    const cappedActions = actionItems.slice(0, 5);
+
+    // Average data completeness
+    const avgPct = perRepo.length > 0
+      ? Math.round(perRepo.reduce((sum, r) => sum + r.report.data_completeness.percentage, 0) / perRepo.length)
+      : 0;
+    // Union source flags: true if any repo had it
+    const unionSources = {
+      git: perRepo.some(r => r.report.data_completeness.sources.git),
+      decisions: perRepo.some(r => r.report.data_completeness.sources.decisions),
+      agent_logs: perRepo.some(r => r.report.data_completeness.sources.agent_logs),
+      ci: perRepo.some(r => r.report.data_completeness.sources.ci),
+      tests: perRepo.some(r => r.report.data_completeness.sources.tests),
+    };
+    const allGaps: TelemetryGap[] = [];
+    for (const r of perRepo) allGaps.push(...r.report.data_completeness.gaps);
+
+    return {
+      sprint_id: this.config.sprintId,
+      period: {
+        from: this.config.fromRef || 'HEAD~100',
+        to: this.config.toRef,
+      },
+      generated_at: now,
+      data_completeness: {
+        percentage: avgPct,
+        sources: unionSources,
+        gaps: allGaps,
+      },
+      summary,
+      scores: aggregatedScores,
+      findings,
+      wins: [],
+      risks: [],
+      action_items: cappedActions,
+      evidence_map: {
+        commits: {},
+        decisions: {},
+        orphans: { commits_without_context: [], decisions_without_implementation: [] },
+      },
+      metadata: {
+        tool_version: '0.3.0',
+        schema_version: '1.2',
+        generated_by: 'agentic-retrospective',
+      },
+    };
+  }
+
+  private async writeMultiRepoOutputs(
+    perRepo: PerRepoResult[],
+    aggregated: RetroReport,
+    perRepoEvidence: Array<{ label: string; path: string; evidence: EvidenceMap }>
+  ): Promise<string> {
+    const outputPath = join(this.config.outputDir, this.config.sprintId);
+    mkdirSync(outputPath, { recursive: true });
+
+    // Write aggregate JSON
+    writeFileSync(
+      join(outputPath, 'retrospective.json'),
+      JSON.stringify(
+        {
+          aggregate: aggregated,
+          repos: perRepo.map(r => ({ label: r.label, path: r.path, report: r.report })),
+        },
+        null,
+        2
+      )
+    );
+
+    // Per-repo evidence maps combined
+    const combinedEvidence: Record<string, EvidenceMap> = {};
+    for (const e of perRepoEvidence) combinedEvidence[e.label] = e.evidence;
+    writeFileSync(
+      join(outputPath, 'evidence_map.json'),
+      JSON.stringify(combinedEvidence, null, 2)
+    );
+
+    // Alerts
+    const alertsOutput: AlertsOutput = {
+      alerts: this.generateAlerts(aggregated),
+      generated_at: new Date().toISOString(),
+    };
+    writeFileSync(join(outputPath, 'alerts.json'), JSON.stringify(alertsOutput, null, 2));
+
+    // Markdown: aggregate summary + per-repo sections
+    if (!this.options.jsonOnly) {
+      const generator = new ReportGenerator();
+      const markdown = generator.generateMultiRepoMarkdown(
+        aggregated,
+        perRepo.map(r => ({ label: r.label, path: r.path, report: r.report }))
+      );
+      writeFileSync(join(outputPath, 'retrospective.md'), markdown);
+    }
+
+    return outputPath;
   }
 
   private async writeOutputs(report: RetroReport, evidenceMap: EvidenceMap): Promise<string> {

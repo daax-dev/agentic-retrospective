@@ -20,12 +20,18 @@ export interface GitAnalysisResult {
 }
 
 export class GitAnalyzer {
+  private cwd: string;
+
+  constructor(cwd: string = process.cwd()) {
+    this.cwd = cwd;
+  }
+
   /**
    * Check if current directory is a git repository
    */
   async isGitRepository(): Promise<boolean> {
     try {
-      execSync('git rev-parse --git-dir', { stdio: 'pipe' });
+      execSync('git rev-parse --git-dir', { stdio: 'pipe', cwd: this.cwd });
       return true;
     } catch {
       return false;
@@ -101,7 +107,7 @@ export class GitAnalyzer {
 
       const result = execSync(
         `git log --since="${dateStr}" --reverse --format="%H" | head -1`,
-        { encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'] }
+        { encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'], cwd: this.cwd }
       ).trim();
 
       if (result) {
@@ -125,7 +131,7 @@ export class GitAnalyzer {
       // Get commit hashes
       const hashesOutput = execSync(
         `git log ${fromRef}..${toRef} --format="%H"`,
-        { encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'] }
+        { encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'], cwd: this.cwd }
       ).trim();
 
       if (!hashesOutput) {
@@ -155,7 +161,7 @@ export class GitAnalyzer {
       // Get commit metadata
       const formatOutput = execSync(
         `git log -1 --format="%H%n%h%n%an%n%ae%n%aI%n%s%n%b" ${hash}`,
-        { encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'] }
+        { encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'], cwd: this.cwd }
       ).trim();
 
       const lines = formatOutput.split('\n');
@@ -163,7 +169,7 @@ export class GitAnalyzer {
       // Get file stats
       const statsOutput = execSync(
         `git diff-tree --no-commit-id --numstat -r ${hash}`,
-        { encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'] }
+        { encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'], cwd: this.cwd }
       ).trim();
 
       const files: FileChange[] = [];
