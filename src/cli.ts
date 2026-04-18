@@ -12,7 +12,8 @@ import { Command } from 'commander';
 import chalk from 'chalk';
 import pkg from '../package.json' with { type: 'json' };
 import { runRetro } from './runner.js';
-import type { RetroConfig } from './types.js';
+import { findRetroConfig } from './config.js';
+import type { RetroConfig, RepoConfig } from './types.js';
 
 const program = new Command();
 
@@ -29,9 +30,42 @@ program
   .option('--output <dir>', 'Output directory', 'docs/retrospectives')
   .option('--json', 'Output JSON only (no markdown)')
   .option('--quiet', 'Suppress progress output')
+  .option(
+    '--repo <path>',
+    'Repo path to analyze (repeatable for multi-repo). Overrides [[repos]] in .retro.toml when provided.',
+    (v: string, prev: string[]) => [...(prev || []), v],
+    [] as string[]
+  )
   .action(async (options) => {
     try {
       console.log(chalk.blue('🔄 Starting Agentic Retrospective...\n'));
+
+      // Lower-precedence defaults from .retro.toml
+      let toml: ReturnType<typeof findRetroConfig> = null;
+      try {
+        toml = findRetroConfig();
+      } catch (err) {
+        console.error(chalk.red('Error reading .retro.toml:'), err instanceof Error ? err.message : err);
+        process.exit(1);
+      }
+
+      if (toml?.retrospective?.sprint_id && !options.sprint) {
+        options.sprint = toml.retrospective.sprint_id;
+      }
+      if (toml?.retrospective?.output_dir && options.output === 'docs/retrospectives') {
+        options.output = toml.retrospective.output_dir;
+      }
+
+      // Repos: CLI --repo flags override config-file [[repos]]
+      let repos: RepoConfig[] | undefined;
+      if (Array.isArray(options.repo) && options.repo.length > 0) {
+        repos = (options.repo as string[]).map((p: string, i: number) => ({
+          path: p,
+          label: `repo-${i + 1}`,
+        }));
+      } else if (toml?.repos && toml.repos.length > 0) {
+        repos = toml.repos;
+      }
 
       const config: RetroConfig = {
         fromRef: options.from || '',
@@ -41,6 +75,7 @@ program
         agentLogsPath: options.logs,
         ciPath: options.ci,
         outputDir: options.output,
+        repos,
       };
 
       const result = await runRetro(config, {
