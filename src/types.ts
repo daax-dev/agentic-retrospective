@@ -496,6 +496,11 @@ export interface RetroReport {
 }
 
 // Configuration Types
+export interface RepoConfig {
+  path: string;    // Absolute or relative; resolved at runtime
+  label: string;   // Human-readable label used in reports (e.g., "frontend")
+}
+
 export interface RetroConfig {
   fromRef: string;
   toRef: string;
@@ -504,6 +509,7 @@ export interface RetroConfig {
   agentLogsPath: string;
   ciPath?: string;
   outputDir: string;
+  repos?: RepoConfig[];   // Empty/absent = single-repo (cwd)
 }
 
 // Alert Types
