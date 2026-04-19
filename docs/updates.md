@@ -391,8 +391,6 @@ export interface RetroToml {
   retrospective?: {
     sprint_id?: string;
     output_dir?: string;
-    from?: string;
-    to?: string;
   };
   repos?: Array<{ path: string; label: string }>;
 }

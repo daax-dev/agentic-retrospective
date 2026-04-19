@@ -4,7 +4,7 @@
     "from": "HEAD~10",
     "to": "HEAD"
   },
-  "generated_at": "2026-02-11T21:40:19.841Z",
+  "generated_at": "2026-04-19T00:48:48.555Z",
   "data_completeness": {
     "percentage": 20,
     "sources": {
@@ -19,19 +19,31 @@
         "gap_type": "missing_decisions",
         "severity": "high",
         "impact": "Cannot evaluate decision quality or boundary discipline",
-        "recommendation": "Create decision log directory: mkdir -p /Users/jasonpoley/prj/dx/agentic-retrospective/.logs/nonexistent-decisions\nSee docs/fixing-telemetry-gaps.md"
+        "recommendation": "Create decision log directory: mkdir -p /home/runner/work/agentic-retrospective/agentic-retrospective/.logs/nonexistent-decisions\nSee docs/fixing-telemetry-gaps.md"
       },
       {
         "gap_type": "missing_agent_logs",
         "severity": "medium",
         "impact": "Cannot analyze agent collaboration patterns or inner loop health",
-        "recommendation": "Agent logs not found at /Users/jasonpoley/prj/dx/agentic-retrospective/.logs/nonexistent-agents\nSee docs/fixing-telemetry-gaps.md"
+        "recommendation": "Agent logs not found at /home/runner/work/agentic-retrospective/agentic-retrospective/.logs/nonexistent-agents\nSee docs/fixing-telemetry-gaps.md"
       },
       {
         "gap_type": "missing_test_results",
         "severity": "medium",
         "impact": "Cannot analyze test pass rates, flakiness, or inner loop cycle times",
         "recommendation": "Add JUnit XML output: pytest --junitxml=test-results/pytest.xml"
+      },
+      {
+        "gap_type": "missing_human_feedback",
+        "severity": "medium",
+        "impact": "Cannot analyze prompt patterns or generate human improvement insights",
+        "recommendation": "Run micro-retrospective.sh after sessions: bash scripts/micro-retrospective.sh"
+      },
+      {
+        "gap_type": "missing_github",
+        "severity": "low",
+        "impact": "Cannot analyze PR review patterns and collaboration metrics",
+        "recommendation": "Install and authenticate gh CLI: gh auth login"
       },
       {
         "gap_type": "missing_security_scans",
@@ -42,23 +54,23 @@
     ]
   },
   "summary": {
-    "commits": 10,
-    "contributors": 1,
+    "commits": 0,
+    "contributors": 0,
     "human_contributors": 0,
-    "agent_contributors": 1,
-    "lines_added": 30418,
-    "lines_removed": 6195,
+    "agent_contributors": 0,
+    "lines_added": 0,
+    "lines_removed": 0,
     "decisions_logged": 0,
-    "agent_commits": 3,
-    "agent_commit_percentage": 30
+    "agent_commits": 0,
+    "agent_commit_percentage": 0
   },
   "scores": {
     "delivery_predictability": {
       "score": 1,
       "confidence": "high",
       "evidence": [
-        "10 commits",
-        "Average 3661 lines per commit"
+        "0 commits",
+        "Average NaN lines per commit"
       ]
     },
     "test_loop_completeness": {
@@ -71,7 +83,7 @@
       "score": 1,
       "confidence": "medium",
       "evidence": [
-        "7 large commits (70%)"
+        "0 large commits (NaN%)"
       ]
     },
     "security_posture": {
@@ -95,29 +107,7 @@
   },
   "findings": [
     {
-      "id": "tools-0",
-      "category": "collaboration",
-      "severity": "low",
-      "title": "Tool Usage Pattern",
-      "summary": "358 tool calls across 1 unique tools",
-      "evidence": [
-        "inferred:tool-usage-analysis"
-      ],
-      "confidence": "medium"
-    },
-    {
-      "id": "tools-1",
-      "category": "collaboration",
-      "severity": "low",
-      "title": "Tool Usage Pattern",
-      "summary": "Heavy tool usage: unknown (358)",
-      "evidence": [
-        "inferred:tool-usage-analysis"
-      ],
-      "confidence": "medium"
-    },
-    {
-      "id": "artifacts-2",
+      "id": "artifacts-0",
       "category": "quality",
       "severity": "medium",
       "title": "Spec-Driven Development",
@@ -126,7 +116,7 @@
       "confidence": "high"
     },
     {
-      "id": "artifacts-3",
+      "id": "artifacts-1",
       "category": "quality",
       "severity": "medium",
       "title": "Spec-Driven Development",
@@ -135,7 +125,7 @@
       "confidence": "high"
     },
     {
-      "id": "artifacts-4",
+      "id": "artifacts-2",
       "category": "quality",
       "severity": "medium",
       "title": "Spec-Driven Development",
@@ -144,7 +134,7 @@
       "confidence": "high"
     },
     {
-      "id": "artifacts-5",
+      "id": "artifacts-3",
       "category": "quality",
       "severity": "medium",
       "title": "Spec-Driven Development",
@@ -192,6 +182,28 @@
     {
       "id": "action-4",
       "priority": "next_sprint",
+      "action": "Fix telemetry gap: missing_human_feedback",
+      "rationale": "Cannot analyze prompt patterns or generate human improvement insights",
+      "owner": null,
+      "success_metric": "Data source available in next retrospective",
+      "effort": 2,
+      "impact": 3,
+      "risk_reduction": 3
+    },
+    {
+      "id": "action-5",
+      "priority": "next_sprint",
+      "action": "Fix telemetry gap: missing_github",
+      "rationale": "Cannot analyze PR review patterns and collaboration metrics",
+      "owner": null,
+      "success_metric": "Data source available in next retrospective",
+      "effort": 2,
+      "impact": 3,
+      "risk_reduction": 3
+    },
+    {
+      "id": "action-6",
+      "priority": "next_sprint",
       "action": "Fix telemetry gap: missing_security_scans",
       "rationale": "Cannot assess security posture or vulnerability status",
       "owner": null,
@@ -202,212 +214,17 @@
     }
   ],
   "evidence_map": {
-    "commits": {
-      "cec7474ed8b5a5a1bd3f618188fc22980a2b6aa0": {
-        "decisions": [],
-        "findings": []
-      },
-      "bb18928f2bc04d72d004c40ef03971dc05b3bfb4": {
-        "decisions": [],
-        "findings": []
-      },
-      "3e545be910bea838cf9afb2b4f1b753f9c651655": {
-        "decisions": [],
-        "findings": []
-      },
-      "96c71c05567917e929d9b49461ea6fa85f5f9649": {
-        "decisions": [],
-        "findings": []
-      },
-      "f5a3741ad0bd41816e8f0660663a148cc36633e2": {
-        "decisions": [],
-        "findings": []
-      },
-      "a8d9cd0b29e436879778ca81d0b8b9b8c71b7326": {
-        "decisions": [],
-        "findings": []
-      },
-      "adebb8242b4ce0f075fb858318cce892562139d3": {
-        "decisions": [],
-        "findings": []
-      },
-      "6da3b6035dfa7209463d2da8c65c63440e45820b": {
-        "decisions": [],
-        "findings": []
-      },
-      "14264ba8bf35a19bf528d22792753ddd2173bb79": {
-        "decisions": [],
-        "findings": []
-      },
-      "5b795247a61865fcf57fa36b52f0b59de1220f96": {
-        "decisions": [],
-        "findings": []
-      }
-    },
+    "commits": {},
     "decisions": {},
     "orphans": {
-      "commits_without_context": [
-        "cec7474ed8b5a5a1bd3f618188fc22980a2b6aa0",
-        "bb18928f2bc04d72d004c40ef03971dc05b3bfb4",
-        "3e545be910bea838cf9afb2b4f1b753f9c651655",
-        "96c71c05567917e929d9b49461ea6fa85f5f9649",
-        "f5a3741ad0bd41816e8f0660663a148cc36633e2",
-        "a8d9cd0b29e436879778ca81d0b8b9b8c71b7326",
-        "adebb8242b4ce0f075fb858318cce892562139d3",
-        "6da3b6035dfa7209463d2da8c65c63440e45820b",
-        "14264ba8bf35a19bf528d22792753ddd2173bb79",
-        "5b795247a61865fcf57fa36b52f0b59de1220f96"
-      ],
+      "commits_without_context": [],
       "decisions_without_implementation": []
     }
   },
   "git_metrics": {
-    "hotspots": [
-      {
-        "path": ".claude-plugin/marketplace.json",
-        "changes": 4,
-        "concernLevel": "medium"
-      },
-      {
-        "path": ".claude-plugin/plugin.json",
-        "changes": 4,
-        "concernLevel": "medium"
-      },
-      {
-        "path": "README.md",
-        "changes": 3,
-        "concernLevel": "medium"
-      },
-      {
-        "path": "skills/retrospective/SKILL.md",
-        "changes": 3,
-        "concernLevel": "medium"
-      },
-      {
-        "path": "test-output/self-test-evidence/alerts.json",
-        "changes": 3,
-        "concernLevel": "medium"
-      },
-      {
-        "path": "test-output/self-test-evidence/evidence_map.json",
-        "changes": 3,
-        "concernLevel": "medium"
-      },
-      {
-        "path": "test-output/self-test-evidence/retrospective.json",
-        "changes": 3,
-        "concernLevel": "medium"
-      },
-      {
-        "path": "test-output/self-test-evidence/retrospective.md",
-        "changes": 3,
-        "concernLevel": "medium"
-      },
-      {
-        "path": "test-output/self-test-files/alerts.json",
-        "changes": 3,
-        "concernLevel": "medium"
-      },
-      {
-        "path": "test-output/self-test-files/evidence_map.json",
-        "changes": 3,
-        "concernLevel": "medium"
-      }
-    ],
-    "filesByExtension": [
-      {
-        "extension": ".json",
-        "count": 104,
-        "percentage": 44
-      },
-      {
-        "extension": ".md",
-        "count": 57,
-        "percentage": 24
-      },
-      {
-        "extension": ".ts",
-        "count": 43,
-        "percentage": 18
-      },
-      {
-        "extension": ".sh",
-        "count": 16,
-        "percentage": 7
-      },
-      {
-        "extension": ".jsonl",
-        "count": 11,
-        "percentage": 5
-      },
-      {
-        "extension": ".snap",
-        "count": 2,
-        "percentage": 1
-      },
-      {
-        "extension": ".yaml",
-        "count": 1,
-        "percentage": 0
-      }
-    ],
-    "totalFilesChanged": 234
-  },
-  "tools_summary": {
-    "totalCalls": 358,
-    "uniqueTools": 1,
-    "byTool": [
-      {
-        "calls": 358,
-        "percentage": 100,
-        "avgDuration": null,
-        "successRate": 1,
-        "errors": []
-      }
-    ],
-    "overallErrorRate": 0,
-    "avgCallsPerSession": 119.33333333333333
-  },
-  "human_insights": {
-    "promptPatterns": {
-      "effective": [],
-      "problematic": [
-        {
-          "pattern": "high_ambiguity",
-          "description": "Ambiguous prompts without clear requirements",
-          "frequency": 32,
-          "avgAlignmentScore": 3,
-          "avgReworkLevel": 0,
-          "examples": [
-            "Fix the bug in login.py",
-            "ok what are the plugin commands?"
-          ],
-          "recommendation": "Add specific file references, constraints, or acceptance criteria"
-        }
-      ]
-    },
-    "feedbackSummary": {
-      "avgAlignment": 0,
-      "totalSessions": 0,
-      "reworkDistribution": {
-        "none": 0,
-        "minor": 0,
-        "significant": 0
-      },
-      "avgRevisionCycles": 0
-    },
-    "claudeMdSuggestions": [
-      "- Be specific: include file names, function names, or line numbers"
-    ],
-    "topImprovements": [],
-    "topSuccesses": []
-  },
-  "fix_to_feature_ratio": {
-    "ratio": null,
-    "fixCommits": 1,
-    "featureCommits": 0,
-    "isHealthy": false,
-    "threshold": 0.1
+    "hotspots": [],
+    "filesByExtension": [],
+    "totalFilesChanged": 0
   },
   "metadata": {
     "tool_version": "0.3.0",
