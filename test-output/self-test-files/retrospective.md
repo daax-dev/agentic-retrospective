@@ -1,8 +1,8 @@
 # Sprint Retrospective: self-test-files
 
 **Period**: HEAD~10 to HEAD
-**Generated**: 2026-04-19T00:48:48.438Z
-**Data Completeness**: 20% (1/5 sources)
+**Generated**: 2026-02-11T21:40:14.469Z
+**Data Completeness**: 40% (2/5 sources)
 
 ---
 
@@ -10,9 +10,9 @@
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│ 🔴 ACTION REQ │ Delivery (1/5), Quality (1/5)              │
+│ 🔴 ACTION REQ │ Decision Hygiene (2/5), Delivery (1/5), Quality (1/5) │
 ├─────────────────────────────────────────────────────────────┤
-│ 🎯 1 quick wins identified                                 │
+│ ⚠️ 1:0 fix-to-feature ratio                                │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -26,26 +26,61 @@
 
 | Metric | Value |
 |--------|-------|
-| Commits | 0 |
-| Contributors | 0 (0 human, 0 agent) |
-| Lines Changed | +0 / -0 |
-| Decisions Logged | 0 |
-| Agent Commits | 0 (0%) |
+| Commits | 10 |
+| Contributors | 1 (0 human, 1 agent) |
+| Lines Changed | +30,418 / -6,195 |
+| Decisions Logged | 13 |
+| Agent Commits | 3 (30%) |
 
 ### Quality Signals
 - Delivery Predictability: 1/5 (high confidence)
 - Quality/Maintainability: 1/5 (medium confidence)
 
 ### Top Findings
-- **Spec-Driven Development** (medium): No specification documents found - consider adding docs/specs/ or docs/prd/
-- **Spec-Driven Development** (medium): No ADRs found - consider adding docs/adr/ for decision records
-- **Spec-Driven Development** (medium): Found 1 API schema definitions
+- **One-way-door decision made by agent** (critical): Agent made irreversible decision without human approval: Port all TypeScript to Python with full parity
+- **One-way-door decision made by agent** (critical): Agent made irreversible decision without human approval: Create comprehensive test suite with 247 tests
+- **One-way-door decision missing reversibility plan** (medium): High-risk decision lacks rollback strategy: Full parity port from TypeScript skills-marketplace to Python
 
-### Top Recommendations
 
-| Area | Current | Target | Action |
-|------|---------|--------|--------|
-| Decision | - | - | Fix telemetry gap: missing_decisions |
+---
+
+## 🧑 Human Partner Insights
+
+### Prompt Patterns That Caused Issues ⚠️
+
+1. **Ambiguous prompts without clear requirements** (32 occurrences)
+   - Example: "Fix the bug in login.py"
+   - **Improvement**: Add specific file references, constraints, or acceptance criteria
+
+
+### Recommended CLAUDE.md Updates 📝
+
+Based on this sprint, consider adding to your CLAUDE.md:
+
+```markdown
+## Prompting Preferences
+- Be specific: include file names, function names, or line numbers
+```
+
+
+
+---
+
+### Fix-to-Feature Ratio 📊
+
+| Metric | Value |
+|--------|-------|
+| Fix Commits | 1 |
+| Feature Commits | 0 |
+| Ratio (fix:feature) | 1:0 |
+| Status | 🔴 Needs Attention |
+| Threshold | 0.1 (10:1 feature-to-fix is healthy) |
+
+> ⚠️ **High fix ratio detected.** This may indicate:
+> - Unclear initial requirements leading to rework
+> - Complex features needing iteration
+> - Technical debt accumulation
+
 
 
 ---
@@ -54,19 +89,80 @@
 
 Files changed 3+ times this sprint (high churn may indicate architectural issues):
 
-*No hotspots detected - files are being changed at a healthy frequency.*
+| File | Changes | Concern Level |
+|------|---------|---------------|
+| `.claude-plugin/marketplace.json` | 4 | Medium |
+| `.claude-plugin/plugin.json` | 4 | Medium |
+| `README.md` | 3 | Medium |
+| `skills/retrospective/SKILL.md` | 3 | Medium |
+| `test-output/self-test-evidence/alerts.json` | 3 | Medium |
+| `test-output/self-test-evidence/evidence_map.json` | 3 | Medium |
+| `test-output/self-test-evidence/retrospective.json` | 3 | Medium |
+| `test-output/self-test-evidence/retrospective.md` | 3 | Medium |
+| `test-output/self-test-files/alerts.json` | 3 | Medium |
+| `test-output/self-test-files/evidence_map.json` | 3 | Medium |
 
 ### File Distribution
 
 | Extension | Files Changed | % of Total |
 |-----------|---------------|------------|
+| .json | 104 | 44% |
+| .md | 57 | 24% |
+| .ts | 43 | 18% |
+| .sh | 16 | 7% |
+| .jsonl | 11 | 5% |
+| .snap | 2 | 1% |
+| .yaml | 1 | 0% |
+
+
+---
+
+## Tool Performance
+
+| Tool | Calls | % | Avg Duration | Success Rate | Top Error |
+|------|-------|---|--------------|--------------|-----------|
+| undefined | 358 | 100% | - | 100% | - |
+
+**Overall**: 358 tool calls, 100% success rate, 119.3 avg calls/session
+
+
+---
+
+## Decisions Analysis
+
+### By Category
+
+| Category | Count | % | Key Decisions |
+|----------|-------|---|---------------|
+| architecture | 7 | 54% | Full parity port from TypeScript skills-marketplac... |
+| naming | 2 | 15% | Rename all 'retro' references to 'retrospective', ... |
+| quality | 2 | 15% | Implement comprehensive test suite with real repo ... |
+| process | 1 | 8% | Use parallel agent execution for maximum velocity |
+| deps | 1 | 8% | Use Pydantic v2 for all data models |
+
+### By Actor
+
+| Actor | Decisions | % | One-Way-Doors |
+|-------|-----------|---|---------------|
+| human | 4 | 31% | 2 |
+| agent | 9 | 69% | 2 |
+
+### Escalation Compliance
+❌ **50% escalation rate** - 2/4 one-way-door decisions made by humans
+
+**CRITICAL**: One-way-door decisions are being made by agents without human approval. This violates decision hygiene principles.
 
 
 ---
 
 ## What Worked / What Didn't
 
-*Insufficient data to evaluate. Ensure decision logs and PR data are available.*
+### Needs Attention
+
+| Area | Score | Evidence |
+|------|-------|----------|
+| Escalation Compliance | 50% | 2/4 one-way-doors escalated to humans |
+
 
 ---
 
@@ -74,14 +170,14 @@ Files changed 3+ times this sprint (high churn may indicate architectural issues
 
 ### Delivery & Outcome
 
-- 0 commits
-- Average NaN lines per commit
+- 10 commits
+- Average 3661 lines per commit
 
 **Score**: 1/5 (high confidence)
 
 ### Code Quality & Maintainability
 
-- 0 large commits (NaN%)
+- 7 large commits (70%)
 
 **Score**: 1/5 (medium confidence)
 
@@ -107,9 +203,11 @@ Files changed 3+ times this sprint (high churn may indicate architectural issues
 
 ### Decision Hygiene
 
-- No decision logs available
+- 13 decisions logged
+- 4 one-way-door decisions
+- 50% escalation rate
 
-**Score**: N/A (no data)
+**Score**: 2/5 (high confidence)
 
 
 ---
@@ -118,17 +216,6 @@ Files changed 3+ times this sprint (high churn may indicate architectural issues
 
 The following data sources were missing, limiting analysis depth:
 
-### Missing Decisions
-
-**Severity**: high
-**Impact**: Cannot evaluate decision quality or boundary discipline
-
-**How to fix**:
-```bash
-Create decision log directory: mkdir -p /home/runner/work/agentic-retrospective/agentic-retrospective/.logs/decisions
-See docs/fixing-telemetry-gaps.md
-```
-
 ### Missing Agent Logs
 
 **Severity**: medium
@@ -136,7 +223,7 @@ See docs/fixing-telemetry-gaps.md
 
 **How to fix**:
 ```bash
-Agent logs not found at /home/runner/work/agentic-retrospective/agentic-retrospective/.logs/agents
+Agent logs not found at /Users/jasonpoley/prj/dx/agentic-retrospective/.logs/agents
 See docs/fixing-telemetry-gaps.md
 ```
 
@@ -148,26 +235,6 @@ See docs/fixing-telemetry-gaps.md
 **How to fix**:
 ```bash
 Add JUnit XML output: pytest --junitxml=test-results/pytest.xml
-```
-
-### Missing Human Feedback
-
-**Severity**: medium
-**Impact**: Cannot analyze prompt patterns or generate human improvement insights
-
-**How to fix**:
-```bash
-Run micro-retrospective.sh after sessions: bash scripts/micro-retrospective.sh
-```
-
-### Missing Github
-
-**Severity**: low
-**Impact**: Cannot analyze PR review patterns and collaboration metrics
-
-**How to fix**:
-```bash
-Install and authenticate gh CLI: gh auth login
 ```
 
 ### Missing Security Scans
@@ -188,12 +255,12 @@ For detailed instructions, see `docs/fixing-telemetry-gaps.md`
 
 | Dimension | Score | Confidence | Key Evidence |
 |-----------|-------|------------|--------------|
-| Delivery Predictability | 1/5 | high | 0 commits |
+| Delivery Predictability | 1/5 | high | 10 commits |
 | Test Loop Completeness | N/A/5 | none | - |
-| Quality/Maintainability | 1/5 | medium | 0 large commits (NaN%) |
+| Quality/Maintainability | 1/5 | medium | 7 large commits (70%) |
 | Security Posture | N/A/5 | none | - |
 | Collaboration Efficiency | N/A/5 | none | - |
-| Decision Hygiene | N/A/5 | none | - |
+| Decision Hygiene | 2/5 | high | 13 decisions logged |
 
 **Overall Sprint Health**: AT RISK
 
@@ -203,9 +270,7 @@ For detailed instructions, see `docs/fixing-telemetry-gaps.md`
 
 ### Must Do (This Sprint)
 
-| Area | Current | Target | Action | Owner |
-|------|---------|--------|--------|-------|
-| Decision | - | Data source available in next retrospective | Fix telemetry gap: missing_decisions | TBD |
+*No critical actions identified*
 
 ### Next Sprint
 
@@ -213,8 +278,6 @@ For detailed instructions, see `docs/fixing-telemetry-gaps.md`
 |------|---------|--------|--------|-------|
 | Agent | - | Data source available in next retrospective | Fix telemetry gap: missing_agent_logs | TBD |
 | General | - | Data source available in next retrospective | Fix telemetry gap: missing_test_results | TBD |
-| General | - | Data source available in next retrospective | Fix telemetry gap: missing_human_feedback | TBD |
-| General | - | Data source available in next retrospective | Fix telemetry gap: missing_github | TBD |
 | Security | - | Data source available in next retrospective | Fix telemetry gap: missing_security_scans | TBD |
 
 

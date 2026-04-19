@@ -1,7 +1,7 @@
 # Sprint Retrospective: self-test-graceful
 
 **Period**: HEAD~10 to HEAD
-**Generated**: 2026-04-19T00:48:48.555Z
+**Generated**: 2026-02-11T21:40:19.841Z
 **Data Completeness**: 20% (1/5 sources)
 
 ---
@@ -12,6 +12,7 @@
 ┌─────────────────────────────────────────────────────────────┐
 │ 🔴 ACTION REQ │ Delivery (1/5), Quality (1/5)              │
 ├─────────────────────────────────────────────────────────────┤
+│ ⚠️ 1:0 fix-to-feature ratio                                │
 │ 🎯 1 quick wins identified                                 │
 └─────────────────────────────────────────────────────────────┘
 ```
@@ -26,20 +27,20 @@
 
 | Metric | Value |
 |--------|-------|
-| Commits | 0 |
-| Contributors | 0 (0 human, 0 agent) |
-| Lines Changed | +0 / -0 |
+| Commits | 10 |
+| Contributors | 1 (0 human, 1 agent) |
+| Lines Changed | +30,418 / -6,195 |
 | Decisions Logged | 0 |
-| Agent Commits | 0 (0%) |
+| Agent Commits | 3 (30%) |
 
 ### Quality Signals
 - Delivery Predictability: 1/5 (high confidence)
 - Quality/Maintainability: 1/5 (medium confidence)
 
 ### Top Findings
+- **Tool Usage Pattern** (low): 358 tool calls across 1 unique tools
+- **Tool Usage Pattern** (low): Heavy tool usage: unknown (358)
 - **Spec-Driven Development** (medium): No specification documents found - consider adding docs/specs/ or docs/prd/
-- **Spec-Driven Development** (medium): No ADRs found - consider adding docs/adr/ for decision records
-- **Spec-Driven Development** (medium): Found 1 API schema definitions
 
 ### Top Recommendations
 
@@ -50,16 +51,86 @@
 
 ---
 
+## 🧑 Human Partner Insights
+
+### Prompt Patterns That Caused Issues ⚠️
+
+1. **Ambiguous prompts without clear requirements** (32 occurrences)
+   - Example: "Fix the bug in login.py"
+   - **Improvement**: Add specific file references, constraints, or acceptance criteria
+
+
+### Recommended CLAUDE.md Updates 📝
+
+Based on this sprint, consider adding to your CLAUDE.md:
+
+```markdown
+## Prompting Preferences
+- Be specific: include file names, function names, or line numbers
+```
+
+
+
+---
+
+### Fix-to-Feature Ratio 📊
+
+| Metric | Value |
+|--------|-------|
+| Fix Commits | 1 |
+| Feature Commits | 0 |
+| Ratio (fix:feature) | 1:0 |
+| Status | 🔴 Needs Attention |
+| Threshold | 0.1 (10:1 feature-to-fix is healthy) |
+
+> ⚠️ **High fix ratio detected.** This may indicate:
+> - Unclear initial requirements leading to rework
+> - Complex features needing iteration
+> - Technical debt accumulation
+
+
+
+---
+
 ## Code Hotspots
 
 Files changed 3+ times this sprint (high churn may indicate architectural issues):
 
-*No hotspots detected - files are being changed at a healthy frequency.*
+| File | Changes | Concern Level |
+|------|---------|---------------|
+| `.claude-plugin/marketplace.json` | 4 | Medium |
+| `.claude-plugin/plugin.json` | 4 | Medium |
+| `README.md` | 3 | Medium |
+| `skills/retrospective/SKILL.md` | 3 | Medium |
+| `test-output/self-test-evidence/alerts.json` | 3 | Medium |
+| `test-output/self-test-evidence/evidence_map.json` | 3 | Medium |
+| `test-output/self-test-evidence/retrospective.json` | 3 | Medium |
+| `test-output/self-test-evidence/retrospective.md` | 3 | Medium |
+| `test-output/self-test-files/alerts.json` | 3 | Medium |
+| `test-output/self-test-files/evidence_map.json` | 3 | Medium |
 
 ### File Distribution
 
 | Extension | Files Changed | % of Total |
 |-----------|---------------|------------|
+| .json | 104 | 44% |
+| .md | 57 | 24% |
+| .ts | 43 | 18% |
+| .sh | 16 | 7% |
+| .jsonl | 11 | 5% |
+| .snap | 2 | 1% |
+| .yaml | 1 | 0% |
+
+
+---
+
+## Tool Performance
+
+| Tool | Calls | % | Avg Duration | Success Rate | Top Error |
+|------|-------|---|--------------|--------------|-----------|
+| undefined | 358 | 100% | - | 100% | - |
+
+**Overall**: 358 tool calls, 100% success rate, 119.3 avg calls/session
 
 
 ---
@@ -74,14 +145,14 @@ Files changed 3+ times this sprint (high churn may indicate architectural issues
 
 ### Delivery & Outcome
 
-- 0 commits
-- Average NaN lines per commit
+- 10 commits
+- Average 3661 lines per commit
 
 **Score**: 1/5 (high confidence)
 
 ### Code Quality & Maintainability
 
-- 0 large commits (NaN%)
+- 7 large commits (70%)
 
 **Score**: 1/5 (medium confidence)
 
@@ -125,7 +196,7 @@ The following data sources were missing, limiting analysis depth:
 
 **How to fix**:
 ```bash
-Create decision log directory: mkdir -p /home/runner/work/agentic-retrospective/agentic-retrospective/.logs/nonexistent-decisions
+Create decision log directory: mkdir -p /Users/jasonpoley/prj/dx/agentic-retrospective/.logs/nonexistent-decisions
 See docs/fixing-telemetry-gaps.md
 ```
 
@@ -136,7 +207,7 @@ See docs/fixing-telemetry-gaps.md
 
 **How to fix**:
 ```bash
-Agent logs not found at /home/runner/work/agentic-retrospective/agentic-retrospective/.logs/nonexistent-agents
+Agent logs not found at /Users/jasonpoley/prj/dx/agentic-retrospective/.logs/nonexistent-agents
 See docs/fixing-telemetry-gaps.md
 ```
 
@@ -148,26 +219,6 @@ See docs/fixing-telemetry-gaps.md
 **How to fix**:
 ```bash
 Add JUnit XML output: pytest --junitxml=test-results/pytest.xml
-```
-
-### Missing Human Feedback
-
-**Severity**: medium
-**Impact**: Cannot analyze prompt patterns or generate human improvement insights
-
-**How to fix**:
-```bash
-Run micro-retrospective.sh after sessions: bash scripts/micro-retrospective.sh
-```
-
-### Missing Github
-
-**Severity**: low
-**Impact**: Cannot analyze PR review patterns and collaboration metrics
-
-**How to fix**:
-```bash
-Install and authenticate gh CLI: gh auth login
 ```
 
 ### Missing Security Scans
@@ -188,9 +239,9 @@ For detailed instructions, see `docs/fixing-telemetry-gaps.md`
 
 | Dimension | Score | Confidence | Key Evidence |
 |-----------|-------|------------|--------------|
-| Delivery Predictability | 1/5 | high | 0 commits |
+| Delivery Predictability | 1/5 | high | 10 commits |
 | Test Loop Completeness | N/A/5 | none | - |
-| Quality/Maintainability | 1/5 | medium | 0 large commits (NaN%) |
+| Quality/Maintainability | 1/5 | medium | 7 large commits (70%) |
 | Security Posture | N/A/5 | none | - |
 | Collaboration Efficiency | N/A/5 | none | - |
 | Decision Hygiene | N/A/5 | none | - |
@@ -213,8 +264,6 @@ For detailed instructions, see `docs/fixing-telemetry-gaps.md`
 |------|---------|--------|--------|-------|
 | Agent | - | Data source available in next retrospective | Fix telemetry gap: missing_agent_logs | TBD |
 | General | - | Data source available in next retrospective | Fix telemetry gap: missing_test_results | TBD |
-| General | - | Data source available in next retrospective | Fix telemetry gap: missing_human_feedback | TBD |
-| General | - | Data source available in next retrospective | Fix telemetry gap: missing_github | TBD |
 | Security | - | Data source available in next retrospective | Fix telemetry gap: missing_security_scans | TBD |
 
 
