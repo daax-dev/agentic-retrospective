@@ -55,7 +55,7 @@ private appendToHistory(report: RetroReport): void {
 }
 ```
 
-Call site: inside `writeOutputs()` immediately after the markdown write, before `return outputPath`.
+Call site: inside `writeOutputs()`, invoke `appendToHistory(report)` after the markdown-write logic has been handled but **outside** the `!jsonOnly`/markdown conditional, and before `return outputPath`, so `--json` runs still append to history.
 
 ### Location rationale
 
