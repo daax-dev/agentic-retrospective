@@ -662,7 +662,7 @@ The following behaviors are explicitly preserved in every fix above, in complian
 
 | Constitutional Principle | How This Plan Honors It |
 |--------------------------|-------------------------|
-| Pure analytics layer — reads data, does not capture it | No fix in this plan writes to `.logs/`. The pre-existing `feedback` subcommand (`src/cli.ts:104,167`) is unchanged and remains the sole `.logs/` writer. The history file is an output artifact under `outputDir`, not telemetry. |
+| Pure analytics layer — reads data, does not capture it | No fix in this plan introduces new writes to `.logs/`. Existing feedback-related writes in `src/cli.ts` remain unchanged, and the history file is an output artifact under `outputDir`, not telemetry. |
 | Git history is the only hard requirement | Multi-repo mode still requires git at each repo path; graceful degradation is unchanged |
 | Maximum 5 action items per report | The aggregate multi-repo report enforces this cap across all repos |
 | Every claim links to evidence or is marked "inferred" | Evidence map format is unchanged; per-repo sections use the same traceability model |
