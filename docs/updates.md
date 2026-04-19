@@ -536,14 +536,16 @@ program
     []
   )
 
-// In .action():
+// In .action(options, command):
 const toml = findRetroConfig();
+const sprintSource = command.getOptionValueSource('sprint');
+const outputSource = command.getOptionValueSource('output');
 
 // Apply config-file defaults (lowest precedence — CLI flags win)
-if (toml?.retrospective?.sprint_id && !options.sprint) {
+if (toml?.retrospective?.sprint_id && sprintSource !== 'cli') {
   options.sprint = toml.retrospective.sprint_id;
 }
-if (toml?.retrospective?.output_dir && options.output === 'docs/retrospectives') {
+if (toml?.retrospective?.output_dir && outputSource !== 'cli') {
   options.output = toml.retrospective.output_dir;
 }
 
