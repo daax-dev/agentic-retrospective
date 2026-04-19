@@ -200,7 +200,7 @@ Call site in `writeOutputs()` (`src/runner.ts:1086`): add `this.appendToHistory(
 
 **Compatibility**: Fully additive. No existing behavior changes. History file is created on first run.
 
-**Testing**: Unit test that calls `writeOutputs()` twice with different sprint IDs and verifies `.retro-history.jsonl` contains exactly two lines with distinct `sprint_id` values.
+**Testing**: Integration test that runs `runRetro()` (or the CLI) twice with different `sprintId` values against the same `outputDir`, then verifies `.retro-history.jsonl` contains exactly two lines with distinct `sprint_id` values.
 
 ---
 
