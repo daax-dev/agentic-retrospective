@@ -517,7 +517,7 @@ The unified executive summary aggregates scores (weighted by commit count), find
 
 **Action-item cap fix**: The constitution mandates max 5 action items (`memory/constitution.md:48`), but the current runner caps at 7 (`src/runner.ts:1031` uses `items.slice(0, 7)`). As part of this multi-repo work, reduce that cap from 7 to 5 so both single-repo and aggregate multi-repo outputs comply with the constitution. Update acceptance criteria for #19 accordingly.
 
-**Constitution compliance**: Multi-repo support itself does not violate any constitutional constraint. The tool remains a pure analytics layer; the retrospective run reads from multiple repos but does not capture telemetry or install hooks (`memory/constitution.md:11–14`). (The one pre-existing exception is the `feedback` subcommand, which writes user-provided session feedback to `.logs/feedback/` at `src/cli.ts:104,167`; this is out of scope for #19 and preserved unchanged.) The blameless and evidence-driven principles apply equally to per-repo and aggregate sections.
+**Constitution compliance**: Multi-repo support itself does not violate any constitutional constraint. The tool remains a pure analytics layer; the retrospective run reads from multiple repos but does not capture telemetry or install hooks (`memory/constitution.md:11–14`). (The pre-existing exception is user-provided session feedback written to `.logs/feedback/`, both via the interactive `promptForFeedback()` path in the main `agentic-retrospective` flow and via the `feedback` subcommand in `src/cli.ts`; this is out of scope for #19 and preserved unchanged.) The blameless and evidence-driven principles apply equally to per-repo and aggregate sections.
 
 ---
 
