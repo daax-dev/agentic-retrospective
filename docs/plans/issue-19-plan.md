@@ -242,16 +242,18 @@ Add after existing `.option(...)` chain:
 )
 ```
 
-In `.action(options)`:
+In `.action(options, command)`:
 
 ```typescript
 const toml = findRetroConfig();
+const sprintSource = command.getOptionValueSource('sprint');
+const outputSource = command.getOptionValueSource('output');
 
 // Config-file defaults (lowest precedence)
-if (toml?.retrospective?.sprint_id && !options.sprint) {
+if (toml?.retrospective?.sprint_id && sprintSource !== 'cli') {
   options.sprint = toml.retrospective.sprint_id;
 }
-if (toml?.retrospective?.output_dir && options.output === 'docs/retrospectives') {
+if (toml?.retrospective?.output_dir && outputSource !== 'cli') {
   options.output = toml.retrospective.output_dir;
 }
 
