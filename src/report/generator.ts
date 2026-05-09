@@ -48,10 +48,11 @@ export class ReportGenerator {
     // Aggregate findings + action items (already capped at 5)
     sections.push(this.generateActionItems(aggregated.action_items));
 
-    // Per-repo sections (body only — no H1 so the combined doc has one root heading)
+    // Per-repo sections (body only — no H1 so the combined doc has one root heading).
+    // No leading `---` here; sections.join('\n\n---\n\n') already inserts separators.
     for (const r of perRepo) {
       sections.push(
-        `---\n\n## Repository: ${r.label} (\`${r.path}\`)\n\n${this.generateMarkdown(r.report, false)}`
+        `## Repository: ${r.label} (\`${r.path}\`)\n\n${this.generateMarkdown(r.report, false)}`
       );
     }
 

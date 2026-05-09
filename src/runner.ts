@@ -460,7 +460,7 @@ export class RetroRunner {
     }
 
     // Collect test results (optional)
-    data.testResults = this.loadTestResults();
+    data.testResults = this.loadTestResults(repoCwd);
     if (!data.testResults) {
       this.addTelemetryGap({
         gap_type: 'missing_test_results',
@@ -643,8 +643,8 @@ export class RetroRunner {
       });
     }
 
-    // Collect artifacts (specs, ADRs, API schemas)
-    const artifactsAnalyzer = new ArtifactsAnalyzer();
+    // Collect artifacts (specs, ADRs, API schemas) rooted at repoCwd.
+    const artifactsAnalyzer = new ArtifactsAnalyzer(repoCwd);
     const artifactsAnalysis = artifactsAnalyzer.analyze();
     this.log(`  Spec-driven score: ${artifactsAnalysis.specDrivenScore}/5`);
     for (const finding of artifactsAnalysis.findings) {
@@ -715,8 +715,9 @@ export class RetroRunner {
     }
   }
 
-  private loadTestResults(): unknown | null {
-    // Look for common test result formats
+  private loadTestResults(cwd: string = process.cwd()): unknown | null {
+    // Look for common test result formats, resolved against cwd so multi-repo
+    // mode checks each repo's own test output rather than the caller's cwd.
     const locations = [
       'test-results/pytest.xml',
       'test-results/junit.xml',
@@ -727,11 +728,11 @@ export class RetroRunner {
     ];
 
     for (const loc of locations) {
-      if (existsSync(loc)) {
+      const full = join(cwd, loc);
+      if (existsSync(full)) {
         try {
-          const content = readFileSync(loc, 'utf-8');
-          // Return raw content for now - parsing depends on format
-          return { path: loc, content };
+          const content = readFileSync(full, 'utf-8');
+          return { path: full, content };
         } catch {
           continue;
         }
