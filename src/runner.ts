@@ -5,7 +5,7 @@
  * with graceful degradation when data sources are missing.
  */
 
-import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'fs';
+import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'fs';
 import { join, resolve, isAbsolute } from 'path';
 import type {
   RetroConfig,
@@ -134,6 +134,20 @@ export class RetroRunner {
   private async runMultiRepo(): Promise<RunResult> {
     try {
       const repos = this.config.repos ?? [];
+
+      // Fail early on duplicate labels — they would silently overwrite entries
+      // in the combined evidence_map.json and produce ambiguous per-repo sections.
+      const seenLabels = new Set<string>();
+      for (const repo of repos) {
+        if (seenLabels.has(repo.label)) {
+          return {
+            success: false,
+            error: `Duplicate repo label "${repo.label}": each repo must have a unique label`,
+          };
+        }
+        seenLabels.add(repo.label);
+      }
+
       const perRepo: PerRepoResult[] = [];
       const perRepoEvidence: Array<{ label: string; path: string; evidence: EvidenceMap }> = [];
 
@@ -183,6 +197,13 @@ export class RetroRunner {
     this.gaps = [];
 
     try {
+      // Validate the path exists and is a directory before touching git, so
+      // typos/missing paths produce a clear diagnostic instead of a generic
+      // "not a git repository" message.
+      if (!existsSync(repoCwd) || !statSync(repoCwd).isDirectory()) {
+        throw new Error(`Repo path does not exist or is not a directory: ${repoCwd}`);
+      }
+
       // Validate git at the repo path
       const gitAnalyzer = new GitAnalyzer(repoCwd);
       const isGit = await gitAnalyzer.isGitRepository();

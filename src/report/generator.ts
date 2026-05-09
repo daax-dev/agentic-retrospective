@@ -45,7 +45,7 @@ export class ReportGenerator {
     }
     sections.push(repoTable);
 
-    // Aggregate findings + action items (already capped at 5)
+    // Aggregate action items (capped at 5); findings appear in the executive summary above.
     sections.push(this.generateActionItems(aggregated.action_items));
 
     // Per-repo sections (body only — no H1 so the combined doc has one root heading).
