@@ -12,7 +12,8 @@ import { Command } from 'commander';
 import chalk from 'chalk';
 import pkg from '../package.json' with { type: 'json' };
 import { runRetro } from './runner.js';
-import type { RetroConfig } from './types.js';
+import { findRetroConfig } from './config.js';
+import type { RetroConfig, RepoConfig } from './types.js';
 
 const program = new Command();
 
@@ -29,9 +30,61 @@ program
   .option('--output <dir>', 'Output directory', 'docs/retrospectives')
   .option('--json', 'Output JSON only (no markdown)')
   .option('--quiet', 'Suppress progress output')
+  .option(
+    '--repo <path>',
+    'Repo path to analyze (repeatable for multi-repo). Overrides [[repos]] in .retro.toml when provided.',
+    (v: string, prev: string[]) => [...(prev || []), v],
+    [] as string[]
+  )
   .action(async (options) => {
     try {
       console.log(chalk.blue('🔄 Starting Agentic Retrospective...\n'));
+
+      // Lower-precedence defaults from .retro.toml
+      let tomlResult: ReturnType<typeof findRetroConfig> = null;
+      try {
+        tomlResult = findRetroConfig();
+      } catch (err) {
+        console.error(chalk.red('Error reading .retro.toml:'), err instanceof Error ? err.message : err);
+        process.exit(1);
+      }
+
+      if (tomlResult?.config?.retrospective?.sprint_id && !options.sprint) {
+        options.sprint = tomlResult.config.retrospective.sprint_id;
+      }
+      if (tomlResult?.config?.retrospective?.output_dir && options.output === 'docs/retrospectives') {
+        options.output = tomlResult.config.retrospective.output_dir;
+      }
+
+      // Repos: CLI --repo flags override config-file [[repos]].
+      // Relative paths from .retro.toml are resolved against the config file's
+      // directory; CLI --repo paths are relative to process.cwd().
+      let repos: RepoConfig[] | undefined;
+      if (Array.isArray(options.repo) && options.repo.length > 0) {
+        repos = (options.repo as string[]).map((p: string, i: number) => ({
+          path: p,
+          label: `repo-${i + 1}`,
+        }));
+      } else if (tomlResult?.config?.repos) {
+        const rawRepos = tomlResult.config.repos;
+        if (!Array.isArray(rawRepos)) {
+          console.error(chalk.red('Error in .retro.toml: "repos" must be an array of {path, label} entries'));
+          process.exit(1);
+        }
+        for (const [i, r] of rawRepos.entries()) {
+          if (typeof (r as Record<string, unknown>)?.path !== 'string' || typeof (r as Record<string, unknown>)?.label !== 'string') {
+            console.error(chalk.red(`Error in .retro.toml: repos[${i}] must have string "path" and "label" fields`));
+            process.exit(1);
+          }
+        }
+        if (rawRepos.length > 0) {
+          const { resolve: resolvePath } = await import('path');
+          repos = rawRepos.map(r => ({
+            ...r,
+            path: resolvePath(tomlResult!.configDir, r.path),
+          }));
+        }
+      }
 
       const config: RetroConfig = {
         fromRef: options.from || '',
@@ -41,6 +94,7 @@ program
         agentLogsPath: options.logs,
         ciPath: options.ci,
         outputDir: options.output,
+        repos,
       };
 
       const result = await runRetro(config, {
