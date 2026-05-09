@@ -65,12 +65,25 @@ program
           path: p,
           label: `repo-${i + 1}`,
         }));
-      } else if (tomlResult?.config?.repos && tomlResult.config.repos.length > 0) {
-        const { resolve: resolvePath } = await import('path');
-        repos = tomlResult.config.repos.map(r => ({
-          ...r,
-          path: resolvePath(tomlResult!.configDir, r.path),
-        }));
+      } else if (tomlResult?.config?.repos) {
+        const rawRepos = tomlResult.config.repos;
+        if (!Array.isArray(rawRepos)) {
+          console.error(chalk.red('Error in .retro.toml: "repos" must be an array of {path, label} entries'));
+          process.exit(1);
+        }
+        for (const [i, r] of rawRepos.entries()) {
+          if (typeof (r as Record<string, unknown>)?.path !== 'string' || typeof (r as Record<string, unknown>)?.label !== 'string') {
+            console.error(chalk.red(`Error in .retro.toml: repos[${i}] must have string "path" and "label" fields`));
+            process.exit(1);
+          }
+        }
+        if (rawRepos.length > 0) {
+          const { resolve: resolvePath } = await import('path');
+          repos = rawRepos.map(r => ({
+            ...r,
+            path: resolvePath(tomlResult!.configDir, r.path),
+          }));
+        }
       }
 
       const config: RetroConfig = {

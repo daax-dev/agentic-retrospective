@@ -48,12 +48,11 @@ export class ReportGenerator {
     // Aggregate action items (capped at 5); findings appear in the executive summary above.
     sections.push(this.generateActionItems(aggregated.action_items));
 
-    // Per-repo sections (body only — no H1 so the combined doc has one root heading).
-    // No leading `---` here; sections.join('\n\n---\n\n') already inserts separators.
+    // Per-repo sections. Headings are shifted down one level (## → ###) so they
+    // nest under the "## Repository:" header rather than appearing as siblings.
     for (const r of perRepo) {
-      sections.push(
-        `## Repository: ${r.label} (\`${r.path}\`)\n\n${this.generateMarkdown(r.report, false)}`
-      );
+      const body = this.shiftHeadings(this.generateMarkdown(r.report, false), 1);
+      sections.push(`## Repository: ${r.label} (\`${r.path}\`)\n\n${body}`);
     }
 
     return sections.join('\n\n---\n\n');
@@ -134,6 +133,18 @@ export class ReportGenerator {
     sections.push(this.generateFooter(report));
 
     return sections.join('\n\n---\n\n');
+  }
+
+  /**
+   * Shift all ATX headings in `markdown` down by `levels` (e.g. ## → ### when
+   * levels=1). Clamps at H6. Used when embedding per-repo content inside a
+   * multi-repo document so inner headings nest under the repository header.
+   */
+  private shiftHeadings(markdown: string, levels: number): string {
+    return markdown.replace(/^(#{1,6})( )/gm, (_, hashes: string, space: string) => {
+      const newLevel = Math.min(hashes.length + levels, 6);
+      return '#'.repeat(newLevel) + space;
+    });
   }
 
   private generateHeader(report: RetroReport): string {

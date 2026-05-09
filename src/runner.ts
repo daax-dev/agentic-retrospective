@@ -200,7 +200,15 @@ export class RetroRunner {
       // Validate the path exists and is a directory before touching git, so
       // typos/missing paths produce a clear diagnostic instead of a generic
       // "not a git repository" message.
-      if (!existsSync(repoCwd) || !statSync(repoCwd).isDirectory()) {
+      // statSync is wrapped in try/catch: it can throw on permission errors
+      // even when existsSync returns true, which would bypass our diagnostic.
+      let pathIsDirectory = false;
+      try {
+        pathIsDirectory = statSync(repoCwd).isDirectory();
+      } catch {
+        // missing, inaccessible, or other FS error — treat as invalid
+      }
+      if (!pathIsDirectory) {
         throw new Error(`Repo path does not exist or is not a directory: ${repoCwd}`);
       }
 
