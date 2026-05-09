@@ -41,30 +41,36 @@ program
       console.log(chalk.blue('🔄 Starting Agentic Retrospective...\n'));
 
       // Lower-precedence defaults from .retro.toml
-      let toml: ReturnType<typeof findRetroConfig> = null;
+      let tomlResult: ReturnType<typeof findRetroConfig> = null;
       try {
-        toml = findRetroConfig();
+        tomlResult = findRetroConfig();
       } catch (err) {
         console.error(chalk.red('Error reading .retro.toml:'), err instanceof Error ? err.message : err);
         process.exit(1);
       }
 
-      if (toml?.retrospective?.sprint_id && !options.sprint) {
-        options.sprint = toml.retrospective.sprint_id;
+      if (tomlResult?.config?.retrospective?.sprint_id && !options.sprint) {
+        options.sprint = tomlResult.config.retrospective.sprint_id;
       }
-      if (toml?.retrospective?.output_dir && options.output === 'docs/retrospectives') {
-        options.output = toml.retrospective.output_dir;
+      if (tomlResult?.config?.retrospective?.output_dir && options.output === 'docs/retrospectives') {
+        options.output = tomlResult.config.retrospective.output_dir;
       }
 
-      // Repos: CLI --repo flags override config-file [[repos]]
+      // Repos: CLI --repo flags override config-file [[repos]].
+      // Relative paths from .retro.toml are resolved against the config file's
+      // directory; CLI --repo paths are relative to process.cwd().
       let repos: RepoConfig[] | undefined;
       if (Array.isArray(options.repo) && options.repo.length > 0) {
         repos = (options.repo as string[]).map((p: string, i: number) => ({
           path: p,
           label: `repo-${i + 1}`,
         }));
-      } else if (toml?.repos && toml.repos.length > 0) {
-        repos = toml.repos;
+      } else if (tomlResult?.config?.repos && tomlResult.config.repos.length > 0) {
+        const { resolve: resolvePath } = await import('path');
+        repos = tomlResult.config.repos.map(r => ({
+          ...r,
+          path: resolvePath(tomlResult!.configDir, r.path),
+        }));
       }
 
       const config: RetroConfig = {

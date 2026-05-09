@@ -48,10 +48,10 @@ export class ReportGenerator {
     // Aggregate findings + action items (already capped at 5)
     sections.push(this.generateActionItems(aggregated.action_items));
 
-    // Per-repo sections (full reports inline)
+    // Per-repo sections (body only — no H1 so the combined doc has one root heading)
     for (const r of perRepo) {
       sections.push(
-        `---\n\n## Repository: ${r.label} (\`${r.path}\`)\n\n${this.generateMarkdown(r.report)}`
+        `---\n\n## Repository: ${r.label} (\`${r.path}\`)\n\n${this.generateMarkdown(r.report, false)}`
       );
     }
 
@@ -59,13 +59,19 @@ export class ReportGenerator {
   }
 
   /**
-   * Generate markdown report from RetroReport
+   * Generate markdown report from RetroReport.
+   *
+   * @param includeHeader - when false, omits the top-level H1 header (used
+   *   when embedding per-repo reports inside a multi-repo document so the
+   *   combined output has only one H1).
    */
-  generateMarkdown(report: RetroReport): string {
+  generateMarkdown(report: RetroReport, includeHeader: boolean = true): string {
     const sections: string[] = [];
 
     // Header
-    sections.push(this.generateHeader(report));
+    if (includeHeader) {
+      sections.push(this.generateHeader(report));
+    }
 
     // TL;DR Quick Summary (Phase 1 addition)
     sections.push(this.humanReportGenerator.generateQuickSummary(report));

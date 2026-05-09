@@ -204,6 +204,9 @@ export class RetroRunner {
       const scores = await this.analyzeSprit(data);
       const report = this.generateReport(data, scores, evidenceMap);
 
+      // Cap per-repo action items at 5 (constitution §48 applies to every retro section)
+      report.action_items = report.action_items.slice(0, 5);
+
       // Tag report with repo label for multi-repo rendering
       report.sprint_id = `${this.config.sprintId}/${repo.label}`;
 

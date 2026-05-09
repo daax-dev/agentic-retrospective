@@ -3,8 +3,6 @@
  */
 
 import { describe, test, expect, beforeEach, afterEach } from 'vitest';
-import { writeFileSync } from 'fs';
-import { join } from 'path';
 import { createTempDir, type TempDir } from '../helpers/temp-dir.js';
 import { findRetroConfig } from '../../src/config.js';
 
@@ -20,13 +18,10 @@ describe('findRetroConfig', () => {
   });
 
   test('returns null when no .retro.toml exists anywhere up to root', () => {
-    // tmpdir should not contain a .retro.toml all the way up
-    // (this is a best-effort assumption — if one exists in /tmp it would shadow)
-    // Create a nested dir and search from there.
+    // Bound the walk to the temp dir so the result is deterministic regardless
+    // of what ancestor directories the developer/CI environment contains.
     const nested = tempDir.createDir('a/b/c');
-    const result = findRetroConfig(nested);
-    // If any ancestor happens to have a `.retro.toml`, this test would fail.
-    // Under CI / dev environments that is not expected.
+    const result = findRetroConfig(nested, tempDir.path);
     expect(result).toBeNull();
   });
 
@@ -49,11 +44,12 @@ label = "api"
 
     const result = findRetroConfig(tempDir.path);
     expect(result).not.toBeNull();
-    expect(result?.retrospective?.sprint_id).toBe('sprint-42');
-    expect(result?.retrospective?.output_dir).toBe('docs/retrospectives');
-    expect(result?.repos).toHaveLength(2);
-    expect(result?.repos?.[0]).toEqual({ path: '.', label: 'frontend' });
-    expect(result?.repos?.[1]).toEqual({ path: '../api', label: 'api' });
+    expect(result?.config?.retrospective?.sprint_id).toBe('sprint-42');
+    expect(result?.config?.retrospective?.output_dir).toBe('docs/retrospectives');
+    expect(result?.config?.repos).toHaveLength(2);
+    expect(result?.config?.repos?.[0]).toEqual({ path: '.', label: 'frontend' });
+    expect(result?.config?.repos?.[1]).toEqual({ path: '../api', label: 'api' });
+    expect(result?.configDir).toBe(tempDir.path);
   });
 
   test('walks up to find .retro.toml in a parent directory', () => {
@@ -67,7 +63,8 @@ sprint_id = "parent-sprint"
 
     const result = findRetroConfig(nested);
     expect(result).not.toBeNull();
-    expect(result?.retrospective?.sprint_id).toBe('parent-sprint');
+    expect(result?.config?.retrospective?.sprint_id).toBe('parent-sprint');
+    expect(result?.configDir).toBe(tempDir.path);
   });
 
   test('throws a user-readable error for malformed TOML', () => {
@@ -84,21 +81,18 @@ sprint_id = "solo"
     );
     const result = findRetroConfig(tempDir.path);
     expect(result).not.toBeNull();
-    expect(result?.repos).toBeUndefined();
+    expect(result?.config?.repos).toBeUndefined();
   });
 
   test('defaults startDir to process.cwd() when no arg', () => {
     // Just verify no crash and returns null|object.
     const result = findRetroConfig();
-    // We do not make assertions on the value since this depends on the
-    // test runner's cwd; the worktree may itself have a .retro.toml added
-    // by a future change.
     expect(result === null || typeof result === 'object').toBe(true);
   });
 
   test('path field from nested config is relative to file, consumer resolves', () => {
     // Documenting behavior: findRetroConfig does not resolve repo paths.
-    // That is the consumer's responsibility.
+    // That is the consumer's responsibility (cli.ts resolves against configDir).
     tempDir.createFile(
       '.retro.toml',
       `[[repos]]
@@ -107,7 +101,8 @@ label = "sub"
 `
     );
     const result = findRetroConfig(tempDir.path);
-    expect(result?.repos?.[0]?.path).toBe('./sub');
+    expect(result?.config?.repos?.[0]?.path).toBe('./sub');
+    expect(result?.configDir).toBe(tempDir.path);
   });
 });
 
@@ -118,6 +113,3 @@ describe('findRetroConfig import shape', () => {
     expect(typeof mod.findRetroConfig).toBe('function');
   });
 });
-
-// Use join() to silence unused-import in some environments.
-void join;

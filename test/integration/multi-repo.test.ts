@@ -11,7 +11,7 @@
  *   7. action items capped at 5 across all repos
  */
 
-import { describe, test, expect, beforeEach, afterEach } from 'vitest';
+import { describe, test, expect, beforeAll, beforeEach, afterEach } from 'vitest';
 import { execSync, spawnSync } from 'child_process';
 import { join } from 'path';
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'fs';
@@ -164,7 +164,7 @@ sprint_id = "toml-sprint"
     const result = findRetroConfig();
 
     expect(result).not.toBeNull();
-    expect(result?.retrospective?.sprint_id).toBe('toml-sprint');
+    expect(result?.config?.retrospective?.sprint_id).toBe('toml-sprint');
   });
 
   test('5: CLI --repo overrides .retro.toml repos (unit-level check via config)', async () => {
@@ -289,6 +289,11 @@ label = "should-be-overridden"
 
     expect(result.success).toBe(true);
     expect(result.report!.action_items.length).toBeLessThanOrEqual(5);
+
+    // Per-repo reports embedded in the combined output must also be capped at 5.
+    for (const r of result.perRepo ?? []) {
+      expect(r.report.action_items.length).toBeLessThanOrEqual(5);
+    }
   });
 });
 
@@ -297,6 +302,13 @@ describe('CLI --repo flag (issue #19)', () => {
   let tempDir: TempDir;
   let originalCwd: string;
   let cliPath: string;
+
+  beforeAll(() => {
+    // Build dist/ so the CLI entry point exists before the test shells out to it.
+    // This is a no-op if dist/ is already up-to-date (tsc is incremental).
+    const root = process.cwd();
+    execSync('pnpm run build', { cwd: root, stdio: 'pipe' });
+  });
 
   beforeEach(() => {
     tempDir = createTempDir('retro-cli-multirepo-');
