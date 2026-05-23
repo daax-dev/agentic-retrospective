@@ -31,12 +31,12 @@ Only document what is confirmed and deployable today.
 - None built in. Output is the retrospective report itself (Markdown + JSON + alerts.json).
 
 ## Build / Package
-- TypeScript: pnpm (canonical, `pnpm-lock.yaml`, lockfile v9). Build via `tsc` (`pnpm run build` → `dist/`). Do not use npm; the committed `package-lock.json` is stale and secondary.
-- CI: GitHub Actions — `.github/workflows/publish.yml`. Triggers only on push to `main` touching `package.json`. Builds, lints, tests, then `npm publish --provenance` when the version changed. CI does NOT run on PRs.
+- TypeScript: pnpm (canonical, `pnpm-lock.yaml`, lockfile v9). Build via `tsc` (`pnpm run build` → `dist/`). Do not use npm; there is no `package-lock.json`.
+- CI: GitHub Actions — `.github/workflows/publish.yml`. Triggered only by a GitHub Release (`release: types: [published]`). Sets `package.json` version from the release tag, then builds, lints, tests, and `npm publish --provenance`. CI does NOT run on PRs or pushes.
 - Artifact registry: npm public registry as `@daax-dev/retrospective`. Plugin distribution via `.claude-plugin/marketplace.json`.
 
 ## Explicitly Not in Stack
 List rejected tools and the reason. Prevents re-proposal.
-- npm as package manager — pnpm is canonical; the lingering `package-lock.json` should not be used or updated.
+- npm as package manager — pnpm is canonical; a `package-lock.json` must not be reintroduced.
 - No database / cache / message broker / web server — this is a read-only analysis CLI.
 - No bundler — TypeScript compiles directly to ESM via `tsc`.

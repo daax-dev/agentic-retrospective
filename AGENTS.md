@@ -36,8 +36,8 @@ Purpose: Evidence-based sprint retrospectives for human-agent collaboration — 
 
 ## Project-Specific Notes
 - Dual artifact: an npm package (`bin: agentic-retrospective`) and a Claude Code plugin. TypeScript source under `src/`; plugin hooks are Bash scripts under `scripts/` wired by `hooks/hooks.json`.
-- `pnpm` is canonical (`pnpm-lock.yaml`; CI uses `pnpm install --frozen-lockfile`). A stale `package-lock.json` exists — do not use npm.
-- CI (`.github/workflows/publish.yml`) only runs on push to `main`, not on PRs. Validate locally before opening a PR.
+- `pnpm` is canonical (`pnpm-lock.yaml`; CI uses `pnpm install --frozen-lockfile`). Do not use npm; there is no `package-lock.json`.
+- Publish (`.github/workflows/publish.yml`) runs on GitHub Release `published` (version set from the release tag), not on PRs or pushes. Validate locally before opening a PR.
 
 ---
 

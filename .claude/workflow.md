@@ -51,4 +51,4 @@ A task is done only when:
 - [ ] Validation pass by a separate model — cross-provider (Claude ↔ Codex) where possible — recorded in the PR description as `Validation:` producer model + validator model + verdict (note if cross-provider was not possible).
 - [ ] GitHub Issue (system of record) updated to done with link to PR/commit.
 
-> Note: CI (`.github/workflows/publish.yml`) runs only on push to `main`, not on PRs. Local `pnpm run validate` is the gate before opening a PR.
+> Note: CI (`.github/workflows/publish.yml`) is triggered only by a GitHub Release (`release.published`), not on PRs or pushes. Local `pnpm run validate` is the gate before opening a PR.

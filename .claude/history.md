@@ -13,8 +13,13 @@ This repo's own retrospective analyzers read `.logs/decisions/*.jsonl` to score 
 
 **Format:**
 ```json
-{"id":"<topic>-NNN","date":"YYYY-MM-DD","decision":"One-sentence statement of what was decided","rationale":"Why","alternatives":"What was considered and rejected, and why","references":["https://..."]}
+{"id":"<topic>-NNN","ts":"YYYY-MM-DDTHH:MM:SSZ","decision":"One-sentence statement of what was decided","rationale":"Why","options_considered":[{"option":"What was considered and rejected","cons":["why rejected"]}],"evidence_refs":["https://..."]}
 ```
+
+**Field names must match what the analyzer parses** (`src/types.ts`, `src/analyzers/decisions.ts`):
+- `ts` (ISO 8601 timestamp; `timestamp` is accepted as an alias). A record without `ts`/`timestamp` is rejected.
+- `evidence_refs` (array of links). This is the field the report links from — `references` is NOT recognized.
+- Optional but scored: `rationale`, `context`, `category`, `decision_type`, `risk_level`, `reversibility_plan`, `owner`.
 
 **Rules:**
 - ID prefix matches the topic filename. IDs increment sequentially. Check the last entry before writing a new one.

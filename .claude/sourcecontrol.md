@@ -42,8 +42,8 @@
 ---
 
 ## CI and Publishing
-- `.github/workflows/publish.yml` triggers ONLY on push to `main` that touches `package.json`. It builds, lints, tests, and `npm publish --provenance` when the version changed. There is no PR-triggered CI — local validation is the gate.
-- Releasing a new npm version = bump `version` in `package.json` on `main` (operator action). Tags like `v0.1.4` track releases.
+- `.github/workflows/publish.yml` triggers ONLY on a GitHub Release (`release: types: [published]`). It sets the `package.json` version from the release tag (strips a leading `v`), builds, lints, tests, then runs `npm publish --provenance`. There is no PR- or push-triggered CI — local validation is the gate.
+- Releasing a new npm version = publish a GitHub Release with a semver tag (e.g., `v0.1.4`); the workflow derives the package version from that tag. No manual `package.json` version bump on `main` is required.
 
 ---
 
@@ -59,7 +59,7 @@
 - `.env` files with live values.
 - Build output `dist/` (git-ignored; `tsc` regenerates it).
 - IDE / OS noise (`.DS_Store`, `Thumbs.db`) — add to `.gitignore`.
-- `package-lock.json` changes — pnpm is canonical; do not introduce npm lockfile churn.
+- `package-lock.json` — pnpm is canonical; never reintroduce an npm lockfile.
 
 ---
 
@@ -72,4 +72,4 @@
 
 ## Tags and Releases
 - Tag scheme: semver, `vMAJOR.MINOR.PATCH` (e.g., `v0.1.4`), matching `package.json` `version`.
-- Release notes: derived from PR/commit history; npm publish is automated by `publish.yml` on version change.
+- Release notes: derived from PR/commit history; npm publish is automated by `publish.yml` when a GitHub Release is published.
