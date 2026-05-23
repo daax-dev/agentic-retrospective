@@ -33,7 +33,7 @@ Goal: Every finding links to a specific commit, PR, or decision ("no AI slop"). 
 - `pnpm` is the canonical package manager (CI uses `pnpm install --frozen-lockfile`; `pnpm-lock.yaml` is authoritative). Do not use npm to install or update deps; there is no `package-lock.json`.
 - Publishing is release-driven via `.github/workflows/publish.yml` (runs on GitHub Release `published`; the workflow sets `package.json` version from the release tag and runs `npm publish --provenance`). CI does NOT run on pull requests — validate locally with `pnpm run validate` before opening a PR.
 - Plugin metadata lives in `plugin.json`, `.claude-plugin/marketplace.json`, and `AGENTSKILLS.md` (the AgentSkills/marketplace surface). When user-facing CLI/slash commands or scoring dimensions change, keep these in sync with `README.md`.
-- CLI surface: `agentic-retrospective` (full run), `--from <ref>`, `--quiet`, `--json`, and `agentic-retrospective feedback`. Reports land in `docs/retrospectives/`.
+- CLI surface (full run): `agentic-retrospective` with `--from <ref>`, `--to <ref>`, `--sprint <id>`, `--decisions <path>`, `--logs <path>`, `--ci <path>`, `--output <dir>`, `--repo <path>`, `--json`, `--quiet`. The `feedback` subcommand records human ratings (`--alignment`, `--rework`, `--cycles`, `--worked`, `--improve`, `--session`). Run `--help` for the authoritative surface. Reports land in `docs/retrospectives/`.
 
 ---
 

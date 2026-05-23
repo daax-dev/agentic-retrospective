@@ -13,11 +13,10 @@ Purpose: Evidence-based sprint retrospectives for human-agent collaboration — 
 ---
 
 ## Operator Preferences
-<!-- Operator-specific. Revise or replace when applying to a different operator. -->
 - State facts only. No sugarcoating.
 - Surface problems, blockers, and risks immediately.
 - Consult before one-way-door decisions and before any architectural change.
-- Never guess. If validation is not possible, say so explicitly.
+- Never answer from a guess. Validate claims against primary sources. If validation is not possible, say so explicitly.
 - Objective language. No first-person pronouns. No apologies or hedges.
 
 ---
@@ -25,11 +24,11 @@ Purpose: Evidence-based sprint retrospectives for human-agent collaboration — 
 ## Hard Guardrails (always apply)
 - Plan before any non-trivial change. Write the plan down. Wait for approval.
 - Never commit or merge directly to `main`.
-- Never commit secrets, tokens, keys, or `.env` files with live values (npm publish uses `NPM_TOKEN` from CI secrets).
+- Never commit secrets, tokens, keys, or `.env` files with live values. The npm publish flow uses `NPM_TOKEN` from CI secrets — never inline it.
 - No destructive git (`reset --hard`, force-push, branch delete) without explicit operator approval.
 - Never overwrite uncommitted user changes. Inspect existing patterns before editing.
 - Run formatter, linter, and tests after changes (`pnpm run validate`). If that is not possible, state exactly why.
-- Log non-trivial decisions to `.logs/decisions/<topic>.jsonl`.
+- Log non-trivial decisions to `.logs/decisions/<topic>.jsonl` (one JSONL object per line). Log when choosing architectures, selecting dependencies, or making trade-offs.
 - Repo-local instructions override these template defaults.
 
 ---

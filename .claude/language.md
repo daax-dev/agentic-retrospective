@@ -30,7 +30,7 @@ Active languages in this repo: **TypeScript** (primary, `src/`) and **Bash** (pl
 - Scope: plugin runtime hooks and helpers in `scripts/` (`ensure-logs-dir.sh`, `log-prompt.sh`, `log-tool.sh`, `run-retrospective.sh`, `micro-retrospective.sh`), wired by `hooks/hooks.json`.
 - Version target: bash 5.x.
 - Linter: shellcheck (run locally; not enforced in CI).
-- Style: `set -euo pipefail` in every script. Quote all expansions. No `eval`. Hook scripts must stay fast (5s timeout in `hooks.json`) and side-effect-only (append telemetry to `.logs/`).
+- Style: every script fails fast with `set -e` (prefer `set -euo pipefail` for new scripts). Quote all expansions. No `eval`. Hook scripts must stay fast (5s timeout in `hooks.json`) and side-effect-only (append telemetry to `.logs/`).
 
 ---
 

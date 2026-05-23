@@ -39,7 +39,7 @@ Purpose: Evidence-based sprint retrospectives for human-agent collaboration — 
 ## Code Conventions
 - TypeScript is strict (`tsconfig.json`: `strict: true`, `noUnusedLocals`, `noUnusedParameters`, `noImplicitReturns`, `noFallthroughCasesInSwitch`). Type-check with `pnpm run typecheck`.
 - ESLint (`.eslintrc.json`): `eslint:recommended` + `@typescript-eslint/recommended`. `@typescript-eslint/no-explicit-any` is `warn` (avoid `any`; justify when unavoidable). `@typescript-eslint/no-unused-vars` is an error with `argsIgnorePattern: "^_"` — unused function *arguments* prefixed `_` are ignored, but unused local variables are still errors regardless of prefix. Run `pnpm run lint`.
-- Bash scripts: `set -euo pipefail`, quote expansions, no `eval`. Keep hook scripts fast (5s timeout) and side-effect-only (telemetry logging).
+- Bash scripts: fail fast with `set -e` (prefer `set -euo pipefail` for new scripts), quote expansions, no `eval`. Keep hook scripts fast (5s timeout) and side-effect-only (telemetry logging).
 - All tests must pass before declaring done. Coverage thresholds (vitest): lines 60, branches 50, functions 60, statements 60.
 - Lockfile (`pnpm-lock.yaml`) is committed. Updating it is a deliberate change — note it in the PR.
 - Generated/build output lives in `dist/` and is git-ignored. Never edit `dist/` by hand.

@@ -5,7 +5,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/scripts/ensure-logs-dir.sh\""
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/scripts/ensure-logs-dir.sh\"",
+            "timeout": 5000
           }
         ]
       }
