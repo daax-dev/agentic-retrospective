@@ -17,7 +17,7 @@ Active languages in this repo: **TypeScript** (primary, `src/`) and **Bash** (pl
 ## TypeScript
 - Runtime: Node.js `>=18` (package.json `engines`); CI pins Node 20 — treat as canonical. ESM (`"type": "module"`, NodeNext).
 - Version: TypeScript `^5.3` (devDependency).
-- Package manager: pnpm (canonical, `pnpm-lock.yaml`, lockfile v9). Do NOT use npm — the committed `package-lock.json` is stale.
+- Package manager: pnpm (canonical, `pnpm-lock.yaml`, lockfile v9). Do NOT use npm — there is no `package-lock.json` in this repo, and it must not be reintroduced.
 - Formatter: none configured. There is no Prettier config; do not introduce one in an unrelated change. Match existing style (2-space indent, single quotes, semicolons) as seen in `src/`.
 - Linter: ESLint, config `.eslintrc.json` — extends `eslint:recommended` + `plugin:@typescript-eslint/recommended`. `@typescript-eslint/no-explicit-any` is `warn` (avoid `any`; justify when unavoidable). `@typescript-eslint/no-unused-vars` is `error` with `argsIgnorePattern: "^_"`. `no-console` is off (CLI tool). Run `pnpm run lint` (lints `src` only, `.ts`).
 - Type checker: `tsc` strict. `tsconfig.json` has `strict: true`, `noUnusedLocals: true`, `noUnusedParameters: true`, `noImplicitReturns: true`, `noFallthroughCasesInSwitch: true`, `isolatedModules: true`. Run `pnpm run typecheck` (`tsc --noEmit`).
@@ -37,5 +37,5 @@ Active languages in this repo: **TypeScript** (primary, `src/`) and **Bash** (pl
 ## Cross-Cutting Rules
 - No language rule overrides project config. Fix the config, not the code.
 - Generated/build output lives in `dist/` (git-ignored). Never edit `dist/` by hand.
-- Lockfile (`pnpm-lock.yaml`) is committed. Updating it is a deliberate change — call it out in the PR. Never commit `package-lock.json` changes.
+- Lockfile (`pnpm-lock.yaml`) is committed. Updating it is a deliberate change — call it out in the PR. Never add or reintroduce `package-lock.json` (pnpm is the sole canonical lockfile).
 - No pre-commit hooks are configured in this repo; run `pnpm run validate` manually before opening a PR.

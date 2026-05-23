@@ -71,5 +71,5 @@ A task is done only when:
 - All tests pass (`pnpm test`); `pnpm run validate` (lint + typecheck + test) is green.
 - ESLint and `tsc --noEmit` pass with no errors.
 - PR opened with problem statement, approach, and test evidence.
-- No `[FILL IN]` placeholders left in affected files.
+- No new `[FILL IN]` placeholders left in affected files (the legend line in `.claude/stack.md` / `.claude/language.md` that defines the `[FILL IN]` marker is intentional and exempt).
 - Decisions logged in `.logs/decisions/` if a non-trivial choice was made.

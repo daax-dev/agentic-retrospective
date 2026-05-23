@@ -43,9 +43,9 @@ This is a CLI tool and library (npm package `@daax-dev/retrospective`) that doub
 ---
 
 ## Decision Logging
-Log to `.logs/decisions/architecture.jsonl`:
+Log to `.logs/decisions/architecture.jsonl` using the schema in `.claude/history.md` (parsed by `src/types.ts` / `src/analyzers/decisions.ts` — `ts` and `evidence_refs`, not `date`/`references`):
 ```json
-{"id":"arch-001","date":"YYYY-MM-DD","decision":"...","rationale":"...","alternatives":"...","references":["https://..."]}
+{"id":"arch-001","ts":"YYYY-MM-DDTHH:MM:SSZ","decision":"...","rationale":"...","options_considered":[{"option":"...","cons":["..."]}],"evidence_refs":["https://..."]}
 ```
 
 ---
