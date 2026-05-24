@@ -29,3 +29,6 @@ coverage/
 
 # Generated retrospective reports (optional - may want to commit these)
 # docs/retro/
+
+# Third-party repos cloned for research/PRD extraction (read-only, not committed)
+3rd-party/
