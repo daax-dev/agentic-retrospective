@@ -88,12 +88,18 @@ export interface GitHubAnalysisResult {
 }
 
 export class GitHubAnalyzer {
+  private cwd: string;
+
+  constructor(cwd: string = process.cwd()) {
+    this.cwd = cwd;
+  }
+
   /**
    * Check if gh CLI is available and authenticated
    */
   isAvailable(): boolean {
     try {
-      execSync('gh auth status', { stdio: 'pipe' });
+      execSync('gh auth status', { stdio: 'pipe', cwd: this.cwd });
       return true;
     } catch {
       return false;
@@ -200,7 +206,7 @@ export class GitHubAnalyzer {
       // Fetch reviews, comments, commits, files, and body for this PR
       const reviewsOutput = execSync(
         `gh pr view ${pr.number} --json reviews,comments,commits,files,body`,
-        { encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'] }
+        { encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'], cwd: this.cwd }
       );
 
       const data = JSON.parse(reviewsOutput);
@@ -474,7 +480,7 @@ export class GitHubAnalyzer {
     try {
       const output = execSync(
         'gh run list --limit 100 --json status,conclusion,name,createdAt,databaseId,headBranch',
-        { encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'] }
+        { encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'], cwd: this.cwd }
       );
 
       const runs = JSON.parse(output);
@@ -618,7 +624,7 @@ export class GitHubAnalyzer {
       const sinceArg = since ? `--search "created:>=${since}"` : '';
       const output = execSync(
         `gh pr list --state all --limit 50 ${sinceArg} --json number,title,author,state,createdAt,mergedAt,additions,deletions,changedFiles,labels`,
-        { encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'] }
+        { encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'], cwd: this.cwd }
       );
 
       const data = JSON.parse(output);

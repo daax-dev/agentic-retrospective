@@ -111,6 +111,51 @@ describe('GitAnalyzer', () => {
       const result = await analyzer.isGitRepository();
       expect(result).toBe(false);
     });
+
+    test('passes explicit cwd to execSync when provided', async () => {
+      mockExecSync.mockReturnValue('.git');
+      const customCwd = '/some/other/path';
+      const analyzer = new GitAnalyzer(customCwd);
+      await analyzer.isGitRepository();
+
+      expect(mockExecSync).toHaveBeenCalledWith(
+        'git rev-parse --git-dir',
+        expect.objectContaining({ cwd: customCwd })
+      );
+    });
+
+    test('defaults cwd to process.cwd() when no arg', async () => {
+      mockExecSync.mockReturnValue('.git');
+      const analyzer = new GitAnalyzer();
+      await analyzer.isGitRepository();
+
+      expect(mockExecSync).toHaveBeenCalledWith(
+        'git rev-parse --git-dir',
+        expect.objectContaining({ cwd: process.cwd() })
+      );
+    });
+  });
+
+  describe('cwd parameter threading', () => {
+    test('analyze() threads cwd through to all git commands', async () => {
+      const customCwd = '/tmp/fake-repo-path';
+
+      mockExecSync.mockImplementation((cmd: string) => {
+        if (cmd.includes('--format="%H"') && !cmd.includes('-1')) return '';
+        return '';
+      });
+
+      const analyzer = new GitAnalyzer(customCwd);
+      await analyzer.analyze('HEAD~5', 'HEAD');
+
+      // Every execSync call should have been issued with the custom cwd
+      const calls = mockExecSync.mock.calls;
+      expect(calls.length).toBeGreaterThan(0);
+      for (const call of calls) {
+        const opts = call[1] as { cwd?: string } | undefined;
+        expect(opts?.cwd).toBe(customCwd);
+      }
+    });
   });
 
   describe('analyze', () => {
