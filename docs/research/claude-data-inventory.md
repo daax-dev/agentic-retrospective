@@ -37,7 +37,8 @@ versioned and undocumented by Anthropic; treat every field as best-effort and pa
 > **Note:** Depending on version and install, Claude data may also live under
 > `~/.config/claude/projects/` and `~/.claude/transcripts/`. On the sample host only
 > `~/.claude/projects/` exists, but a portable ingester must search all three and honor
-> `CLAUDE_CONFIG_DIR` (see §3).
+> `CLAUDE_CONFIG_DIR`, if set, as the override for the base Claude config/data directory
+> when resolving `projects/`.
 
 ---
 
@@ -49,7 +50,7 @@ Each line is one JSON object discriminated by `type`. Observed `type` values on 
 |---|---|---|
 | `user` | User prompt OR tool_result carrier | `message.role`, `message.content` (string for prompts; array of `tool_result` blocks otherwise), `promptId`, `uuid`, `parentUuid`, `cwd`, `gitBranch`, `version`, `timestamp` |
 | `assistant` | One assistant API response | `message.model`, `message.usage` (see §2.1), `message.content[]` (blocks: `text`, `thinking`, `tool_use`), `requestId`, `uuid`, `parentUuid`, `advisorModel` (when advisor used) |
-| `attachment` | Hook output, injected files, system events | `attachment.type` (`hook_success`, `hook_non_blocking_error`, `file`, …), `attachment.hookName`, `attachment.durationMs`, `toolUseID` |
+| `attachment` | Hook output, injected files, system events | `attachment.type` (`hook_success`, `hook_non_blocking_error`, `file`, …), `attachment.hookName`, `attachment.durationMs`, `attachment.toolUseID` (attachment-local; not a top-level envelope field) |
 | `file-history-snapshot` | File backup checkpoint | `messageId`, `snapshot.trackedFileBackups`, `snapshot.timestamp` |
 | `last-prompt` | Pointer to most recent prompt leaf | `leafUuid`, `sessionId` |
 | `permission-mode` | Permission mode change | `permissionMode` (e.g. `bypassPermissions`), `sessionId` |

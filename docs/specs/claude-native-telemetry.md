@@ -48,11 +48,12 @@ token fields follow the inventory §2.1 definitions.
 
 ```
 ClaudeTurn {
-  sessionId, uuid, parentUuid, role: 'user'|'assistant',
+  sessionId, uuid, parentUuid, kind: 'message'|'attachment',
+  role?: 'user'|'assistant',      // present for kind: 'message'; omitted for attachments
   model?, timestamp, gitBranch, cwd, projectSlug,
   usage?: { inputTokens, cacheCreationTokens, cacheReadTokens, outputTokens,
             serviceTier, speed, serverToolUse: {webSearch, webFetch} },
-  isSidechain, agentId?           // agentId present for subagent turns
+  isSidechain, agentId?           // agentId present for subagent turns; attachments normalize here too
 }
 
 ClaudeToolCall {

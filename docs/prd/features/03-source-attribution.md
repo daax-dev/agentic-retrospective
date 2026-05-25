@@ -13,7 +13,7 @@ triggered and the results that re-entered context.
 
 ## Behaviour
 1. **Attribution priority** (highest wins) for each spend-bearing event:
-   `MCP method (mcp__*) > subagent (Task) > skill > built-in tool > direct response`.
+   `MCP method (mcp__*) > subagent (Agent/Task) > skill > built-in tool > direct response`.
    - MCP methods identified by the `mcp__<server>__<method>` tool-name convention.
    - Subagents launched via the `Agent` or `Task` tool (match both; the 2.1.150 sample uses `Agent`).
      Subagent spend resolved via the `subagents/*.meta.json` `toolUseId` link when present
