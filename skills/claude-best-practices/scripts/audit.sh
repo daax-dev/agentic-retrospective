@@ -24,19 +24,23 @@ info() { echo "[INFO] $1";    INFO=$((INFO + 1));       }
 # CLAUDE.md checks
 # -----------------------------------------------------------------------------
 CLAUDE_MD="$PROJECT_ROOT/CLAUDE.md"
-if [ -f "$CLAUDE_MD" ]; then
+if [ ! -f "$CLAUDE_MD" ]; then
+    err "No CLAUDE.md found in project root"
+elif [ ! -r "$CLAUDE_MD" ]; then
+    err "CLAUDE.md exists but is not readable"
+else
     info "CLAUDE.md found"
 
     if ! grep -q "^## " "$CLAUDE_MD" 2>/dev/null; then
         warn "CLAUDE.md has no section headers"
     fi
 
-    CLAUDE_LINES=$(wc -l < "$CLAUDE_MD" | tr -d ' ')
-    if [ "$CLAUDE_LINES" -gt 500 ]; then
+    CLAUDE_LINES=$(wc -l < "$CLAUDE_MD" 2>/dev/null | tr -d ' ')
+    if ! printf '%s' "$CLAUDE_LINES" | grep -qE '^[0-9]+$'; then
+        err "CLAUDE.md line count could not be determined (wc output: '$CLAUDE_LINES')"
+    elif [ "$CLAUDE_LINES" -gt 500 ]; then
         warn "CLAUDE.md is $CLAUDE_LINES lines (>500); consider splitting"
     fi
-else
-    err "No CLAUDE.md found in project root"
 fi
 
 # -----------------------------------------------------------------------------
