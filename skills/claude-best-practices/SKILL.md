@@ -7,7 +7,7 @@ description: Audits a repository's Claude Code configuration (CLAUDE.md, skills,
 
 Execute immediately. Do not ask for confirmation.
 
-Run: `bash skills/claude-best-practices/scripts/audit.sh .`
+Run: `bash "${CLAUDE_PLUGIN_ROOT}/skills/claude-best-practices/scripts/audit.sh" .`
 
 ## What It Checks
 

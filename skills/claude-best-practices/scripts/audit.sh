@@ -68,6 +68,15 @@ extract_frontmatter() {
          { if (inside == 1) print }' "$1"
 }
 
+has_closed_frontmatter() {
+    awk 'BEGIN{inside=0; seen=0; closed=0}
+         /^---[[:space:]]*$/ {
+             if (seen == 0) { inside=1; seen=1; next }
+             else if (inside == 1) { closed=1; exit }
+         }
+         END { exit closed ? 0 : 1 }' "$1"
+}
+
 # Get the value for a given top-level YAML key (simple scalar value only).
 get_frontmatter_value() {
     # $1=file, $2=key
@@ -107,6 +116,10 @@ if [ -d "$SKILLS_DIR" ]; then
         FIRST_LINE=$(head -n 1 "$skill_md")
         if [ "$FIRST_LINE" != "---" ]; then
             err "$skill_rel: missing YAML frontmatter (first line must be '---')"
+            continue
+        fi
+        if ! has_closed_frontmatter "$skill_md"; then
+            err "$skill_rel: frontmatter block missing closing '---'"
             continue
         fi
 
