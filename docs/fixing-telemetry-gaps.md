@@ -374,17 +374,15 @@ Expected improvements:
 
 The `evidence_refs` field on a decision record links the decision to the
 concrete artifacts that implement or justify it. Every ref must use one
-of the recognized prefixes below — otherwise the ref is silently
-orphaned and the retrospective will emit a `unrecognized_evidence_refs`
-telemetry gap.
-
-| Prefix      | Format                          | Links to                          |
-|-------------|---------------------------------|-----------------------------------|
-| `commit:`   | `commit:<full-or-short-hash>`   | A git commit (7-12 char or 40)    |
-| `pr:`       | `pr:<number>`                   | A GitHub pull request             |
-| `decision:` | `decision:<id>`                 | Another decision record           |
-| `file:`     | `file:<relative-path>`          | A source file                     |
-| `inferred:` | `inferred:<reason>`             | Evidence inferred (no artifact)   |
+of the recognized prefixes below — refs with unrecognized prefixes will
+trigger a stderr warning and a `unrecognized_evidence_refs` telemetry gap.
+| Prefix      | Format                          | Notes                                                     |
+|-------------|---------------------------------|-----------------------------------------------------------|
+| `commit:`   | `commit:<full-or-short-hash>`   | Resolved to a git commit in the evidence map (7-12 or 40) |
+| `pr:`       | `pr:<number>`                   | Accepted prefix (not currently resolved in evidence map)  |
+| `decision:` | `decision:<id>`                 | Accepted prefix (not currently resolved in evidence map)  |
+| `file:`     | `file:<relative-path>`          | Accepted prefix (not currently resolved in evidence map)  |
+| `inferred:` | `inferred:<reason>`             | Accepted prefix (no artifact to resolve)                  |
 
 ### Correlating an Issue Tracker Record
 
@@ -411,7 +409,7 @@ git log --oneline --grep="ISSUE-123"
 
 **Common mistake**: Using raw issue IDs like `"ISSUE-123"` or
 `"claw-abc"` directly in `evidence_refs`. These have no recognized
-prefix and are silently orphaned. Always resolve to a `commit:` or
+prefix and will trigger a stderr warning + telemetry gap. Always resolve to a `commit:` or
 `pr:` reference before logging.
 
 ### What happens when refs are unrecognized

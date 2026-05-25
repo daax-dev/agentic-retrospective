@@ -807,7 +807,10 @@ export class RetroRunner {
     if (data.git?.commits) {
       for (const c of data.git.commits) {
         for (let len = 7; len <= Math.min(12, c.hash.length); len++) {
-          shortHashIndex.set(c.hash.slice(0, len), c.hash);
+          const short = c.hash.slice(0, len);
+          const existing = shortHashIndex.get(short);
+          if (existing === undefined) shortHashIndex.set(short, c.hash);
+          else if (existing !== c.hash) shortHashIndex.set(short, ''); // ambiguous
         }
       }
     }

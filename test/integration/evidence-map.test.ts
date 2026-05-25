@@ -229,8 +229,8 @@ describe('buildEvidenceMap evidence_refs validation', () => {
     ]);
 
     // Run the built CLI so we can observe real stdout/stderr split.
+    execSync('pnpm run build', { cwd: originalCwd, stdio: 'pipe' });
     const cliPath = join(originalCwd, 'dist', 'cli.js');
-    const result = spawnSync(
       'node',
       [cliPath, '--from', firstCommit, '--json', '--quiet'],
       { cwd: tempDir.path, encoding: 'utf-8', timeout: 30000 }
