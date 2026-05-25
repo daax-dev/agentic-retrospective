@@ -803,11 +803,20 @@ export class RetroRunner {
 
     // Build a short-hash -> full-hash index so `commit:a1b2c3d` (7-12
     // char short hashes) resolves to the full 40-char hash indexed above.
-    const shortHashIndex = new Map<string, string>();
+    // A prefix shared by more than one full hash is ambiguous: store `null`
+    // so it is NOT resolved to an arbitrary commit (last-write-wins would
+    // silently mis-link the decision). Only unique prefixes resolve.
+    const shortHashIndex = new Map<string, string | null>();
     if (data.git?.commits) {
       for (const c of data.git.commits) {
         for (let len = 7; len <= Math.min(12, c.hash.length); len++) {
-          shortHashIndex.set(c.hash.slice(0, len), c.hash);
+          const prefix = c.hash.slice(0, len);
+          if (!shortHashIndex.has(prefix)) {
+            shortHashIndex.set(prefix, c.hash);
+          } else if (shortHashIndex.get(prefix) !== c.hash) {
+            // Same prefix maps to a different full hash -> ambiguous.
+            shortHashIndex.set(prefix, null);
+          }
         }
       }
     }
@@ -838,7 +847,14 @@ export class RetroRunner {
             }
             const match = ref.match(/^commit:([0-9a-fA-F]+)/);
             if (match) {
-              const resolvedHash = shortHashIndex.get(match[1]) ?? match[1];
+              const indexed = shortHashIndex.get(match[1]);
+              // `null` means the short prefix is ambiguous (shared by >1
+              // commit) -> do not resolve. `undefined` means no short-hash
+              // entry, so fall back to the raw value (handles full hashes).
+              if (indexed === null) {
+                continue;
+              }
+              const resolvedHash = indexed ?? match[1];
               if (map.commits[resolvedHash]) {
                 map.commits[resolvedHash].decisions.push(id);
                 map.decisions[id].commits.push(resolvedHash);
@@ -1452,6 +1468,13 @@ export class RetroRunner {
       );
       writeFileSync(join(outputPath, 'retrospective.md'), markdown);
     }
+
+    // Append a single aggregate score snapshot to sprint history so the
+    // "history appended after every run" contract holds for repos[] mode
+    // too. One run = one entry; the aggregated report carries sprint_id,
+    // scores, and data_completeness, so it is a valid SprintHistoryEntry.
+    // Non-fatal (appendToHistory catches its own errors).
+    this.appendToHistory(aggregated);
 
     return outputPath;
   }

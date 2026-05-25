@@ -6,7 +6,7 @@
  * to the full 40-char hash. These tests cover both behaviours.
  */
 
-import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, test, expect, beforeAll, beforeEach, afterEach, vi } from 'vitest';
 import { execSync, spawnSync } from 'child_process';
 import { join } from 'path';
 import { createTempDir, createMockLogsDir, type TempDir } from '../helpers/temp-dir.js';
@@ -16,6 +16,13 @@ import type { RetroConfig } from '../../src/types.js';
 describe('buildEvidenceMap evidence_refs validation', () => {
   let tempDir: TempDir;
   let originalCwd: string;
+
+  beforeAll(() => {
+    // Build dist/ so the CLI entry point exists before the test shells out to it.
+    // This is a no-op if dist/ is already up-to-date (tsc is incremental).
+    const root = process.cwd();
+    execSync('pnpm run build', { cwd: root, stdio: 'pipe' });
+  });
 
   beforeEach(() => {
     tempDir = createTempDir('retro-evmap-');

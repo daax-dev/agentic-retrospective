@@ -373,18 +373,25 @@ Expected improvements:
 ## Linking Issue Tracker Records to Git Commits (evidence_refs)
 
 The `evidence_refs` field on a decision record links the decision to the
-concrete artifacts that implement or justify it. Every ref must use one
-of the recognized prefixes below — otherwise the ref is silently
-orphaned and the retrospective will emit a `unrecognized_evidence_refs`
-telemetry gap.
+concrete artifacts that implement or justify it. Every ref should use one
+of the recognized prefixes below. A ref whose prefix is not recognized is
+not silently dropped: the runner warns on stderr and records an
+`unrecognized_evidence_refs` telemetry gap (see "What happens when refs
+are unrecognized" below).
 
-| Prefix      | Format                          | Links to                          |
-|-------------|---------------------------------|-----------------------------------|
-| `commit:`   | `commit:<full-or-short-hash>`   | A git commit (7-12 char or 40)    |
-| `pr:`       | `pr:<number>`                   | A GitHub pull request             |
-| `decision:` | `decision:<id>`                 | Another decision record           |
-| `file:`     | `file:<relative-path>`          | A source file                     |
-| `inferred:` | `inferred:<reason>`             | Evidence inferred (no artifact)   |
+The "Resolved today" column reflects what `buildEvidenceMap` actually
+does in the current implementation. Only `commit:` refs are resolved to an
+artifact (the matching commit node in the evidence map). The other
+prefixes are *accepted* — they suppress the unrecognized-format warning —
+but are not yet linked to any artifact.
+
+| Prefix      | Format                          | Intended target                   | Resolved today          |
+|-------------|---------------------------------|-----------------------------------|-------------------------|
+| `commit:`   | `commit:<full-or-short-hash>`   | A git commit (7-12 char or 40)    | Yes — links to commit   |
+| `pr:`       | `pr:<number>`                   | A GitHub pull request             | No — accepted only      |
+| `decision:` | `decision:<id>`                 | Another decision record           | No — accepted only      |
+| `file:`     | `file:<relative-path>`          | A source file                     | No — accepted only      |
+| `inferred:` | `inferred:<reason>`             | Evidence inferred (no artifact)   | No — accepted only      |
 
 ### Correlating an Issue Tracker Record
 
@@ -411,8 +418,10 @@ git log --oneline --grep="ISSUE-123"
 
 **Common mistake**: Using raw issue IDs like `"ISSUE-123"` or
 `"claw-abc"` directly in `evidence_refs`. These have no recognized
-prefix and are silently orphaned. Always resolve to a `commit:` or
-`pr:` reference before logging.
+prefix, so they do not link to any artifact and they trigger a stderr
+warning plus an `unrecognized_evidence_refs` telemetry gap. Always
+resolve to a `commit:` reference before logging (it is the only prefix
+that currently links to an artifact).
 
 ### What happens when refs are unrecognized
 
