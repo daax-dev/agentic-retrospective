@@ -15,13 +15,63 @@ export class ReportGenerator {
   }
 
   /**
-   * Generate markdown report from RetroReport
+   * Generate a multi-repo markdown report: one aggregate executive summary
+   * followed by per-repo sections (full per-repo markdown rendered under a
+   * "## Repository: <label>" header).
    */
-  generateMarkdown(report: RetroReport): string {
+  generateMultiRepoMarkdown(
+    aggregated: RetroReport,
+    perRepo: Array<{ label: string; path: string; report: RetroReport }>
+  ): string {
+    const sections: string[] = [];
+
+    sections.push(
+      `# Multi-Repo Sprint Retrospective: ${aggregated.sprint_id}
+
+**Period**: ${aggregated.period.from} to ${aggregated.period.to}
+**Generated**: ${aggregated.generated_at}
+**Repos**: ${perRepo.length} (${perRepo.map(r => r.label).join(', ')})
+**Data Completeness (avg)**: ${aggregated.data_completeness.percentage}%`
+    );
+
+    // Aggregate executive summary
+    sections.push(this.generateExecutiveSummary(aggregated));
+
+    // Quick per-repo commit table
+    let repoTable = `## Per-Repo Breakdown\n\n| Repo | Commits | Lines +/- | Decisions | Agent commits |\n|------|---------|-----------|-----------|----------------|\n`;
+    for (const r of perRepo) {
+      const s = r.report.summary;
+      repoTable += `| ${r.label} | ${s.commits} | +${s.lines_added}/-${s.lines_removed} | ${s.decisions_logged} | ${s.agent_commits} (${s.agent_commit_percentage}%) |\n`;
+    }
+    sections.push(repoTable);
+
+    // Aggregate action items (capped at 5); findings appear in the executive summary above.
+    sections.push(this.generateActionItems(aggregated.action_items));
+
+    // Per-repo sections. Headings are shifted down one level (## → ###) so they
+    // nest under the "## Repository:" header rather than appearing as siblings.
+    for (const r of perRepo) {
+      const body = this.shiftHeadings(this.generateMarkdown(r.report, false), 1);
+      sections.push(`## Repository: ${r.label} (\`${r.path}\`)\n\n${body}`);
+    }
+
+    return sections.join('\n\n---\n\n');
+  }
+
+  /**
+   * Generate markdown report from RetroReport.
+   *
+   * @param includeHeader - when false, omits the top-level H1 header (used
+   *   when embedding per-repo reports inside a multi-repo document so the
+   *   combined output has only one H1).
+   */
+  generateMarkdown(report: RetroReport, includeHeader: boolean = true): string {
     const sections: string[] = [];
 
     // Header
-    sections.push(this.generateHeader(report));
+    if (includeHeader) {
+      sections.push(this.generateHeader(report));
+    }
 
     // TL;DR Quick Summary (Phase 1 addition)
     sections.push(this.humanReportGenerator.generateQuickSummary(report));
@@ -83,6 +133,18 @@ export class ReportGenerator {
     sections.push(this.generateFooter(report));
 
     return sections.join('\n\n---\n\n');
+  }
+
+  /**
+   * Shift all ATX headings in `markdown` down by `levels` (e.g. ## → ### when
+   * levels=1). Clamps at H6. Used when embedding per-repo content inside a
+   * multi-repo document so inner headings nest under the repository header.
+   */
+  private shiftHeadings(markdown: string, levels: number): string {
+    return markdown.replace(/^(#{1,6})( )/gm, (_, hashes: string, space: string) => {
+      const newLevel = Math.min(hashes.length + levels, 6);
+      return '#'.repeat(newLevel) + space;
+    });
   }
 
   private generateHeader(report: RetroReport): string {

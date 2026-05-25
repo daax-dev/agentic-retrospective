@@ -1,11 +1,8 @@
 name: Publish to npm
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - 'package.json'
+  release:
+    types: [published]
 
 jobs:
   publish:
@@ -18,6 +15,13 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0  # Full history for e2e tests
+
+      - name: Set version from release tag
+        run: |
+          VERSION="${{ github.ref_name }}"
+          VERSION="${VERSION#v}"  # strip leading 'v'
+          npm version "$VERSION" --no-git-tag-version
+          echo "Publishing version $VERSION"
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -40,21 +44,7 @@ jobs:
       - name: Run lint and tests
         run: pnpm run lint && pnpm test
 
-      - name: Check if version changed
-        id: version
-        run: |
-          CURRENT_VERSION=$(node -p "require('./package.json').version")
-          NPM_VERSION=$(npm view @daax-dev/retrospective version 2>/dev/null || echo "0.0.0")
-          if [ "$CURRENT_VERSION" != "$NPM_VERSION" ]; then
-            echo "changed=true" >> $GITHUB_OUTPUT
-            echo "Version changed: $NPM_VERSION -> $CURRENT_VERSION"
-          else
-            echo "changed=false" >> $GITHUB_OUTPUT
-            echo "Version unchanged: $CURRENT_VERSION"
-          fi
-
       - name: Publish to npm
-        if: steps.version.outputs.changed == 'true'
         run: npm publish --provenance --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
