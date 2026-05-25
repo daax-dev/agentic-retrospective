@@ -138,9 +138,12 @@ if [ -d "$SKILLS_DIR" ]; then
             fi
 
             # Third-person voice: check for first/second person pronouns in the
-            # description only. Surround with spaces on both sides to avoid
-            # false positives (e.g. "API" matching " I ").
-            DESC_PADDED=" $DESC "
+            # description only. Normalize punctuation to spaces first so trailing
+            # punctuation is caught ("you." / "your," / "you?"), then pad with
+            # spaces to avoid false positives inside words (e.g. "API" matching
+            # " I "). Kept portable (no \b) for BSD/macOS + GNU/Linux grep.
+            DESC_NORM=$(printf '%s' "$DESC" | tr -c "[:alnum:]' " ' ')
+            DESC_PADDED=" $DESC_NORM "
             if printf '%s' "$DESC_PADDED" | grep -qE ' I | I'"'"''; then
                 warn "$skill_rel: description uses first-person ('I'); prefer third person"
             fi
