@@ -5,7 +5,7 @@ description: Audits a repository's Claude Code configuration (CLAUDE.md, skills,
 
 # Claude Best Practices Audit
 
-Execute immediately. Do not ask for confirmation.
+If the user has requested this audit, execute immediately. Do not ask for additional confirmation.
 
 Run: `bash "${CLAUDE_PLUGIN_ROOT}/skills/claude-best-practices/scripts/audit.sh" .`
 
