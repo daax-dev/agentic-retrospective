@@ -1,7 +1,6 @@
 ---
 name: retrospective
-description: Evidence-based sprint retrospectives with objective metrics from git, GitHub, and decision logs.
-invocation: /daax:retrospective
+description: Generates evidence-based sprint retrospectives by mining git history, GitHub PRs, and decision logs into objective metrics. Use when the user asks for a sprint retrospective, wants to analyze team or agent collaboration over a period, needs rework/testing discipline metrics, or runs the `agentic-retrospective` CLI.
 ---
 
 # Retrospective

@@ -1,0 +1,23 @@
+{
+  "name": "feedback-only",
+  "description": "User wants to log session feedback without running a full retrospective.",
+  "user_prompt": "I want to leave feedback on how this session went.",
+  "expected_behavior": {
+    "skill_invoked": "retrospective",
+    "commands_run": [
+      "npx agentic-retrospective feedback",
+      "agentic-retrospective feedback"
+    ],
+    "must_include_in_output": [
+      "feedback"
+    ],
+    "must_not_include": [
+      "full retrospective report",
+      "commit type breakdown"
+    ]
+  },
+  "success_criteria": [
+    "Selects the `feedback` subcommand, not the default analysis",
+    "Does not auto-trigger the full report generation"
+  ]
+}
