@@ -512,6 +512,14 @@ export interface RetroConfig {
   repos?: RepoConfig[];   // Empty/absent = single-repo (cwd)
 }
 
+// Sprint History Types
+export interface SprintHistoryEntry {
+  sprint_id: string;
+  date: string; // ISO 8601
+  scores: Scores;
+  data_completeness: number; // 0-100 percentage
+}
+
 // Alert Types
 export interface Alert {
   id: string;

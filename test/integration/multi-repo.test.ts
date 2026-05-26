@@ -13,7 +13,7 @@
 
 import { describe, test, expect, beforeAll, beforeEach, afterEach } from 'vitest';
 import { execSync, spawnSync } from 'child_process';
-import { join } from 'path';
+import { join, resolve } from 'path';
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'fs';
 import { createTempDir, type TempDir } from '../helpers/temp-dir.js';
 import { runRetro } from '../../src/runner.js';
@@ -294,6 +294,52 @@ label = "should-be-overridden"
     for (const r of result.perRepo ?? []) {
       expect(r.report.action_items.length).toBeLessThanOrEqual(5);
     }
+  });
+
+  test('8: multi-repo run appends exactly one aggregate sprint-history entry', async () => {
+    const repoA = tempDir.createDir('hist-a');
+    initGitRepo(repoA);
+    makeCommit(repoA, 'init', { 'a.ts': 'a' });
+    makeCommit(repoA, 'feat: a', { 'x.ts': 'x' });
+
+    const repoB = tempDir.createDir('hist-b');
+    initGitRepo(repoB);
+    makeCommit(repoB, 'init', { 'b.ts': 'b' });
+    makeCommit(repoB, 'feat: b', { 'y.ts': 'y' });
+
+    process.chdir(tempDir.path);
+    const outputDir = join(tempDir.path, 'out-history-multi');
+    const config: RetroConfig = {
+      fromRef: '',
+      toRef: 'HEAD',
+      sprintId: 'history-multi',
+      decisionsPath: '.logs/decisions',
+      agentLogsPath: '.logs/agents',
+      outputDir,
+      repos: [
+        { path: repoA, label: 'a' },
+        { path: repoB, label: 'b' },
+      ],
+    };
+    const result = await runRetro(config, { verbose: false });
+    expect(result.success).toBe(true);
+
+    // History file sits one level above outputDir, same as the single-repo path.
+    const historyPath = resolve(outputDir, '../.retro-history.jsonl');
+    expect(existsSync(historyPath)).toBe(true);
+
+    const lines = readFileSync(historyPath, 'utf-8').trim().split('\n').filter(Boolean);
+    // One run = exactly one aggregate entry (not one per repo).
+    expect(lines).toHaveLength(1);
+
+    const entry = JSON.parse(lines[0]) as {
+      sprint_id: string;
+      scores: Record<string, unknown>;
+      data_completeness: number;
+    };
+    expect(entry.sprint_id).toBe('history-multi');
+    expect(entry.scores).toBeDefined();
+    expect(typeof entry.data_completeness).toBe('number');
   });
 });
 
