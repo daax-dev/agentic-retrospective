@@ -845,7 +845,7 @@ export class RetroRunner {
               unrecognizedRefs.push({ decisionId: id, ref });
               continue;
             }
-            const match = ref.match(/^commit:([0-9a-fA-F]+)/);
+            const match = ref.match(/^commit:([0-9a-fA-F]+)$/);
             if (match) {
               const indexed = shortHashIndex.get(match[1]);
               // `null` means the short prefix is ambiguous (shared by >1
