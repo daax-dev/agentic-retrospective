@@ -90,9 +90,10 @@ export const PRICING_TABLE: Record<string, ModelPricing> = Object.fromEntries(
  *
  * Returns a best-effort key; whether that key is *priced* is a separate lookup
  * (`getPricing`). Pure string normalization — never throws: a non-string or
- * empty input resolves to `''` (an unpriced key), not an exception.
+ * empty input resolves to `''` (an unpriced key), not an exception. The
+ * parameter is `unknown` so JS callers need no cast to hit the runtime guard.
  */
-export function resolveModelKey(rawModel: string): string {
+export function resolveModelKey(rawModel: unknown): string {
   if (typeof rawModel !== 'string') return '';
   let s = rawModel.trim().toLowerCase();
   s = s.replace(/^(?:us|eu|apac|global)\./, '');
@@ -113,10 +114,12 @@ export function resolveModelKey(rawModel: string): string {
 /**
  * Look up pricing for a raw model id. Returns `undefined` when the resolved key
  * has no table entry — the caller MUST treat that as "cost unknown," not 0.
- * A blank/whitespace model string is unknown, never a silent default.
+ * A non-string or blank/whitespace model is unknown, never a silent default.
+ * The parameter is `unknown` and guarded so a JS caller passing a number/object
+ * gets `undefined` rather than a thrown `.trim()`.
  */
-export function getPricing(rawModel: string | undefined): ModelPricing | undefined {
-  if (!rawModel || !rawModel.trim()) return undefined;
+export function getPricing(rawModel: unknown): ModelPricing | undefined {
+  if (typeof rawModel !== 'string' || !rawModel.trim()) return undefined;
   return PRICING_TABLE[resolveModelKey(rawModel)];
 }
 

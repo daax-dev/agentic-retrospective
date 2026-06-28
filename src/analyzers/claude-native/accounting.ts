@@ -122,6 +122,8 @@ export interface TokenCostResult {
 
 const UNKNOWN_PROJECT = '(unknown)';
 const UNKNOWN_MODEL = '(unknown-model)';
+const UNKNOWN_SESSION = '(unknown-session)';
+const UNKNOWN_UUID = '(unknown-uuid)';
 const UNDATED = '(undated)';
 
 /**
@@ -152,14 +154,20 @@ export function accountTokenCost(result: ClaudeIngestionResult): TokenCostResult
     const cost = pricing ? costOf(usage, pricing) : null;
     const day = utcDay(turn.timestamp);
 
+    // Normalize identifiers used as map keys / stored fields. A malformed JS turn
+    // with a non-string sessionId/projectSlug would otherwise throw in
+    // BucketBook.toArray() (`key.localeCompare`); coerce to safe sentinels.
+    const sessionId = asString(turn.sessionId, UNKNOWN_SESSION);
+    const projectSlug = asOptString(turn.projectSlug);
+
     perTurn.push({
-      sessionId: turn.sessionId,
-      uuid: turn.uuid,
-      projectSlug: turn.projectSlug,
-      timestamp: turn.timestamp,
+      sessionId,
+      uuid: asString(turn.uuid, UNKNOWN_UUID),
+      projectSlug,
+      timestamp: asOptString(turn.timestamp),
       day,
       isSidechain: turn.isSidechain === true,
-      model: turn.model,
+      model: asOptString(turn.model),
       modelKey: pricing?.key,
       usage,
       costUSD: cost,
@@ -167,9 +175,9 @@ export function accountTokenCost(result: ClaudeIngestionResult): TokenCostResult
 
     addToBucket(totals, usage, cost);
     addModelBucket(byModel, turn, pricing, usage, cost, unknownModels);
-    bySession.add(turn.sessionId, usage, cost);
+    bySession.add(sessionId, usage, cost);
     byDay.add(day, usage, cost);
-    byProject.add(turn.projectSlug ?? UNKNOWN_PROJECT, usage, cost);
+    byProject.add(projectSlug ?? UNKNOWN_PROJECT, usage, cost);
   }
 
   if (unknownModels.size > 0) {
@@ -235,6 +243,16 @@ function num(v: unknown): number {
   return typeof v === 'number' && Number.isFinite(v) ? v : 0;
 }
 
+/** A non-empty string, or `fallback` for any other value (defensive boundary). */
+function asString(v: unknown, fallback: string): string {
+  return typeof v === 'string' && v.length > 0 ? v : fallback;
+}
+
+/** A non-empty string, or `undefined` for any other value. */
+function asOptString(v: unknown): string | undefined {
+  return typeof v === 'string' && v.length > 0 ? v : undefined;
+}
+
 function emptyLedger(): LedgerUsage {
   return {
     inputTokens: 0,
@@ -290,9 +308,11 @@ function addModelBucket(
 ): void {
   // Priced turns bucket by canonical key; unpriced turns bucket by their raw id
   // (so distinct unknown models stay distinct) and are recorded for reporting.
-  // A blank/missing model is unpriced too — it gets a sentinel id so it is
-  // recorded, never silently dropped.
-  const raw = turn.model?.trim() || undefined;
+  // A blank/whitespace/missing/non-string model is unpriced too — it gets a
+  // sentinel id so it is recorded, never silently dropped. Trim so a
+  // whitespace-only model collapses to the sentinel (not a distinct id), and
+  // guard the type so a non-string model never throws on `.trim()`.
+  const raw = typeof turn.model === 'string' ? turn.model.trim() || undefined : undefined;
   const key = pricing?.key ?? raw ?? UNKNOWN_MODEL;
   if (!pricing) unknownModels.add(raw ?? UNKNOWN_MODEL);
 

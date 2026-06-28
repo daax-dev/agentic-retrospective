@@ -89,10 +89,14 @@ describe('pricing — offline table, registry, and aliases', () => {
     expect(getPricing('   ')).toBeUndefined();
   });
 
-  test('resolveModelKey never throws on invalid (JS-callable) input', () => {
-    expect(resolveModelKey(undefined as unknown as string)).toBe('');
-    expect(resolveModelKey(null as unknown as string)).toBe('');
+  test('resolveModelKey / getPricing never throw on invalid (JS-callable) input', () => {
+    expect(resolveModelKey(undefined)).toBe('');
+    expect(resolveModelKey(null)).toBe('');
+    expect(resolveModelKey(42)).toBe('');
     expect(resolveModelKey('')).toBe('');
+    // getPricing must guard a truthy non-string (would otherwise throw on .trim()).
+    expect(getPricing(42)).toBeUndefined();
+    expect(getPricing({} as unknown)).toBeUndefined();
   });
 });
 
@@ -194,6 +198,42 @@ describe('accountTokenCost — ledger and cost', () => {
     expect(result.totals.costKnown).toBe(true);
     // 5 input tokens * $5/MTok — finite, never NaN.
     expect(result.totals.costUSD).toBeCloseTo((5 * 5) / 1_000_000, 12);
+  });
+
+  test('defensive: malformed turn identifiers fall back to sentinels, never throw', () => {
+    const turn = {
+      sessionId: 123, // non-string
+      uuid: null,
+      projectSlug: 7, // non-string
+      role: 'assistant',
+      isSidechain: false,
+      model: 99, // non-string — must not throw on .trim()
+      usage: { inputTokens: 10, outputTokens: 1 },
+    } as unknown as ClaudeTurn;
+    const result = accountTokenCost({ turns: [turn] } as unknown as ClaudeIngestionResult);
+    expect(result.bySession[0].key).toBe('(unknown-session)');
+    expect(result.byProject[0].key).toBe('(unknown)');
+    expect(result.perTurn[0].sessionId).toBe('(unknown-session)');
+    expect(result.perTurn[0].uuid).toBe('(unknown-uuid)');
+    // Non-string model is unpriced and recorded under the sentinel.
+    expect(result.byModel[0].model).toBe('(unknown-model)');
+    expect(result.unknownModels).toContain('(unknown-model)');
+  });
+
+  test('a whitespace-only model collapses to the unknown sentinel, not a distinct id', () => {
+    const turn = {
+      sessionId: 's',
+      uuid: 'w1',
+      parentUuid: null,
+      kind: 'message',
+      role: 'assistant',
+      isSidechain: false,
+      model: '   ',
+      usage: { inputTokens: 10, outputTokens: 1 },
+    } as unknown as ClaudeTurn;
+    const result = accountTokenCost({ turns: [turn] } as unknown as ClaudeIngestionResult);
+    expect(result.byModel[0].model).toBe('(unknown-model)');
+    expect(result.unknownModels).toEqual(['(unknown-model)']);
   });
 });
 
