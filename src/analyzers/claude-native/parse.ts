@@ -209,6 +209,11 @@ export function extractToolTarget(name: string, input: unknown): string | undefi
     case 'Agent':
     case 'Task':
       return str(i.subagent_type);
+    case 'Skill':
+      // Skill invocations carry the skill identity in `input.skill`
+      // (e.g. `codex:rescue`); capture it so attribution records *which*
+      // skill ran, not just that a skill ran (inventory §2.2, PRD 03).
+      return str(i.skill);
     default:
       return undefined;
   }
