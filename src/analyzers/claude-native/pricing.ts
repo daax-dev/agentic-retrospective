@@ -89,9 +89,11 @@ export const PRICING_TABLE: Record<string, ModelPricing> = Object.fromEntries(
  *  - explicit aliases (`ALIASES`).
  *
  * Returns a best-effort key; whether that key is *priced* is a separate lookup
- * (`getPricing`). Pure string normalization — never throws.
+ * (`getPricing`). Pure string normalization — never throws: a non-string or
+ * empty input resolves to `''` (an unpriced key), not an exception.
  */
 export function resolveModelKey(rawModel: string): string {
+  if (typeof rawModel !== 'string') return '';
   let s = rawModel.trim().toLowerCase();
   s = s.replace(/^(?:us|eu|apac|global)\./, '');
   s = s.replace(/^anthropic\./, '');
@@ -118,7 +120,7 @@ export function getPricing(rawModel: string | undefined): ModelPricing | undefin
   return PRICING_TABLE[resolveModelKey(rawModel)];
 }
 
-/** Round to 6 significant decimals to avoid float noise in derived cache prices. */
+/** Round to 6 decimal places to avoid float noise in derived cache prices. */
 function round(n: number): number {
   return Math.round(n * 1e6) / 1e6;
 }

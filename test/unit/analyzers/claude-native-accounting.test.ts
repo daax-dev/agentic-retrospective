@@ -88,6 +88,12 @@ describe('pricing — offline table, registry, and aliases', () => {
     expect(getPricing(undefined)).toBeUndefined();
     expect(getPricing('   ')).toBeUndefined();
   });
+
+  test('resolveModelKey never throws on invalid (JS-callable) input', () => {
+    expect(resolveModelKey(undefined as unknown as string)).toBe('');
+    expect(resolveModelKey(null as unknown as string)).toBe('');
+    expect(resolveModelKey('')).toBe('');
+  });
 });
 
 describe('accountTokenCost — ledger and cost', () => {

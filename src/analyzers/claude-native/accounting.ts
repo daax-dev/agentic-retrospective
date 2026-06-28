@@ -92,7 +92,7 @@ export interface CostBucket {
 
 /** A by-model bucket; `priced` is false for the unknown-model bucket. */
 export interface ModelCost extends CostBucket {
-  /** Canonical key when priced; the raw model id (or `(unknown)`) when not. */
+  /** Canonical key when priced; the raw model id (or `(unknown-model)`) when not. */
   model: string;
   priced: boolean;
 }
