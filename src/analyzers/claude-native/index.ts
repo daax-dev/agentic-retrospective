@@ -34,3 +34,4 @@ export {
   parseMcpName,
   totalAttributedTokens,
 } from './attribution.js';
+export * from './detectors/index.js';
