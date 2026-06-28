@@ -36,6 +36,7 @@ import {
 import { getFixturesDir } from '../../helpers/fixture-loader.js';
 
 const COST_PROJECTS = join(getFixturesDir(), 'claude-native', 'accounting', 'projects');
+const COST_SUBAGENT_PROJECTS = join(getFixturesDir(), 'claude-native', 'accounting-subagent', 'projects');
 
 function ingest(scope?: { fromTimestamp?: string; toTimestamp?: string }): ClaudeIngestionResult {
   return new ClaudeNativeAnalyzer({ baseDirs: [COST_PROJECTS], scope }).analyze();
@@ -286,6 +287,64 @@ describe('accountTokenCost — reconciliation invariant (AC#4)', () => {
     // And the windowed accounting totals match the ingester's windowed totals.
     expect(result.totals.usage.inputTokens).toBe(ingestion.totals.inputTokens);
     expect(result.totals.usage.outputTokens).toBe(ingestion.totals.outputTokens);
+  });
+});
+
+describe('accountTokenCost — subagent reconciliation (double-count guard)', () => {
+  // Fixture: main session (haiku 200/20) + one subagent transcript (sonnet
+  // 1000/100). The ingester emits the subagent's turns INTO result.turns
+  // (isSidechain) AND its usageTotals into result.subagents — so accounting
+  // must iterate result.turns ONCE and NOT also add result.subagents[].usageTotals.
+  function analyzeSub() {
+    const ingestion = new ClaudeNativeAnalyzer({ baseDirs: [COST_SUBAGENT_PROJECTS] }).analyze();
+    return { ingestion, result: accountTokenCost(ingestion) };
+  }
+
+  test('the fixture actually carries a subagent (otherwise the guard is vacuous)', () => {
+    const { ingestion, result } = analyzeSub();
+    expect(ingestion.subagents).toHaveLength(1);
+    expect(ingestion.subagents[0].agentType).toBe('Explore');
+    expect(ingestion.subagents[0].usageTotals.inputTokens).toBe(1000);
+    // The subagent's sidechain turn is present in the per-turn ledger.
+    const sidechain = result.perTurn.filter(t => t.isSidechain);
+    expect(sidechain).toHaveLength(1);
+    expect(sidechain[0].model).toBe('claude-sonnet-4-6');
+  });
+
+  test('totals reconcile field-exact to ingestion.totals WITH a subagent present', () => {
+    const { ingestion, result } = analyzeSub();
+    const fields = ['inputTokens', 'cacheCreationTokens', 'cacheReadTokens', 'outputTokens'] as const;
+    for (const f of fields) {
+      expect(result.totals.usage[f]).toBe(ingestion.totals[f]);
+      const summed = result.byModel.reduce((n, m) => n + m.usage[f], 0);
+      expect(summed).toBe(ingestion.totals[f]);
+    }
+    expect(result.totals.usage.serverWebSearch).toBe(ingestion.totals.serverToolUse.webSearch);
+    expect(result.totals.usage.serverWebFetch).toBe(ingestion.totals.serverToolUse.webFetch);
+  });
+
+  test('subagent usage is counted exactly once — not added on top of the sidechain turns', () => {
+    const { ingestion, result } = analyzeSub();
+    const subInput = ingestion.subagents.reduce((n, s) => n + s.usageTotals.inputTokens, 0);
+    const subOutput = ingestion.subagents.reduce((n, s) => n + s.usageTotals.outputTokens, 0);
+    // main-stream + subagent (once) == grand total.
+    expect(result.totals.usage.inputTokens).toBe(ingestion.mainStreamTotals.inputTokens + subInput);
+    expect(result.totals.usage.outputTokens).toBe(ingestion.mainStreamTotals.outputTokens + subOutput);
+    // A regression that summed result.subagents[].usageTotals on top would double it.
+    expect(result.totals.usage.inputTokens).not.toBe(
+      ingestion.mainStreamTotals.inputTokens + 2 * subInput
+    );
+  });
+
+  test('subagent spend is priced under its own model and the total cost is correct', () => {
+    const { result } = analyzeSub();
+    // haiku main: 200*1 + 20*5 = 300; sonnet subagent: 1000*3 + 100*15 = 4500 (per MTok / 1e6).
+    const haiku = result.byModel.find(m => m.model === 'claude-haiku-4-5')!;
+    const sonnet = result.byModel.find(m => m.model === 'claude-sonnet-4-6')!;
+    expect(haiku.costUSD).toBeCloseTo(300 / 1_000_000, 12);
+    expect(sonnet.costUSD).toBeCloseTo(4500 / 1_000_000, 12); // the subagent's spend, once
+    expect(result.totals.costKnown).toBe(true);
+    expect(result.totals.costUSD).toBeCloseTo((300 + 4500) / 1_000_000, 12);
   });
 });
 

@@ -238,9 +238,13 @@ function toLedgerUsage(u: ClaudeUsage): LedgerUsage {
   };
 }
 
-/** Coerce a value to a finite number; non-finite/non-number defaults to 0. */
+/**
+ * Coerce a value to a non-negative finite number; non-finite/non-number defaults
+ * to 0. Token counts are never negative — a negative value is malformed input and
+ * is clamped to 0 so it cannot subtract from a ledger or cost.
+ */
 function num(v: unknown): number {
-  return typeof v === 'number' && Number.isFinite(v) ? v : 0;
+  return typeof v === 'number' && Number.isFinite(v) && v > 0 ? v : 0;
 }
 
 /** A non-empty string, or `fallback` for any other value (defensive boundary). */
