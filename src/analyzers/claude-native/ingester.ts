@@ -468,8 +468,12 @@ export class ClaudeNativeAnalyzer {
     if (!scope) return true;
     const { repoPath, gitBranch } = scope;
     if (!repoPath && !gitBranch) return true;
-    const repoOk = !repoPath || records.some(r => isWithinPath(r.turn.cwd, repoPath));
-    const branchOk = !gitBranch || records.some(r => r.turn.gitBranch === gitBranch);
+
+    const hasCwd = records.some(r => r.turn.cwd !== undefined);
+    const hasBranch = records.some(r => r.turn.gitBranch !== undefined);
+
+    const repoOk = !repoPath || !hasCwd || records.some(r => isWithinPath(r.turn.cwd, repoPath));
+    const branchOk = !gitBranch || !hasBranch || records.some(r => r.turn.gitBranch === gitBranch);
     return repoOk && branchOk;
   }
 

@@ -87,7 +87,8 @@ export function normalizeRecord(
   if (!type || !TURN_TYPES.has(type)) return null;
 
   const sessionId = str(raw.sessionId) ?? ctx.sessionId;
-  const uuid = str(raw.uuid) ?? '';
+  const uuid = str(raw.uuid);
+  if (!uuid) return null;
   const message = isObject(raw.message) ? (raw.message as Record<string, unknown>) : undefined;
   const version = str(raw.version);
 
