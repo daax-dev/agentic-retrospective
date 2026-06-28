@@ -18,3 +18,19 @@ export {
   type ClaudeNativeOptions,
   type ScopeFilter,
 } from './ingester.js';
+export {
+  type AttributedToolCall,
+  type AttributionResult,
+  type IdentitySpend,
+  type PromptChain,
+  type SourceCategory,
+  type SourceSpend,
+  type ToolCategory,
+  type ToolClassification,
+  type UnlinkedSubagentSpend,
+  CATEGORY_PRIORITY,
+  attributeSpend,
+  classifyTool,
+  parseMcpName,
+  totalAttributedTokens,
+} from './attribution.js';
