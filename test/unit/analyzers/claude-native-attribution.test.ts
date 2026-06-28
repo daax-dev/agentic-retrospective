@@ -8,7 +8,9 @@
  *  - AC#2: subagent tokens attribute to the spawning prompt, never "direct";
  *  - AC#3: skill attribution records the specific skill identity;
  *  - AC#4: a prompt's tool/result/token linkage reconstructs the causal chain;
- *  - the anti-slop invariant: sum(spend by source) === ingestion grand totals;
+ *  - the anti-slop invariant: sum(spend by source) + cacheReadOverhead ===
+ *    ingestion grand totals (cache-read is whole-session overhead, excluded from
+ *    per-source attribution);
  *  - classification is name-only, so em-dash / literal `--` / inline `mcp__`
  *    text in a Bash command never produces a false positive.
  */
@@ -87,7 +89,10 @@ describe('attributeSpend — rollups and invariants', () => {
 
     expect(byId('toolu_MCP1')).toMatchObject({ category: 'mcp', identity: 'notion/API-post-search' });
     expect(byId('toolu_SKILL1')).toMatchObject({ category: 'skill', identity: 'codex:rescue' });
-    expect(byId('toolu_AGENT_L')).toMatchObject({ category: 'subagent', identity: 'general-purpose' });
+    // The Agent call was launched with subagent_type "general-purpose", but the
+    // spawned subagent's authoritative sidecar agentType is "Explore" — the call
+    // identity unifies to agentType so spend aggregates under one identity.
+    expect(byId('toolu_AGENT_L')).toMatchObject({ category: 'subagent', identity: 'Explore' });
     expect(byId('toolu_BASH1')).toMatchObject({ category: 'tool', identity: 'Bash' });
     expect(byId('toolu_MCP2')).toMatchObject({ category: 'mcp', identity: 'backlog/task_create' });
     // Guarded Bash call (command embeds mcp__/--/em-dash) stays a tool.
@@ -132,12 +137,26 @@ describe('attributeSpend — rollups and invariants', () => {
     expect(result.toolCalls.filter(c => c.identity === 'Bash')).toHaveLength(2);
   });
 
-  test('by-identity events count spend turns/subagents, not raw call frequency', () => {
+  test('subagent identity unifies: spawning turn and transcript aggregate under agentType', () => {
     const { result } = analyzeAttribution();
-    // general-purpose: a4 launch turn (winning) + ORPH subagent = 2 spend events.
+    // LINK: launched as subagent_type "general-purpose" but sidecar agentType
+    // "Explore". The a4 launch turn (6/3) AND the LINK transcript (100/50) must
+    // both aggregate under the single identity "Explore" — not split across two.
+    const explore = result.byIdentity.find(i => i.category === 'subagent' && i.identity === 'Explore');
+    expect(explore?.events).toBe(2);
+    expect(explore?.usage).toMatchObject(usageOf(106, 53)); // a4 (6/3) + LINK (100/50)
+
+    // The unlinked ORPH subagent (agentType "general-purpose") stays its own
+    // identity — no spawning turn to fold in.
     const gp = result.byIdentity.find(i => i.category === 'subagent' && i.identity === 'general-purpose');
-    expect(gp?.events).toBe(2);
-    expect(gp?.usage).toMatchObject(usageOf(46, 23)); // a4 (6/3) + ORPH (40/20)
+    expect(gp?.events).toBe(1);
+    expect(gp?.usage).toMatchObject(usageOf(40, 20)); // ORPH only
+
+    // No subagent spend is split across both identities (sum equals category total).
+    const subTotalInput = result.byIdentity
+      .filter(i => i.category === 'subagent')
+      .reduce((n, i) => n + i.usage.inputTokens, 0);
+    expect(subTotalInput).toBe(result.bySource.find(s => s.category === 'subagent')!.usage.inputTokens);
   });
 
   test('AC#3: skill attribution records the specific skill identity', () => {

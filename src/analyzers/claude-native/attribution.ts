@@ -245,6 +245,25 @@ export function attributeSpend(result: ClaudeIngestionResult): AttributionResult
   }
   const toolCalls = [...classified.values()];
 
+  // Unify subagent identity. A subagent has TWO candidate identities: the
+  // `input.subagent_type` requested at the `Agent`/`Task` call site, and the
+  // authoritative `agentType` recorded in the subagent's sidecar (§3.1). They
+  // can differ (aliases / resolved types). The sidecar `agentType` wins, so a
+  // spawning turn's spend and the subagent's own transcript spend aggregate
+  // under ONE identity. Falls back to the call's `subagent_type` when the
+  // subagent cannot be resolved (lineage unknown).
+  const agentTypeByCall = new Map<string, string>();
+  for (const sub of result.subagents) {
+    if (sub.spawnedByToolUseId) {
+      agentTypeByCall.set(scopedKey(sub.sessionId, sub.spawnedByToolUseId), sub.agentType);
+    }
+  }
+  for (const call of toolCalls) {
+    if (call.category !== 'subagent') continue;
+    const agentType = agentTypeByCall.get(scopedKey(call.sessionId, call.toolUseId));
+    if (agentType) call.identity = agentType;
+  }
+
   // Index calls by the (session-scoped) turn that issued them.
   const callsByTurn = new Map<string, AttributedToolCall[]>();
   for (const call of toolCalls) {
@@ -430,8 +449,9 @@ function buildPromptChains(
     }
   }
 
-  // Per-prompt category breakdown (after subagent spend is folded in). The sum
-  // of a segment's `bySource` usage equals its `usage` total.
+  // Per-prompt category breakdown (after subagent spend is folded in). Cache-read
+  // is excluded from the breakdown, so per segment:
+  //   sum(bySource) + seg.usage.cacheReadTokens === seg.usage.
   for (const seg of prompts) {
     seg.bySource = computeSegmentBySource(seg, turnById, callsByTurn, subUsageBySessionAgent);
   }
@@ -455,7 +475,9 @@ function isToolResultTurn(
 /**
  * Category rollup within one prompt segment. Each assistant turn is charged to
  * its highest-priority call's category (or `direct`); the segment's linked
- * subagent totals are charged to `subagent`. The summed usage equals `seg.usage`.
+ * subagent totals are charged to `subagent`. Cache-read is excluded here (it is
+ * whole-session overhead), so the reconciliation is
+ * `sum(bySource) + seg.usage.cacheReadTokens === seg.usage`.
  */
 function computeSegmentBySource(
   seg: PromptChain,
