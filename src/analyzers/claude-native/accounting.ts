@@ -147,7 +147,9 @@ export function accountTokenCost(result: ClaudeIngestionResult): TokenCostResult
 
     const pricing = getPricing(turn.model);
     const usage = toLedgerUsage(turn.usage);
-    const cost = pricing ? costOf(turn.usage, pricing) : null;
+    // Cost is computed from the coerced ledger (finite numbers), so a malformed
+    // JS-supplied usage object cannot poison cost with NaN.
+    const cost = pricing ? costOf(usage, pricing) : null;
     const day = utcDay(turn.timestamp);
 
     perTurn.push({
@@ -191,11 +193,13 @@ export function accountTokenCost(result: ClaudeIngestionResult): TokenCostResult
 }
 
 /**
- * Cost of a turn's usage under one model's pricing. Each token class is billed
+ * Cost of a coerced ledger under one model's pricing. Each token class is billed
  * at its own rate (PRD 02 §2): input, cache-creation (write), cache-read, output.
  * Charging a flat input rate on "billable input" would misprice every cached turn.
+ * Operates on `LedgerUsage` (already coerced to finite numbers) so a malformed
+ * usage object cannot propagate `NaN` into the cost.
  */
-function costOf(u: ClaudeUsage, p: ModelPricing): number {
+function costOf(u: LedgerUsage, p: ModelPricing): number {
   return (
     (u.inputTokens * p.inputPerMTok +
       u.cacheCreationTokens * p.cacheWritePerMTok +
@@ -205,17 +209,30 @@ function costOf(u: ClaudeUsage, p: ModelPricing): number {
   );
 }
 
-/** Token-only projection of a `ClaudeUsage` (adds billable input + server-tool counts). */
+/**
+ * Token-only projection of a `ClaudeUsage` (adds billable input + server-tool
+ * counts). Defensive at the boundary: every field is coerced to a finite number
+ * (default 0) and `serverToolUse` is treated as optional, so a malformed or
+ * minimally-shaped JS-supplied object yields a zeroed ledger instead of throwing.
+ */
 function toLedgerUsage(u: ClaudeUsage): LedgerUsage {
+  const input = num(u?.inputTokens);
+  const cacheCreation = num(u?.cacheCreationTokens);
+  const server = u?.serverToolUse;
   return {
-    inputTokens: u.inputTokens,
-    cacheCreationTokens: u.cacheCreationTokens,
-    cacheReadTokens: u.cacheReadTokens,
-    outputTokens: u.outputTokens,
-    billableInputTokens: u.inputTokens + u.cacheCreationTokens,
-    serverWebSearch: u.serverToolUse.webSearch,
-    serverWebFetch: u.serverToolUse.webFetch,
+    inputTokens: input,
+    cacheCreationTokens: cacheCreation,
+    cacheReadTokens: num(u?.cacheReadTokens),
+    outputTokens: num(u?.outputTokens),
+    billableInputTokens: input + cacheCreation,
+    serverWebSearch: num(server?.webSearch),
+    serverWebFetch: num(server?.webFetch),
   };
+}
+
+/** Coerce a value to a finite number; non-finite/non-number defaults to 0. */
+function num(v: unknown): number {
+  return typeof v === 'number' && Number.isFinite(v) ? v : 0;
 }
 
 function emptyLedger(): LedgerUsage {

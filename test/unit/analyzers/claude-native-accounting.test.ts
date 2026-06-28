@@ -175,6 +175,26 @@ describe('accountTokenCost — ledger and cost', () => {
     expect(result.byModel[0].priced).toBe(false);
     expect(result.byModel[0].costUSD).toBeNull();
   });
+
+  test('defensive: malformed/minimal usage yields a zeroed ledger, never NaN', () => {
+    const turn = {
+      sessionId: 's',
+      uuid: 'm1',
+      parentUuid: null,
+      kind: 'message',
+      role: 'assistant',
+      isSidechain: false,
+      model: 'claude-opus-4-8',
+      usage: { inputTokens: 5 }, // missing cache/output fields and serverToolUse
+    } as unknown as ClaudeTurn;
+    const result = accountTokenCost({ turns: [turn] } as unknown as ClaudeIngestionResult);
+    expect(result.totals.usage.inputTokens).toBe(5);
+    expect(result.totals.usage.cacheCreationTokens).toBe(0);
+    expect(result.totals.usage.serverWebSearch).toBe(0);
+    expect(result.totals.costKnown).toBe(true);
+    // 5 input tokens * $5/MTok — finite, never NaN.
+    expect(result.totals.costUSD).toBeCloseTo((5 * 5) / 1_000_000, 12);
+  });
 });
 
 describe('accountTokenCost — reconciliation invariant (AC#4)', () => {
