@@ -35,8 +35,12 @@ else
         warn "CLAUDE.md has no section headers"
     fi
 
-    CLAUDE_LINES=$(wc -l < "$CLAUDE_MD" 2>/dev/null | tr -d ' ')
-    if ! printf '%s' "$CLAUDE_LINES" | grep -qE '^[0-9]+$'; then
+    CLAUDE_LINES_RAW=$(wc -l < "$CLAUDE_MD" 2>/dev/null)
+    WC_STATUS=$?
+    CLAUDE_LINES=$(printf '%s' "$CLAUDE_LINES_RAW" | tr -d '[:space:]')
+    if [ "$WC_STATUS" -ne 0 ]; then
+        err "CLAUDE.md line count could not be determined"
+    elif ! printf '%s' "$CLAUDE_LINES" | grep -qE '^[0-9]+$'; then
         err "CLAUDE.md line count could not be determined (wc output: '$CLAUDE_LINES')"
     elif [ "$CLAUDE_LINES" -gt 500 ]; then
         warn "CLAUDE.md is $CLAUDE_LINES lines (>500); consider splitting"
@@ -61,11 +65,28 @@ fi
 # -----------------------------------------------------------------------------
 # Skill SKILL.md checks
 # -----------------------------------------------------------------------------
-# Extract the frontmatter block (between the first two lines that are exactly "---")
-# and echo stdin-relative lines.
+# Extract the frontmatter block (between the opening and closing "---" delimiters)
+# and echo stdin-relative lines. Delimiters may have trailing spaces/tabs, and the
+# first line may have a UTF-8 BOM. CRLF input is normalized before matching.
+is_frontmatter_delimiter() {
+    LC_ALL=C awk 'BEGIN { status=1 }
+         NR == 1 {
+             sub(/^\357\273\277/, "")
+             sub(/\r$/, "")
+             if ($0 ~ /^---[[:blank:]]*$/) { status=0 }
+             exit
+         }
+         END { exit status }' "$1"
+}
+
 extract_frontmatter() {
-    awk 'BEGIN{inside=0; seen=0}
-         /^---[[:space:]]*$/ {
+    LC_ALL=C awk 'BEGIN{inside=0; seen=0}
+         {
+             if (NR == 1) { sub(/^\357\273\277/, "") }
+             sub(/\r$/, "")
+         }
+         NR == 1 && $0 !~ /^---[[:blank:]]*$/ { exit }
+         /^---[[:blank:]]*$/ {
              if (seen == 0) { inside=1; seen=1; next }
              else if (inside == 1) { inside=0; exit }
          }
@@ -73,8 +94,13 @@ extract_frontmatter() {
 }
 
 has_closed_frontmatter() {
-    awk 'BEGIN{inside=0; seen=0; closed=0}
-         /^---[[:space:]]*$/ {
+    LC_ALL=C awk 'BEGIN{inside=0; seen=0; closed=0}
+         {
+             if (NR == 1) { sub(/^\357\273\277/, "") }
+             sub(/\r$/, "")
+         }
+         NR == 1 && $0 !~ /^---[[:blank:]]*$/ { exit 1 }
+         /^---[[:blank:]]*$/ {
              if (seen == 0) { inside=1; seen=1; next }
              else if (inside == 1) { closed=1; exit }
          }
@@ -98,13 +124,18 @@ get_frontmatter_value() {
 
 # Count lines in a SKILL.md body (everything after the closing frontmatter ---).
 body_line_count() {
-    awk 'BEGIN{inside=0; seen=0; count=0}
-         /^---[[:space:]]*$/ {
+    LC_ALL=C awk 'BEGIN{inside=0; seen=0; closed=0; count=0}
+         {
+             if (NR == 1) { sub(/^\357\273\277/, "") }
+             sub(/\r$/, "")
+         }
+         NR == 1 && $0 !~ /^---[[:blank:]]*$/ { exit }
+         /^---[[:blank:]]*$/ {
              if (seen == 0) { inside=1; seen=1; next }
-             else if (inside == 1) { inside=0; next }
+             else if (inside == 1) { inside=0; closed=1; next }
              else { count++; next }
          }
-         { if (inside == 0 && seen == 1) count++ }
+         { if (closed == 1) count++ }
          END { print count+0 }' "$1"
 }
 
@@ -117,9 +148,8 @@ if [ -d "$SKILLS_DIR" ]; then
         info "Auditing $skill_rel"
 
         # Require frontmatter block
-        FIRST_LINE=$(head -n 1 "$skill_md")
-        if [ "$FIRST_LINE" != "---" ]; then
-            err "$skill_rel: missing YAML frontmatter (first line must be '---')"
+        if ! is_frontmatter_delimiter "$skill_md"; then
+            err "$skill_rel: missing YAML frontmatter (first line must be '---', with optional trailing spaces/tabs)"
             continue
         fi
         if ! has_closed_frontmatter "$skill_md"; then
@@ -138,9 +168,9 @@ if [ -d "$SKILLS_DIR" ]; then
         if [ -z "$NAME" ]; then
             err "$skill_rel: frontmatter missing 'name'"
         else
-            # lowercase letters, digits, hyphens only; <= 64 chars
-            if ! printf '%s' "$NAME" | grep -qE '^[a-z0-9-]{1,64}$'; then
-                err "$skill_rel: name '$NAME' must match ^[a-z0-9-]{1,64}$ (lowercase/hyphens, <=64)"
+            # lowercase letters, digits, hyphens only; <= 64 chars; no leading/trailing hyphen
+            if ! printf '%s' "$NAME" | grep -qE '^[a-z0-9]([a-z0-9-]{0,62}[a-z0-9])?$'; then
+                err "$skill_rel: name '$NAME' must contain lowercase letters/digits/hyphens, start and end with a letter/digit, and be <=64 chars"
             fi
         fi
 
@@ -159,13 +189,13 @@ if [ -d "$SKILLS_DIR" ]; then
             # punctuation is caught ("you." / "your," / "you?"), then pad with
             # spaces to avoid false positives inside words (e.g. "API" matching
             # " I "). Kept portable (no \b) for BSD/macOS + GNU/Linux grep.
-            DESC_NORM=$(printf '%s' "$DESC" | tr -c "[:alnum:]' " ' ')
+            DESC_NORM=$(printf '%s' "$DESC" | LC_ALL=C tr -c "[:alnum:]' " ' ' | LC_ALL=C tr '[:upper:]' '[:lower:]')
             DESC_PADDED=" $DESC_NORM "
-            if printf '%s' "$DESC_PADDED" | grep -qE ' I | I'"'"''; then
-                warn "$skill_rel: description uses first-person ('I'); prefer third person"
+            if printf '%s' "$DESC_PADDED" | grep -qE " (i|i'm|i've|i'd|i'll|im|ive|id|ill|we|we're|we've|we'd|we'll) "; then
+                warn "$skill_rel: description uses first-person voice; prefer third person"
             fi
-            if printf '%s' "$DESC_PADDED" | grep -qiE ' you | your '; then
-                warn "$skill_rel: description uses second-person ('you'/'your'); prefer third person"
+            if printf '%s' "$DESC_PADDED" | grep -qE " (you|your|you're|you've|you'd|you'll|yours) "; then
+                warn "$skill_rel: description uses second-person voice; prefer third person"
             fi
         fi
 

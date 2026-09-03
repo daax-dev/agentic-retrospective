@@ -7,13 +7,13 @@ description: Audits a repository's Claude Code configuration (CLAUDE.md, skills,
 
 Execute immediately. Do not ask for confirmation.
 
-Run: `bash "${CLAUDE_PLUGIN_ROOT}/skills/claude-best-practices/scripts/audit.sh" .`
+Run: `bash "${CLAUDE_PLUGIN_ROOT:?CLAUDE_PLUGIN_ROOT is required}/skills/claude-best-practices/scripts/audit.sh" .`
 
 ## What It Checks
 
 - CLAUDE.md exists, has section headers, and stays under 500 lines
 - Each `skills/*/SKILL.md` has valid frontmatter (`name`, `description`)
-- Skill `description` uses third-person voice (no "I" or "you/your")
+- Skill `description` uses third-person voice (no first- or second-person pronouns)
 - Skill bodies stay under 500 lines
 - Warns if an `AGENTSKILLS.md` exists alongside a `skills/` tree (duplication risk)
 - Reports presence of `.claude/hooks.json` and `.claude/settings.json`
