@@ -1,7 +1,7 @@
 /**
  * Integration tests for sprint history persistence (issue #18, fix 18-A).
  *
- * Each run appends a JSONL entry to <outputDir>/../.retro-history.jsonl so
+ * Each run appends a JSONL entry to <outputDir>/.retro-history.jsonl so
  * consumers can detect multi-sprint trends without re-analyzing prior reports.
  */
 
@@ -56,7 +56,7 @@ describe('sprint history', () => {
   }
 
   function historyPathFor(config: RetroConfig): string {
-    return resolve(config.outputDir, '../.retro-history.jsonl');
+    return resolve(config.outputDir, '.retro-history.jsonl');
   }
 
   test('creates history file on first run', async () => {

@@ -791,6 +791,8 @@ export class RetroRunner {
       },
     };
 
+    const fullHashIndex = new Map<string, string>();
+
     // Index commits
     if (data.git?.commits) {
       for (const commit of data.git.commits) {
@@ -798,6 +800,7 @@ export class RetroRunner {
           decisions: [],
           findings: [],
         };
+        fullHashIndex.set(commit.hash.toLowerCase(), commit.hash);
       }
     }
 
@@ -809,11 +812,12 @@ export class RetroRunner {
     const shortHashIndex = new Map<string, string | null>();
     if (data.git?.commits) {
       for (const c of data.git.commits) {
+        const normalizedHash = c.hash.toLowerCase();
         for (let len = 7; len <= Math.min(12, c.hash.length); len++) {
-          const prefix = c.hash.slice(0, len);
+          const prefix = normalizedHash.slice(0, len);
           if (!shortHashIndex.has(prefix)) {
             shortHashIndex.set(prefix, c.hash);
-          } else if (shortHashIndex.get(prefix) !== c.hash) {
+          } else if (shortHashIndex.get(prefix)?.toLowerCase() !== normalizedHash) {
             // Same prefix maps to a different full hash -> ambiguous.
             shortHashIndex.set(prefix, null);
           }
@@ -847,14 +851,15 @@ export class RetroRunner {
             }
             const match = ref.match(/^commit:([0-9a-fA-F]+)/);
             if (match) {
-              const indexed = shortHashIndex.get(match[1]);
+              const hashRef = match[1].toLowerCase();
+              const indexed = shortHashIndex.get(hashRef);
               // `null` means the short prefix is ambiguous (shared by >1
               // commit) -> do not resolve. `undefined` means no short-hash
               // entry, so fall back to the raw value (handles full hashes).
               if (indexed === null) {
                 continue;
               }
-              const resolvedHash = indexed ?? match[1];
+              const resolvedHash = indexed ?? fullHashIndex.get(hashRef) ?? hashRef;
               if (map.commits[resolvedHash]) {
                 map.commits[resolvedHash].decisions.push(id);
                 map.decisions[id].commits.push(resolvedHash);
@@ -1512,15 +1517,15 @@ export class RetroRunner {
       writeFileSync(join(outputPath, 'retrospective.md'), markdown);
     }
 
-    // Append score snapshot to sprint history (one level above outputDir
-    // so a single file spans all sprints).
+    // Append score snapshot to sprint history under outputDir so a single
+    // file spans all sprint-specific output directories.
     this.appendToHistory(report);
 
     return outputPath;
   }
 
   private appendToHistory(report: RetroReport): void {
-    const historyPath = resolve(this.config.outputDir, '../.retro-history.jsonl');
+    const historyPath = join(this.config.outputDir, '.retro-history.jsonl');
     const entry: SprintHistoryEntry = {
       sprint_id: report.sprint_id,
       date: report.generated_at,
@@ -1528,9 +1533,7 @@ export class RetroRunner {
       data_completeness: report.data_completeness.percentage,
     };
     try {
-      // Ensure parent dir exists (outputDir is created in writeOutputs,
-      // but the history file sits one level up which may not yet exist
-      // when outputDir itself is a fresh nested path).
+      // Ensure outputDir exists before writing the cross-sprint history file.
       const historyDir = resolve(historyPath, '..');
       mkdirSync(historyDir, { recursive: true });
       appendFileSync(historyPath, JSON.stringify(entry) + '\n', 'utf8');

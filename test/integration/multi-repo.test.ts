@@ -13,7 +13,7 @@
 
 import { describe, test, expect, beforeAll, beforeEach, afterEach } from 'vitest';
 import { execSync, spawnSync } from 'child_process';
-import { join, resolve } from 'path';
+import { join } from 'path';
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'fs';
 import { createTempDir, type TempDir } from '../helpers/temp-dir.js';
 import { runRetro } from '../../src/runner.js';
@@ -324,8 +324,8 @@ label = "should-be-overridden"
     const result = await runRetro(config, { verbose: false });
     expect(result.success).toBe(true);
 
-    // History file sits one level above outputDir, same as the single-repo path.
-    const historyPath = resolve(outputDir, '../.retro-history.jsonl');
+    // History file sits in outputDir, same as the single-repo path.
+    const historyPath = join(outputDir, '.retro-history.jsonl');
     expect(existsSync(historyPath)).toBe(true);
 
     const lines = readFileSync(historyPath, 'utf-8').trim().split('\n').filter(Boolean);

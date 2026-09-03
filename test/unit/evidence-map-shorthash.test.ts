@@ -95,4 +95,16 @@ describe('buildEvidenceMap short-hash ambiguity', () => {
     expect(map.decisions['dec-full'].commits).toContain(hashA);
     expect(map.commits[hashA].decisions).toContain('dec-full');
   });
+
+  test('uppercase short hash resolves case-insensitively', () => {
+    const runner = makeRunner();
+    const map = buildMap(
+      runner,
+      [commit(hashUnique)],
+      [{ id: 'dec-upper', ts: '2026-02-01T10:00:00Z', evidence_refs: [`commit:${uniquePrefix.toUpperCase()}`] }]
+    );
+
+    expect(map.decisions['dec-upper'].commits).toContain(hashUnique);
+    expect(map.commits[hashUnique].decisions).toContain('dec-upper');
+  });
 });
